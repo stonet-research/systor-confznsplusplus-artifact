@@ -1,0 +1,31 @@
+#include <linux/f2fs_fs.h>
+#include "f2fs.h"
+
+BEGIN 
+{
+    @GC_ID = 0;
+}
+
+k:move_data_page,
+k:move_data_block
+{
+    @gc_data_move_map[@GC_ID]++;
+}
+
+k:do_garbage_collection
+{
+    @gc_track_map[@GC_ID] = nsec;  
+}
+
+kretprobe:do_garbage_collection
+{
+    @gc_map[@GC_ID] = (nsec - @gc_track_map[@GC_ID], @gc_data_move_map[@GC_ID]);
+    clear(@gc_track_map[@GC_ID]);
+    clear(@gc_data_move_map[@GC_ID]);
+    @GC_ID++;
+}
+
+END
+{
+    clear(@GC_ID);
+}
