@@ -1,14 +1,14 @@
 [global]
 name=zns-fio
 directory=/mnt/f2fs
-size=7G
+size=6G
 bs=4K
 ioscheduler=mq-deadline
 group_reporting
 thread=1
 
 [fill-prep]
-ioengine=psync
+ioengine=psync 
 direct=1
 iodepth=1
 numjobs=8
@@ -16,7 +16,3 @@ filename_format=gc.$jobnum.$filenum
 fsync=1
 write_hint=short
 rw=write
-write_bw_log=${DIR}/fill_bw_log
-write_lat_log=${DIR}/fill_lat_log
-write_iops_log=${DIR}/fill_iops_log
-log_avg_msec=1000

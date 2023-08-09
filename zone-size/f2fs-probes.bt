@@ -1,5 +1,7 @@
 #include <linux/f2fs_fs.h>
-#include "f2fs.h"
+
+#define NODE 0
+#define DATA 1
 
 BEGIN 
 {
@@ -7,25 +9,38 @@ BEGIN
 }
 
 k:move_data_page,
-k:move_data_block
+k:move_data_block,
 {
-    @gc_data_move_map[@GC_ID]++;
+    @gc_move_map[@GC_ID] = (@gc_move_map[@GC_ID].0 + 1, DATA);
 }
 
-k:do_garbage_collection
+k:f2fs_move_node_page
 {
-    @gc_track_map[@GC_ID] = nsec;  
+    @gc_move_map[@GC_ID] = (@gc_move_map[@GC_ID].0 + 1, NODE);
 }
 
-kretprobe:do_garbage_collection
+k:do_garbage_collect
 {
-    @gc_map[@GC_ID] = (nsec - @gc_track_map[@GC_ID], @gc_data_move_map[@GC_ID]);
-    clear(@gc_track_map[@GC_ID]);
-    clear(@gc_data_move_map[@GC_ID]);
+    @gc_track_map[@GC_ID] = nsecs;  
+}
+
+kretprobe:do_garbage_collect
+{
+    @gc_map[@GC_ID] = (nsecs - @gc_track_map[@GC_ID], @gc_move_map[@GC_ID].0, @gc_move_map[@GC_ID].1);
+    delete(@gc_track_map[@GC_ID]);
+    delete(@gc_move_map[@GC_ID]);
     @GC_ID++;
+}
+
+interval:s:10
+{
+    print(@gc_map);
+    clear(@gc_map);
 }
 
 END
 {
+    clear(@gc_track_map);
+    clear(@gc_move_map);
     clear(@GC_ID);
 }

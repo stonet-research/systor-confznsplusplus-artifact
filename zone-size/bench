@@ -11,14 +11,14 @@ setup_f2fs() {
     ZNS=$1
     MOUNT="/mnt/f2fs"
 
-    # TODO: test to find min for 64G zns
-    DEV=$(sudo ../nullblk_create 4096 1024) 
+    # Create conventional with 448MiB, minimal size for F2FS metadata
+    DEV=$(sudo ../nullblk_create 512 448) 
     export DEV
     export ZNS
 
     sudo nvme zns reset-zone /dev/${ZNS} -a
     echo mq-deadline | sudo tee /sys/block/${ZNS}/queue/scheduler > /dev/null
-    sudo env "PATH=${PATH}" mkfs.f2fs -f -m -c /dev/${ZNS} /dev/${DEV}
+    sudo env "PATH=${PATH}" mkfs.f2fs -o 10 -f -m -c /dev/${ZNS} /dev/${DEV}
     sudo mkdir -p /mnt/f2fs
     sudo mount -t f2fs /dev/${DEV} ${MOUNT}
     sudo chown -R ${USER} /mnt/f2fs
@@ -41,7 +41,8 @@ mkdir -p ${DIR}
 setup_f2fs ${ZNS}
 
 echo "Inserting F2FS Probes"
-(sudo env "BPFTRACE_MAP_KEYS_MAX=262144" /home/user/src/bpftrace/build/src/bpftrace -I include/f2fs.h ./f2fs-probes.bt ${ZONE_SIZE} -o ${DATA_DIR}/f2fs_data.json -f json) &
+
+(sudo /home/user/src/bpftrace/build/src/bpftrace ./f2fs-probes.bt -o ${DIR}/f2fs_data.json -f json) &
 child=$! 
 
 sudo env "DIR=${DIR}" ${FIO_HOME}/fio --output-format=json --output=${DIR}/gc.json job-fill.fio
@@ -50,6 +51,9 @@ sudo rm ${MOUNT}/gc.1.0 ${MOUNT}/gc.3.0 ${MOUNT}/gc.5.0 ${MOUNT}/gc.7.0
 sudo sync
 sudo env "DIR=${DIR}" ${FIO_HOME}/fio --output-format=json --output=${DIR}/write.json job-write.fio
 
-sudo pkill -SIGINT ${child}
+sudo kill -SIGTERM ${child}
+
+echo "Terminating F2FS Trace"
+sleep 5 # small sleep to let child terminate
 
 cleanup

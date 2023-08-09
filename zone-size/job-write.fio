@@ -1,7 +1,7 @@
 [global]
 name=zns-fio
 directory=/mnt/f2fs
-size=7G
+size=6G
 bs=4K
 ioscheduler=mq-deadline
 group_reporting
@@ -17,8 +17,3 @@ direct=1
 rw=write
 fsync=128
 filename_format=write.$jobnum.0
-percentile_list=50:75:90:95:99:99.9:99.99:99.999:100
-write_bw_log=${DIR}/overwrite_bw_log
-write_lat_log=${DIR}/overwrite_lat_log
-write_iops_log=${DIR}/overwrite_iops_log
-log_avg_msec=1000
