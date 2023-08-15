@@ -1,3 +1,5 @@
+watch -n 1 "cat /sys/kernel/debug/f2fs/status | grep -A7 -i 'gc calls'"
+
 GC calls: 685 (BG: 2)
   - data segments : 12721 (167)
   - node segments : 124 (0)
@@ -8,6 +10,7 @@ Try to move 6348681 blocks (BG: 83910)
   - node blocks : 8407 (0)
 BG skip : IO: 61, Other: 3
 
+watch -n 1 "cat /sys/kernel/debug/f2fs/status | grep -A23 -i 'utilization'"
 
 Utilization: 88% (11873602 valid blocks, 0 discard blocks)
   - Node: 13117 (Inode: 873, Other: 12244)
