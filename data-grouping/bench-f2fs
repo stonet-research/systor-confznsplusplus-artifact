@@ -1,0 +1,57 @@
+#! /bin/bash
+
+set -e
+
+if [ $# != 1 ]; then
+    echo "Usage: $0 <ZNS device (e.g., nvme0n2)>"
+    exit 1
+fi
+
+setup_f2fs() {
+    ZNS=$1
+    MOUNT="/mnt/f2fs"
+
+    # Scale the conventional device with the minimum possible size for respective zone sizes:
+    # zone size     | Conventional Device Size
+    # 64MiB         | 448MiB
+    # 256MiB        | 950MiB
+    # 2GiB          | 4544MiB
+    DEV=$(sudo ../nullblk_create 512 950) 
+    export DEV
+    export ZNS
+
+    sudo nvme zns reset-zone /dev/${ZNS} -a
+    echo mq-deadline | sudo tee /sys/block/${ZNS}/queue/scheduler > /dev/null
+    sudo env "PATH=${PATH}" mkfs.f2fs -f -m -c /dev/${ZNS} /dev/${DEV}
+    sudo mkdir -p /mnt/f2fs
+    sudo mount -t f2fs /dev/${DEV} ${MOUNT}
+    sudo chown -R ${USER} /mnt/f2fs
+}
+
+cleanup() {
+    sudo sync # avoid errors on busy unmount
+    sudo umount /dev/${DEV}
+    DEV_ID=$(echo "${DEV: -1}")
+    sudo ../nullblk_delete $DEV_ID
+}
+
+ZNS=$1
+export ZNS
+
+DIR=data
+
+mkdir -p ${DIR}
+
+setup_f2fs ${ZNS}
+
+#echo "Inserting F2FS Probes"
+
+#(sudo /home/user/src/bpftrace/build/src/bpftrace ./f2fs-probes.bt -o ${DIR}/f2fs_data.json -f json) &
+#child=$! 
+
+#sudo kill -SIGTERM ${child}
+
+#echo "Terminating F2FS Trace"
+#sleep 5 # small sleep to let child terminate
+
+#cleanup

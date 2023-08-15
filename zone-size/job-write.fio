@@ -8,12 +8,10 @@ group_reporting
 thread=1
 
 [write]
-stonewall
-numjobs=4
 ioengine=psync
-iodepth=1
-write_hint=short
 direct=1
+iodepth=1
+numjobs=4
+filename_format=write.$jobnum.$filenum
+write_hint=short
 rw=write
-fsync=128
-filename_format=write.$jobnum.0
