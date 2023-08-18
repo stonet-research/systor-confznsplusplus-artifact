@@ -22,9 +22,9 @@ setup_f2fs() {
 
     sudo nvme zns reset-zone /dev/${ZNS} -a
     echo mq-deadline | sudo tee /sys/block/${ZNS}/queue/scheduler > /dev/null
-    sudo env "PATH=${PATH}" mkfs.f2fs -o hot_data_streams=2 -o warm_data_streams=5 -o cold_data_streams=6 -o stream_policy-=amfs -f -m -c /dev/${ZNS} /dev/${DEV}
+    sudo env "PATH=${PATH}" mkfs.f2fs -f -m -c /dev/${ZNS} /dev/${DEV}
     sudo mkdir -p /mnt/f2fs
-    sudo mount -t f2fs /dev/${DEV} ${MOUNT}
+    sudo mount -t f2fs -o hot_data_streams=1 -o warm_data_streams=5 -o cold_data_streams=6 -o stream_policy=spf /dev/${DEV} ${MOUNT}
     sudo chown -R ${USER} /mnt/f2fs
 }
 
