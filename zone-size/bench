@@ -11,8 +11,13 @@ setup_f2fs() {
     ZNS=$1
     MOUNT="/mnt/f2fs"
 
-    # Create conventional with 448MiB, minimal size for F2FS metadata
-    DEV=$(sudo ../nullblk_create 512 448) 
+    # Scale the conventional device with the minimum possible size for respective zone sizes:
+    # zone size     | Conventional Device Size
+    # 64MiB         | 448MiB
+    # 256MiB        | 950MiB
+    # 512MiB        | 1472MiB
+    # 2GiB          | 4544MiB
+    DEV=$(sudo ../nullblk_create 512 1472) 
     export DEV
     export ZNS
 

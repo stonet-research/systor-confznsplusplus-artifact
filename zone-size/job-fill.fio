@@ -1,7 +1,7 @@
 [global]
 name=zns-fio
 directory=/mnt/f2fs
-size=6G
+size=5G
 bs=4K
 ioscheduler=mq-deadline
 group_reporting
