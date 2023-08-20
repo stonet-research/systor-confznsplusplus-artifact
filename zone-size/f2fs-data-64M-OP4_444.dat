@@ -1,0 +1,83 @@
+
+=====[ partition info(nullb0). #0, RW, CP: Good]=====
+[SBI: fs_dirty]
+[SB: 1] [CP: 2] [SIT: 4] [NAT: 116] [SSA: 70] [MAIN: 32768(OverProv:3076 Resv:1697)]
+
+Current Time Sec: 10356 / Mounted Time Sec: 7881
+
+Utilization: 69% (10496082 valid blocks, 0 discard blocks)
+  - Node: 10321 (Inode: 9, Other: 10312)
+  - Data: 10485761
+  - Inline_xattr Inode: 8
+  - Inline_data Inode: 0
+  - Inline_dentry Inode: 0
+  - Compressed Inode: 0, Blocks: 0
+  - Orphan/Append/Update Inode: 0, 0, 0
+
+Main area: 32768 segs, 1024 secs 1024 zones
+    TYPE            segno    secno   zoneno  dirty_seg   full_seg  valid_blk
+  - COLD   data:     8593      268      268          1        721     369605
+  - WARM   data:      128        4        4          0          0          0
+  - HOT    data:     3673      114      114      17574      12596    8703919
+  - Dir   dnode:        0        0        0          1          0          1
+  - File  dnode:    24250      757      757         27          0      10304
+  - Indir nodes:       64        2        2          1          0         16
+  - Pinned file:       -1       -1       -1
+  - ATGC   data:       -1       -1       -1
+
+  - Valid: 13323
+  - Dirty: 17599
+  - Prefree: 0
+  - Free: 1846 (54)
+
+CP calls: 2511 (BG: 7)
+  - cp blocks : 7807
+  - sit blocks : 10930
+  - nat blocks : 4608
+  - ssa blocks : 63499
+CP merge (Queued:    0, Issued:    9, Total:    9, Cur time:    0(ms), Peak time:  110(ms))
+GC calls: 2037 (BG: 0)
+  - data segments : 2912 (0)
+  - node segments : 6339 (0)
+  - Reclaimed segs : Normal (9251), Idle CB (0), Idle Greedy (0), Idle AT (0), Urgent High (0), Urgent Mid (0), Urgent Low (0)
+Try to move 383628 blocks (BG: 0)
+  - data blocks : 369605 (0)
+  - node blocks : 14023 (0)
+BG skip : IO: 40, Other: 0
+
+Extent Cache:
+  - Hit Count: L1-1:0 L1-2:0 L2:125
+  - Hit Ratio: 100% (125 / 125)
+  - Inner Struct Count: tree: 8(0), node: 550
+
+Balancing F2FS Async:
+  - DIO (R:    0, W:    0)
+  - IO_R (Data:    0, Node:    0, Meta:    0
+  - IO_W (CP:    0, Data: 18023, Flush: (   0 10485752    1), Discard: (   0    0)) cmd:    0 undiscard:   0
+  - atomic IO:    0 (Max.    0)
+  - compress:    0, hit:       0
+  - nodes:   14 in 10321
+  - dents:    0 in dirs:   0 (   0)
+  - datas: 1412238 in files:   0
+  - quota datas:    0 in quota files:   0
+  - meta:   25 in 20945
+  - imeta:    0
+  - fsync mark:    0
+  - NATs:         0/     8891
+  - SITs:        26/    32768
+  - free_nids:      1051/ 13501356
+  - alloc_nids:         0
+
+Distribution of User Blocks: [ valid | invalid | free ]
+  [-----------------------------|---------------------|]
+
+IPU: 0 blocks
+SSR: 0 blocks in 0 segments
+LFS: 32525220 blocks in 63524 segments
+
+BDF: 59, avg. vblocks: 4233
+
+Memory: 134851 KB
+  - static: 9441 KB
+  - cached: 345 KB
+  - paged : 125064 KB
