@@ -18,7 +18,7 @@ setup_f2fs() {
 
     sudo nvme zns reset-zone /dev/${ZNS} -a
     echo mq-deadline | sudo tee /sys/block/${ZNS}/queue/scheduler > /dev/null
-    sudo env "PATH=${PATH}" mkfs.f2fs -o 10 -f -m -c /dev/${ZNS} /dev/${DEV}
+    sudo env "PATH=${PATH}" mkfs.f2fs -f -m -c /dev/${ZNS} /dev/${DEV}
     sudo mkdir -p /mnt/f2fs
     sudo mount -t f2fs /dev/${DEV} ${MOUNT}
     sudo chown -R ${USER} /mnt/f2fs
@@ -40,10 +40,10 @@ mkdir -p ${DIR}
 
 setup_f2fs ${ZNS}
 
-echo "Inserting F2FS Probes"
+# echo "Inserting F2FS Probes"
 
-(sudo /home/user/src/bpftrace/build/src/bpftrace ./f2fs-probes.bt -o ${DIR}/f2fs_data.json -f json) &
-child=$! 
+# (sudo /home/user/src/bpftrace/build/src/bpftrace ./f2fs-probes.bt -o ${DIR}/f2fs_data.json -f json) &
+# child=$! 
 
 sudo env "DIR=${DIR}" ${FIO_HOME}/fio --output-format=json --output=${DIR}/gc.json job-fill.fio
 # Deleting four files so we have space to write four new files
@@ -51,9 +51,16 @@ sudo rm ${MOUNT}/gc.1.0 ${MOUNT}/gc.3.0 ${MOUNT}/gc.5.0 ${MOUNT}/gc.7.0
 sudo sync
 sudo env "DIR=${DIR}" ${FIO_HOME}/fio --output-format=json --output=${DIR}/write.json job-write.fio
 
-sudo kill -SIGTERM ${child}
+# Delete 2 of the remaining first written files that should have moved to cold
+sudo rm ${MOUNT}/gc.0.0 ${MOUNT}/gc.2.0
+sudo sync
+sudo env "DIR=${DIR}" ${FIO_HOME}/fio --output-format=json --output=${DIR}/overwrite.json job-overwrite.fio
 
-echo "Terminating F2FS Trace"
-sleep 5 # small sleep to let child terminate
+# sudo kill -SIGTERM ${child}
 
-cleanup
+# echo "Terminating F2FS Trace"
+# sleep 5 # small sleep to let child terminate
+
+sudo cat /sys/kernel/debug/f2fs/status &> f2fs-data.dat
+
+# cleanup
