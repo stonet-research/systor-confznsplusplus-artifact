@@ -3,7 +3,7 @@ name=loaded-reset
 filename=/dev/${DEV}
 ioengine=io_uring_cmd 
 sqthread_poll=1
-size=${SIZE}z
+size=${FILL_SIZE}z
 bs=64K
 group_reporting
 zonemode=zbd
@@ -18,4 +18,15 @@ rw=write
 stonewall
 rw=randtrim
 iodepth=1
+numjobs=${TRIM_IODEPTH}
 bs=${BS}
+flow_id=1
+flow=${TRIM_FLOW}
+
+[write]
+rw=randwrite
+iodepth=1
+size=${WRITE_SIZE}z
+offset=${FILL_SIZE}z
+flow_id=1
+flow=${WRITE_FLOW}

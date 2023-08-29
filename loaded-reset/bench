@@ -1,7 +1,8 @@
 #! /bin/bash
 
+# TODO: do we also ant reads? 
+
 set -e
-set -x
 
 if [ $# != 1 ]; then
     echo "Usage: $0 <ZNS device (e.g., nvme0n2)>"
@@ -13,10 +14,33 @@ DEV_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
 DEV_ZONE_SIZE=$(cat /sys/block/$1/queue/chunk_sectors)
 DEV_ZONES=$(cat /sys/block/$1/queue/nr_zones)
 
-# fio options for specific ZNS
+mkdir -p data
+
+##################################
+## fio options for specific ZNS ##
+##################################
 BS=$(echo "${DEV_SECT_SIZE} * ${DEV_ZONE_SIZE}" | bc)
+FILL_SIZE=$(echo "${DEV_ZONES} - 1" | bc) # All but 1 zone for zone resets
 
+# 1 zone for writes, as lowest reset rate is 50% = 1 write for every 1 reset 
+# issued which for 1000 zones is only 64K * 1023 = ~64MiB written (64K below). 
+# This is the smalles zone size we will have, so we do not need a lot of space 
+# for concurrent writing
+WRITE_SIZE=1 
+FILL_DIST=$(echo "${FILL_SIZE} * ${DEV_ZONE_SIZE} * ${DEV_SECT_SIZE}" | bc)
+WRITE_DIST=$(echo "1 * ${DEV_ZONE_SIZE} * ${DEV_SECT_SIZE}" | bc)
 
-# TODO: remove hardcoded paths
-# TODO: other vars such as device size, etc.
-sudo env "DEV=${DEV}" "BS=${BS}" "SIZE=${DEV_ZONES}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data.json job.fio
+TRIM_IODEPTH=(1 2 4 8 16 32)
+TRIM_FLOW=(100 99 90 75 50)
+
+for trim_iodepth in ${TRIM_IODEPTH[@]}; do
+    for trim_flow in ${TRIM_FLOW[@]}; do
+        write_flow=$((100 - ${trim_flow}))
+        echo "Benchmarking TRIM_IODEPTH ${trim_iodepth}: <TRIM_FLOW ${trim_flow} - WRITE_FLOW ${write_flow}>"
+        sudo nvme zns reset-zone /dev/$1 -a
+
+        # TODO: remove hardcoded paths
+        sudo env "DEV=${DEV}" "BS=${BS}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=${WRITE_SIZE}" "FILL_DIST=${FILL_DIST}" "WRITE_DIST=${WRITE_DIST}" "WRITE_FLOW=${write_flow}" "TRIM_FLOW=${trim_flow}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
+
+    done
+done
