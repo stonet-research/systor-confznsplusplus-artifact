@@ -8,6 +8,7 @@ bs=64K
 group_reporting
 zonemode=zbd
 thread=1
+lat_percentiles=1
 
 [fill-prep]
 iodepth=1

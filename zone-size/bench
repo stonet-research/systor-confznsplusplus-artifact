@@ -25,7 +25,7 @@ setup_f2fs() {
     echo mq-deadline | sudo tee /sys/block/${ZNS}/queue/scheduler > /dev/null
     sudo env "PATH=${PATH}" mkfs.f2fs -f -m -c /dev/${ZNS} /dev/${DEV}
     sudo mkdir -p /mnt/f2fs
-    sudo mount -t f2fs /dev/${DEV} ${MOUNT}
+    sudo mount -t f2fs -o hot_data_streams=10 /dev/${DEV} ${MOUNT}
     sudo chown -R ${USER} /mnt/f2fs
 }
 
