@@ -1,0 +1,18 @@
+#! /bin/bash
+
+set -e
+set -x
+
+if [ $# != 1 ]; then
+    echo "Usage: $0 <ZNS device (e.g., nvme0n2)>"
+    exit 1
+fi
+
+DEV=$(echo $1 | sed 's/vme/g/g')
+DEV_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
+DEV_ZONE_SIZE=$(cat /sys/block/$1/queue/chunk_sectors)
+BS=$(echo "${DEV_SECT_SIZE} * ${DEV_ZONE_SIZE}" | bc)
+
+# TODO: remove hardcoded paths
+# TODO: other vars such as device size, etc.
+sudo env "DEV=${DEV}" "BS=${BS}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data.json job.fio
