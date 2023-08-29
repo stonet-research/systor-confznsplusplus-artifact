@@ -40,7 +40,7 @@ for trim_iodepth in ${TRIM_IODEPTH[@]}; do
         sudo nvme zns reset-zone /dev/$1 -a
 
         # TODO: remove hardcoded paths
-        if i[[ ${write_flow} -eq 0 ]] then
+        if [[ ${write_flow} -eq 0 ]]; then
             # With 0 write flow we want to disable the concurrent wirte workload
             sudo env "DEV=${DEV}" "BS=${BS}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=0" "FILL_DIST=${FILL_DIST}" "WRITE_DIST=0" "WRITE_FLOW=0" "TRIM_FLOW=${trim_flow}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
         else
