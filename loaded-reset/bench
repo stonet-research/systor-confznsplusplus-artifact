@@ -20,18 +20,18 @@ mkdir -p data
 ## fio options for specific ZNS ##
 ##################################
 BS=$(echo "${DEV_SECT_SIZE} * ${DEV_ZONE_SIZE}" | bc)
-FILL_SIZE=$(echo "${DEV_ZONES} - 1" | bc) # All but 1 zone for zone resets
-
 # 1 zone for writes, as lowest reset rate is 50% = 1 write for every 1 reset 
 # issued which for 1000 zones is only 64K * 1023 = ~64MiB written (64K below). 
 # This is the smalles zone size we will have, so we do not need a lot of space 
 # for concurrent writing
 WRITE_SIZE=1 
-FILL_DIST=$(echo "${FILL_SIZE} * ${DEV_ZONE_SIZE} * ${DEV_SECT_SIZE}" | bc)
-WRITE_DIST=$(echo "1 * ${DEV_ZONE_SIZE} * ${DEV_SECT_SIZE}" | bc)
+FILL_SIZE=$(echo "${DEV_ZONES} - ${WRITE_SIZE}" | bc) # All but the write zone
 
-TRIM_IODEPTH=(1 2 4 8 16 32)
-TRIM_FLOW=(100 99 90 75 50)
+FILL_DIST=$(echo "${FILL_SIZE} * ${DEV_ZONE_SIZE} * ${DEV_SECT_SIZE}" | bc)
+WRITE_DIST=$(echo "${WRITE_SIZE} * ${DEV_ZONE_SIZE} * ${DEV_SECT_SIZE}" | bc)
+
+TRIM_IODEPTH=(1 2 4 8 16 32 64 128)
+TRIM_FLOW=(100 99 95 90 75 50)
 
 for trim_iodepth in ${TRIM_IODEPTH[@]}; do
     for trim_flow in ${TRIM_FLOW[@]}; do
