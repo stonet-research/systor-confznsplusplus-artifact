@@ -11,8 +11,12 @@ fi
 DEV=$(echo $1 | sed 's/vme/g/g')
 DEV_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
 DEV_ZONE_SIZE=$(cat /sys/block/$1/queue/chunk_sectors)
+DEV_ZONES=$(cat /sys/block/$1/queue/nr_zones)
+
+# fio options for specific ZNS
 BS=$(echo "${DEV_SECT_SIZE} * ${DEV_ZONE_SIZE}" | bc)
+
 
 # TODO: remove hardcoded paths
 # TODO: other vars such as device size, etc.
-sudo env "DEV=${DEV}" "BS=${BS}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data.json job.fio
+sudo env "DEV=${DEV}" "BS=${BS}" "SIZE=${DEV_ZONES}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data.json job.fio

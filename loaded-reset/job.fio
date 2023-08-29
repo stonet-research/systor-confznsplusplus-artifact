@@ -1,8 +1,8 @@
 [global]
 name=loaded-reset
 filename=/dev/${DEV}
-size=1G
-bs=4K
+size=${SIZE}z
+bs=64K
 ioscheduler=mq-deadline
 group_reporting
 zonemode=zbd
@@ -10,12 +10,12 @@ thread=1
 
 [fill-prep]
 ioengine=io_uring_cmd 
-iodepth=128
+iodepth=1
 rw=write
 
 [trim]
 stonewall
 ioengine=io_uring_cmd 
 rw=randtrim
-iodepth=16
+iodepth=1
 bs=${BS}

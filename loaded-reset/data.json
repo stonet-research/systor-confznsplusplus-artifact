@@ -1,14 +1,12 @@
-fio: time_based requires a runtime/timeout setting
-fio: time_based requires a runtime/timeout setting
 {
   "fio version" : "fio-3.35",
-  "timestamp" : 1693313256,
-  "timestamp_ms" : 1693313256596,
-  "time" : "Tue Aug 29 12:47:36 2023",
+  "timestamp" : 1693317251,
+  "timestamp_ms" : 1693317251721,
+  "time" : "Tue Aug 29 13:54:11 2023",
   "global options" : {
     "name" : "loaded-reset",
-    "size" : "1G",
-    "bs" : "4K",
+    "size" : "16z",
+    "bs" : "64K",
     "ioscheduler" : "mq-deadline",
     "zonemode" : "zbd",
     "thread" : "1",
@@ -20,10 +18,10 @@ fio: time_based requires a runtime/timeout setting
       "groupid" : 0,
       "error" : 0,
       "eta" : 0,
-      "elapsed" : 30,
+      "elapsed" : 11,
       "job options" : {
         "ioengine" : "io_uring_cmd",
-        "iodepth" : "128",
+        "iodepth" : "1",
         "rw" : "write"
       },
       "read" : {
@@ -72,67 +70,67 @@ fio: time_based requires a runtime/timeout setting
       "write" : {
         "io_bytes" : 1073741824,
         "io_kbytes" : 1048576,
-        "bw_bytes" : 36377064,
-        "bw" : 35524,
-        "iops" : 8881.119355,
-        "runtime" : 29517,
-        "total_ios" : 262144,
+        "bw_bytes" : 111038451,
+        "bw" : 108435,
+        "iops" : 1694.312306,
+        "runtime" : 9670,
+        "total_ios" : 16384,
         "short_ios" : 0,
         "drop_ios" : 0,
         "slat_ns" : {
-          "min" : 4892,
-          "max" : 665228,
-          "mean" : 9418.286751,
-          "stddev" : 6415.673585,
-          "N" : 262144
+          "min" : 12753,
+          "max" : 1095837,
+          "mean" : 26386.046387,
+          "stddev" : 9881.125838,
+          "N" : 16384
         },
         "clat_ns" : {
-          "min" : 468199,
-          "max" : 29537792,
-          "mean" : 14327413.821503,
-          "stddev" : 929831.727912,
-          "N" : 262144,
+          "min" : 407633,
+          "max" : 817311,
+          "mean" : 561608.906921,
+          "stddev" : 9207.576079,
+          "N" : 16384,
           "percentile" : {
-            "1.000000" : 13434880,
-            "5.000000" : 13434880,
-            "10.000000" : 13828096,
-            "20.000000" : 14090240,
-            "30.000000" : 14090240,
-            "40.000000" : 14221312,
-            "50.000000" : 14352384,
-            "60.000000" : 14483456,
-            "70.000000" : 14745600,
-            "80.000000" : 14876672,
-            "90.000000" : 15138816,
-            "95.000000" : 15138816,
-            "99.000000" : 15138816,
-            "99.500000" : 15138816,
-            "99.900000" : 15794176,
-            "99.950000" : 17432576,
-            "99.990000" : 26345472
+            "1.000000" : 552960,
+            "5.000000" : 552960,
+            "10.000000" : 561152,
+            "20.000000" : 561152,
+            "30.000000" : 561152,
+            "40.000000" : 561152,
+            "50.000000" : 561152,
+            "60.000000" : 561152,
+            "70.000000" : 561152,
+            "80.000000" : 561152,
+            "90.000000" : 561152,
+            "95.000000" : 569344,
+            "99.000000" : 585728,
+            "99.500000" : 602112,
+            "99.900000" : 684032,
+            "99.950000" : 684032,
+            "99.990000" : 724992
           }
         },
         "lat_ns" : {
-          "min" : 481575,
-          "max" : 29545213,
-          "mean" : 14336832.108253,
-          "stddev" : 929679.649678,
-          "N" : 262144
+          "min" : 558346,
+          "max" : 1651386,
+          "mean" : 587994.953308,
+          "stddev" : 12755.055880,
+          "N" : 16384
         },
-        "bw_min" : 35376,
-        "bw_max" : 36544,
+        "bw_min" : 107648,
+        "bw_max" : 109018,
         "bw_agg" : 100.000000,
-        "bw_mean" : 35549.000000,
-        "bw_dev" : 153.389540,
-        "bw_samples" : 58,
-        "iops_min" : 8844,
-        "iops_max" : 9136,
-        "iops_mean" : 8887.017241,
-        "iops_stddev" : 38.359103,
-        "iops_samples" : 58
+        "bw_mean" : 108519.631579,
+        "bw_dev" : 291.197186,
+        "bw_samples" : 19,
+        "iops_min" : 1682,
+        "iops_max" : 1703,
+        "iops_mean" : 1695.473684,
+        "iops_stddev" : 4.538336,
+        "iops_samples" : 19
       },
       "ZNS Reset" : {
-        "total_zone_resets" : 16,
+        "total_zone_resets" : 0,
         "io_bytes" : 0,
         "io_kbytes" : 0,
         "bw_bytes" : 0,
@@ -185,20 +183,20 @@ fio: time_based requires a runtime/timeout setting
           "N" : 0
         }
       },
-      "job_runtime" : 29516,
-      "usr_cpu" : 2.290283,
-      "sys_cpu" : 12.152731,
-      "ctx" : 258053,
+      "job_runtime" : 9669,
+      "usr_cpu" : 1.427242,
+      "sys_cpu" : 5.905471,
+      "ctx" : 16386,
       "majf" : 0,
       "minf" : 0,
       "iodepth_level" : {
-        "1" : 0.100000,
-        "2" : 0.100000,
-        "4" : 0.100000,
-        "8" : 0.100000,
-        "16" : 0.100000,
-        "32" : 0.195312,
-        ">=64" : 99.615479
+        "1" : 100.000000,
+        "2" : 0.000000,
+        "4" : 0.000000,
+        "8" : 0.000000,
+        "16" : 0.000000,
+        "32" : 0.000000,
+        ">=64" : 0.000000
       },
       "iodepth_submit" : {
         "0" : 0.000000,
@@ -211,12 +209,12 @@ fio: time_based requires a runtime/timeout setting
       },
       "iodepth_complete" : {
         "0" : 0.000000,
-        "4" : 99.999618,
+        "4" : 100.000000,
         "8" : 0.000000,
         "16" : 0.000000,
         "32" : 0.000000,
         "64" : 0.000000,
-        ">=64" : 0.100000
+        ">=64" : 0.000000
       },
       "latency_ns" : {
         "2" : 0.000000,
@@ -238,16 +236,16 @@ fio: time_based requires a runtime/timeout setting
         "50" : 0.000000,
         "100" : 0.000000,
         "250" : 0.000000,
-        "500" : 0.010000,
-        "750" : 0.010000,
-        "1000" : 0.017548
+        "500" : 0.024414,
+        "750" : 99.969482,
+        "1000" : 0.010000
       },
       "latency_ms" : {
-        "2" : 0.062943,
-        "4" : 0.159454,
-        "10" : 0.398254,
-        "20" : 99.319839,
-        "50" : 0.031281,
+        "2" : 0.000000,
+        "4" : 0.000000,
+        "10" : 0.000000,
+        "20" : 0.000000,
+        "50" : 0.000000,
         "100" : 0.000000,
         "250" : 0.000000,
         "500" : 0.000000,
@@ -256,7 +254,7 @@ fio: time_based requires a runtime/timeout setting
         "2000" : 0.000000,
         ">=2000" : 0.000000
       },
-      "latency_depth" : 128,
+      "latency_depth" : 1,
       "latency_target" : 0,
       "latency_percentile" : 100.000000,
       "latency_window" : 0
@@ -266,11 +264,11 @@ fio: time_based requires a runtime/timeout setting
       "groupid" : 1,
       "error" : 0,
       "eta" : 0,
-      "elapsed" : 30,
+      "elapsed" : 11,
       "job options" : {
         "ioengine" : "io_uring_cmd",
         "rw" : "randtrim",
-        "iodepth" : "16",
+        "iodepth" : "1",
         "bs" : "67108864"
       },
       "read" : {
@@ -363,10 +361,10 @@ fio: time_based requires a runtime/timeout setting
         "total_zone_resets" : 16,
         "io_bytes" : 1073741824,
         "io_kbytes" : 1048576,
-        "bw_bytes" : 30678337828,
-        "bw" : 29959314,
-        "iops" : 457.142857,
-        "runtime" : 35,
+        "bw_bytes" : 31580641882,
+        "bw" : 30840470,
+        "iops" : 470.588235,
+        "runtime" : 34,
         "total_ios" : 16,
         "short_ios" : 0,
         "drop_ios" : 0,
@@ -378,10 +376,10 @@ fio: time_based requires a runtime/timeout setting
           "N" : 0
         },
         "clat_ns" : {
-          "min" : 184468823509,
-          "max" : 184500650707,
-          "mean" : 184484671966.500000,
-          "stddev" : 10109551.981569,
+          "min" : 717598438535,
+          "max" : 717629683462,
+          "mean" : 717614051710.500000,
+          "stddev" : 9902020.123859,
           "N" : 16,
           "percentile" : {
             "1.000000" : 17112760320,
@@ -404,10 +402,10 @@ fio: time_based requires a runtime/timeout setting
           }
         },
         "lat_ns" : {
-          "min" : 2055555,
-          "max" : 2161479,
-          "mean" : 2117043.312500,
-          "stddev" : 27840.967171,
+          "min" : 2038639,
+          "max" : 2116932,
+          "mean" : 2078118.812500,
+          "stddev" : 26988.075464,
           "N" : 16
         },
         "bw_min" : 0,
@@ -432,9 +430,9 @@ fio: time_based requires a runtime/timeout setting
           "N" : 0
         }
       },
-      "job_runtime" : 34,
-      "usr_cpu" : 0.000000,
-      "sys_cpu" : 2.941176,
+      "job_runtime" : 33,
+      "usr_cpu" : 3.030303,
+      "sys_cpu" : 0.000000,
       "ctx" : 16,
       "majf" : 0,
       "minf" : 0,
@@ -503,7 +501,7 @@ fio: time_based requires a runtime/timeout setting
         "2000" : 0.000000,
         ">=2000" : 100.000000
       },
-      "latency_depth" : 16,
+      "latency_depth" : 1,
       "latency_target" : 0,
       "latency_percentile" : 100.000000,
       "latency_window" : 0
