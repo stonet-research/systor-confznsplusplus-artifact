@@ -11,7 +11,8 @@ fi
 
 DEV=$(echo $1 | sed 's/vme/g/g')
 DEV_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
-DEV_ZONE_SIZE=$(cat /sys/block/$1/queue/chunk_sectors)
+DEV_ZONE_SIZE_BLOCKS=$(cat /sys/block/$1/queue/chunk_sectors)
+DEV_ZONE_SIZE=$(echo "${DEV_ZONE_SIZE_BLOCKS} * 512" | bc)
 DEV_ZONES=$(cat /sys/block/$1/queue/nr_zones)
 
 mkdir -p data
@@ -44,9 +45,9 @@ for trim_iodepth in ${TRIM_IODEPTH[@]}; do
         # TODO: remove hardcoded paths
         if [[ ${write_flow} -eq 0 ]]; then
             # With 0 write flow we want to disable the concurrent write workload
-            sudo env "DEV=${DEV}" "BS=${BS}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=0" "FILL_DIST=${FILL_DIST}" "WRITE_DIST=0" "WRITE_FLOW=0" "TRIM_FLOW=${trim_flow}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
+            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=0" "FILL_DIST=${FILL_DIST}" "WRITE_DIST=0" "WRITE_FLOW=0" "TRIM_FLOW=${trim_flow}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
         else
-            sudo env "DEV=${DEV}" "BS=${BS}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=${WRITE_SIZE}" "FILL_DIST=${FILL_DIST}" "WRITE_DIST=${WRITE_DIST}" "WRITE_FLOW=${write_flow}" "TRIM_FLOW=${trim_flow}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
+            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=${WRITE_SIZE}" "FILL_DIST=${FILL_DIST}" "WRITE_DIST=${WRITE_DIST}" "WRITE_FLOW=${write_flow}" "TRIM_FLOW=${trim_flow}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
         fi
     done
 done

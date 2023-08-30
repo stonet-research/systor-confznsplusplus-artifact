@@ -25,11 +25,14 @@ numjobs=${TRIM_IODEPTH}
 bs=${BS}
 flow_id=1
 flow=${TRIM_FLOW}
+exitall
+exit_what=stonewall
 
 [write]
 rw=randwrite
 iodepth=1
 size=${WRITE_SIZE}z
 offset=${FILL_SIZE}z
+bs=4K
 flow_id=1
 flow=${WRITE_FLOW}
