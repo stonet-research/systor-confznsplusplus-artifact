@@ -32,6 +32,7 @@ def parse_fio_data(data_path, data):
                         temp.write(line)
                         temp.writelines(rows)
                     break
+
         with open(os.path.join(os.getcwd(), "temp.json"), 'r') as temp:
             data[file] = dict()
             data[file] = json.load(temp)
@@ -45,12 +46,14 @@ if __name__ == "__main__":
     data = dict()
     parse_fio_data(f"{file_path}/data", data)
 
-    queue_depths = [1, 2, 4, 8, 16]
+    queue_depths = [1, 2, 4, 8, 16, 32, 64, 128]
 
     reset100 = [None] * len(queue_depths)
     reset100_iops = [None] * len(queue_depths)
     reset99 = [None] * len(queue_depths)
     reset99_iops = [None] * len(queue_depths)
+    reset95 = [None] * len(queue_depths)
+    reset95_iops = [None] * len(queue_depths)
     reset90 = [None] * len(queue_depths)
     reset90_iops = [None] * len(queue_depths)
     reset75 = [None] * len(queue_depths)
@@ -66,6 +69,9 @@ if __name__ == "__main__":
         elif 'tflow_99' in key:
             reset99[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
             reset99_iops[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
+        elif 'tflow_95' in key:
+            reset95[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
+            reset95_iops[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
         elif 'tflow_90' in key:
             reset90[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
             reset90_iops[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
@@ -79,10 +85,11 @@ if __name__ == "__main__":
     fig, ax = plt.subplots()
 
     ax.plot(reset100_iops, reset100, markersize=6, marker='x', label="100% reset")
-    ax.plot(reset99_iops, reset99, markersize=6, marker='o', label="99%  reset")
-    ax.plot(reset90_iops, reset90, markersize=6, marker=',', label="90%  reset")
-    ax.plot(reset75_iops, reset75, markersize=6, marker='+', label="75%  reset")
-    ax.plot(reset50_iops, reset50, markersize=6, marker='.', label="50%  reset")
+    ax.plot(reset99_iops, reset99, markersize=6, marker='o', label="  99% reset")
+    ax.plot(reset95_iops, reset95, markersize=6, marker='*', label="  95% reset")
+    ax.plot(reset90_iops, reset90, markersize=6, marker='<', label="  90% reset")
+    ax.plot(reset75_iops, reset75, markersize=6, marker='+', label="  75% reset")
+    ax.plot(reset50_iops, reset50, markersize=6, marker='^', label="  50% reset")
 
     fig.tight_layout()
     ax.grid(which='major', linestyle='dashed', linewidth='1')
@@ -90,6 +97,7 @@ if __name__ == "__main__":
     # ax.legend(loc='best', handles=handles)
     ax.legend(loc='best')
     ax.set_ylim(bottom=0)
+    # ax.set_xlim(left=0)
     ax.set_ylabel("p95 Reset Latency (msec)")
     ax.set_xlabel("Total IOPS")
     plt.savefig(f"{file_path}/loaded_reset_latency.pdf", bbox_inches="tight")
