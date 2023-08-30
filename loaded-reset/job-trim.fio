@@ -23,18 +23,3 @@ rw=randtrim
 iodepth=1
 numjobs=${TRIM_IODEPTH}
 bs=${BS}
-exitall
-exit_what=stonewall
-exec_prerun=sleep 3
-
-[write]
-rw=write
-iodepth=1
-size=${WRITE_SIZE}z
-offset=${FILL_SIZE}z
-offset_increment=${WRITE_SIZE}z
-numjobs=${CONCUR_WRITE}
-bs=64K
-rate=,${WRITE_LIMIT}
-time_based
-runtime=10m

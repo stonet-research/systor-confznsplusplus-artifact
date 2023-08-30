@@ -1,6 +1,7 @@
 #! /bin/bash
 
 # TODO: do we also ant reads? 
+# TODO: remove hardcoded paths
 
 set -e
 
@@ -21,33 +22,35 @@ mkdir -p data
 ## fio options for specific ZNS ##
 ##################################
 BS=$(echo "${DEV_SECT_SIZE} * ${DEV_ZONE_SIZE}" | bc)
-# 4 zone for writes, as lowest reset rate is 50% = 1 write for every 1 reset 
-# issued which for 1000 zones is only 64K * 1023 = ~64MiB written (64K below). 
-# This is the smalles zone size we will have, so we do not need a lot of space 
-# for concurrent writing.
 CONCUR_FILL=4 # concurrent fill jobs to speedup filling
-WRITE_SIZE=${CONCUR_FILL} 
-FILL_SIZE=$(echo "${DEV_ZONES} - ${WRITE_SIZE}" | bc) # All but the write zones
+# Use 90% of the zones for resets and 10% for writes
+FILL_SIZE=$(echo "scale=0; ${DEV_ZONES} * 0.9" | bc | sed 's/\.[0-9]*//g')
+WRITE_ZONES=$(echo "${DEV_ZONES} - ${FILL_SIZE}" | bc) # All but the fill zones
+WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${CONCUR_FILL}" | bc)
 CONCUR_FILL_SIZE=$(echo "scale=0; ${DEV_ZONES} / ${CONCUR_FILL} - 1" | bc)
-
-FILL_DIST=$(echo "${FILL_SIZE} * ${DEV_ZONE_SIZE} * ${DEV_SECT_SIZE}" | bc)
-WRITE_DIST=$(echo "${WRITE_SIZE} * ${DEV_ZONE_SIZE} * ${DEV_SECT_SIZE}" | bc)
 
 TRIM_IODEPTH=(1 2 4 8 16 32 64 128)
 TRIM_FLOW=(100 99 95 90 75 50)
 
+echo "Benchmarking ZNS Device Write BW Rate Limit"
+sudo nvme zns reset-zone /dev/$1 -a
+sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/bw.json job-bw.fio
+
+BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
+echo "Found Max BW for Write Rate Limiting: ${BW} B/sec"
+
 for trim_iodepth in ${TRIM_IODEPTH[@]}; do
     for trim_flow in ${TRIM_FLOW[@]}; do
         write_flow=$((100 - ${trim_flow}))
-        echo "Benchmarking TRIM_IODEPTH ${trim_iodepth}: <TRIM_FLOW ${trim_flow} - WRITE_FLOW ${write_flow}>"
+        echo "Benchmarking TRIM_IODEPTH ${trim_iodepth}: <TRIM_FLOW ${trim_flow} - WRITE_LIMIT ${write_flow}>"
         sudo nvme zns reset-zone /dev/$1 -a
 
-        # TODO: remove hardcoded paths
         if [[ ${write_flow} -eq 0 ]]; then
             # With 0 write flow we want to disable the concurrent write workload
-            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=0" "FILL_DIST=${FILL_DIST}" "WRITE_DIST=0" "WRITE_FLOW=0" "TRIM_FLOW=${trim_flow}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
+            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=0" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job-trim.fio
         else
-            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=${WRITE_SIZE}" "FILL_DIST=${FILL_DIST}" "WRITE_DIST=${WRITE_DIST}" "WRITE_FLOW=${write_flow}" "TRIM_FLOW=${trim_flow}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
+            write_rate_limit=$(echo "scale=2; ${write_flow} / 100  * ${BW} / ${CONCUR_FILL}" | bc)
+            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=${WRITE_SIZE}" "CONCUR_WRITE=${CONCUR_FILL}" "WRITE_LIMIT=${write_rate_limit}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
         fi
     done
 done
