@@ -1,40 +1,8 @@
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
-trim : Saving output of prerun in trim.prerun.txt
 {
   "fio version" : "fio-3.35",
-  "timestamp" : 1693410164,
-  "timestamp_ms" : 1693410164215,
-  "time" : "Wed Aug 30 15:42:44 2023",
+  "timestamp" : 1693409864,
+  "timestamp_ms" : 1693409864505,
+  "time" : "Wed Aug 30 15:37:44 2023",
   "global options" : {
     "name" : "loaded-reset",
     "ioengine" : "io_uring_cmd",
@@ -52,7 +20,7 @@ trim : Saving output of prerun in trim.prerun.txt
       "groupid" : 0,
       "error" : 0,
       "eta" : 0,
-      "elapsed" : 60,
+      "elapsed" : 57,
       "job options" : {
         "iodepth" : "1",
         "rw" : "write",
@@ -104,13 +72,13 @@ trim : Saving output of prerun in trim.prerun.txt
         "iops_samples" : 0
       },
       "write" : {
-        "io_bytes" : 67419308032,
-        "io_kbytes" : 65839168,
-        "bw_bytes" : 1222626770,
-        "bw" : 1193971,
-        "iops" : 18655.804001,
-        "runtime" : 55143,
-        "total_ios" : 1028737,
+        "io_bytes" : 67658711040,
+        "io_kbytes" : 66072960,
+        "bw_bytes" : 1219075874,
+        "bw" : 1190503,
+        "iops" : 18601.621622,
+        "runtime" : 55500,
+        "total_ios" : 1032390,
         "short_ios" : 0,
         "drop_ios" : 0,
         "slat_ns" : {
@@ -121,67 +89,67 @@ trim : Saving output of prerun in trim.prerun.txt
           "N" : 0
         },
         "clat_ns" : {
-          "min" : 17166,
-          "max" : 18430145,
-          "mean" : 212046.225004,
-          "stddev" : 173117.517343,
-          "N" : 1028737,
+          "min" : 41441,
+          "max" : 36666945,
+          "mean" : 212520.677969,
+          "stddev" : 181651.048766,
+          "N" : 1032390,
           "percentile" : {
-            "1.000000" : 55552,
-            "5.000000" : 72192,
+            "1.000000" : 55040,
+            "5.000000" : 71168,
             "10.000000" : 82432,
-            "20.000000" : 103936,
+            "20.000000" : 102912,
             "30.000000" : 124416,
             "40.000000" : 146432,
             "50.000000" : 166912,
             "60.000000" : 195584,
             "70.000000" : 232448,
             "80.000000" : 284672,
-            "90.000000" : 378880,
-            "95.000000" : 489472,
+            "90.000000" : 382976,
+            "95.000000" : 497664,
             "99.000000" : 823296,
-            "99.500000" : 987136,
-            "99.900000" : 2244608,
+            "99.500000" : 978944,
+            "99.900000" : 2179072,
             "99.950000" : 2736128,
-            "99.990000" : 3194880
+            "99.990000" : 3063808
           }
         },
         "lat_ns" : {
-          "min" : 45616,
-          "max" : 18431241,
-          "mean" : 213562.275396,
-          "stddev" : 173959.036698,
-          "N" : 1028737,
+          "min" : 44822,
+          "max" : 36668678,
+          "mean" : 214196.591984,
+          "stddev" : 182608.954154,
+          "N" : 1032390,
           "percentile" : {
-            "1.000000" : 57088,
+            "1.000000" : 56576,
             "5.000000" : 73216,
             "10.000000" : 84480,
             "20.000000" : 104960,
-            "30.000000" : 126464,
+            "30.000000" : 125440,
             "40.000000" : 146432,
             "50.000000" : 168960,
             "60.000000" : 197632,
-            "70.000000" : 232448,
+            "70.000000" : 234496,
             "80.000000" : 284672,
-            "90.000000" : 378880,
-            "95.000000" : 493568,
+            "90.000000" : 382976,
+            "95.000000" : 497664,
             "99.000000" : 823296,
-            "99.500000" : 987136,
-            "99.900000" : 2277376,
+            "99.500000" : 978944,
+            "99.900000" : 2179072,
             "99.950000" : 2736128,
-            "99.990000" : 3194880
+            "99.990000" : 3063808
           }
         },
-        "bw_min" : 1141673,
-        "bw_max" : 1224192,
+        "bw_min" : 1093940,
+        "bw_max" : 1238349,
         "bw_agg" : 100.000000,
-        "bw_mean" : 1194473.609091,
-        "bw_dev" : 3823.325340,
+        "bw_mean" : 1191033.300000,
+        "bw_dev" : 4392.832677,
         "bw_samples" : 440,
-        "iops_min" : 17838,
-        "iops_max" : 19128,
-        "iops_mean" : 18663.309091,
-        "iops_stddev" : 59.699331,
+        "iops_min" : 17091,
+        "iops_max" : 19348,
+        "iops_mean" : 18609.572727,
+        "iops_stddev" : 68.636623,
         "iops_samples" : 440
       },
       "ZNS Reset" : {
@@ -238,10 +206,10 @@ trim : Saving output of prerun in trim.prerun.txt
           "N" : 0
         }
       },
-      "job_runtime" : 220568,
-      "usr_cpu" : 99.997280,
+      "job_runtime" : 221996,
+      "usr_cpu" : 99.995045,
       "sys_cpu" : 0.000000,
-      "ctx" : 245,
+      "ctx" : 294,
       "majf" : 0,
       "minf" : 0,
       "iodepth_level" : {
@@ -287,20 +255,20 @@ trim : Saving output of prerun in trim.prerun.txt
         "2" : 0.000000,
         "4" : 0.000000,
         "10" : 0.000000,
-        "20" : 0.010000,
-        "50" : 0.360636,
-        "100" : 17.801829,
-        "250" : 56.017330,
-        "500" : 21.060582,
-        "750" : 3.407576,
-        "1000" : 0.871943
+        "20" : 0.000000,
+        "50" : 0.400624,
+        "100" : 17.956005,
+        "250" : 55.670435,
+        "500" : 21.063455,
+        "750" : 3.497612,
+        "1000" : 0.958843
       },
       "latency_ms" : {
-        "2" : 0.369968,
-        "4" : 0.109066,
+        "2" : 0.345896,
+        "4" : 0.106161,
         "10" : 0.010000,
-        "20" : 0.010000,
-        "50" : 0.000000,
+        "20" : 0.000000,
+        "50" : 0.010000,
         "100" : 0.000000,
         "250" : 0.000000,
         "500" : 0.000000,
@@ -319,17 +287,13 @@ trim : Saving output of prerun in trim.prerun.txt
       "groupid" : 1,
       "error" : 0,
       "eta" : 0,
-      "elapsed" : 60,
+      "elapsed" : 57,
       "job options" : {
-        "rw" : "write",
+        "rw" : "randtrim",
         "iodepth" : "1",
-        "size" : "1z",
-        "offset" : "57z",
-        "offset_increment" : "1z",
-        "numjobs" : "4",
-        "bs" : "64K",
-        "rate" : ",152436802.12",
-        "runtime" : "10m"
+        "numjobs" : "32",
+        "bs" : "2147483648",
+        "exit_what" : "stonewall"
       },
       "read" : {
         "io_bytes" : 0,
@@ -375,13 +339,13 @@ trim : Saving output of prerun in trim.prerun.txt
         "iops_samples" : 0
       },
       "write" : {
-        "io_bytes" : 1843855360,
-        "io_kbytes" : 1800640,
-        "bw_bytes" : 461194437,
-        "bw" : 450385,
-        "iops" : 7037.268634,
-        "runtime" : 3998,
-        "total_ios" : 28135,
+        "io_bytes" : 0,
+        "io_kbytes" : 0,
+        "bw_bytes" : 0,
+        "bw" : 0,
+        "iops" : 0.000000,
+        "runtime" : 0,
+        "total_ios" : 0,
         "short_ios" : 0,
         "drop_ios" : 0,
         "slat_ns" : {
@@ -392,77 +356,39 @@ trim : Saving output of prerun in trim.prerun.txt
           "N" : 0
         },
         "clat_ns" : {
-          "min" : 43624,
-          "max" : 970618148,
-          "mean" : 194105.989373,
-          "stddev" : 11571255.155226,
-          "N" : 28135,
-          "percentile" : {
-            "1.000000" : 45312,
-            "5.000000" : 45824,
-            "10.000000" : 45824,
-            "20.000000" : 46336,
-            "30.000000" : 46848,
-            "40.000000" : 46848,
-            "50.000000" : 47360,
-            "60.000000" : 48384,
-            "70.000000" : 51456,
-            "80.000000" : 61696,
-            "90.000000" : 63744,
-            "95.000000" : 66048,
-            "99.000000" : 80384,
-            "99.500000" : 166912,
-            "99.900000" : 593920,
-            "99.950000" : 995328,
-            "99.990000" : 968884224
-          }
+          "min" : 0,
+          "max" : 0,
+          "mean" : 0.000000,
+          "stddev" : 0.000000,
+          "N" : 0
         },
         "lat_ns" : {
-          "min" : 45295,
-          "max" : 970622421,
-          "mean" : 196040.909685,
-          "stddev" : 11571273.542783,
-          "N" : 28135,
-          "percentile" : {
-            "1.000000" : 46848,
-            "5.000000" : 47360,
-            "10.000000" : 47360,
-            "20.000000" : 47872,
-            "30.000000" : 48384,
-            "40.000000" : 48896,
-            "50.000000" : 49408,
-            "60.000000" : 50432,
-            "70.000000" : 53504,
-            "80.000000" : 63744,
-            "90.000000" : 66048,
-            "95.000000" : 68096,
-            "99.000000" : 81408,
-            "99.500000" : 168960,
-            "99.900000" : 593920,
-            "99.950000" : 1003520,
-            "99.990000" : 968884224
-          }
+          "min" : 0,
+          "max" : 0,
+          "mean" : 0.000000,
+          "stddev" : 0.000000,
+          "N" : 0
         },
-        "bw_min" : 147584,
-        "bw_max" : 596436,
-        "bw_agg" : 100.000000,
-        "bw_mean" : 531794.095238,
-        "bw_dev" : 46681.635129,
-        "bw_samples" : 27,
-        "iops_min" : 2306,
-        "iops_max" : 9318,
-        "iops_mean" : 8309.095238,
-        "iops_stddev" : 729.377453,
-        "iops_samples" : 27
+        "bw_min" : 0,
+        "bw_max" : 0,
+        "bw_agg" : 0.000000,
+        "bw_mean" : 0.000000,
+        "bw_dev" : 0.000000,
+        "bw_samples" : 0,
+        "iops_min" : 0,
+        "iops_max" : 0,
+        "iops_mean" : 0.000000,
+        "iops_stddev" : 0.000000,
+        "iops_samples" : 0
       },
       "ZNS Reset" : {
-        "total_zone_resets" : 60,
+        "total_zone_resets" : 57,
         "io_bytes" : 122406567936,
         "io_kbytes" : 119537664,
-        "bw_bytes" : 119072536902,
-        "bw" : 116281774,
-        "iops" : 55.447471,
-        "runtime" : 1028,
+        "bw_bytes" : 121314735318,
+        "bw" : 118471421,
+        "iops" : 56.491576,
+        "runtime" : 1009,
         "total_ios" : 57,
         "short_ios" : 0,
         "drop_ios" : 0,
@@ -474,10 +400,10 @@ trim : Saving output of prerun in trim.prerun.txt
           "N" : 0
         },
         "clat_ns" : {
-          "min" : 20048579109119,
-          "max" : 20049519608057,
-          "mean" : 20049046291839.203125,
-          "stddev" : 291428289.938519,
+          "min" : 19748938124756,
+          "max" : 19749882288945,
+          "mean" : 19749413048700.648438,
+          "stddev" : 291928216.486776,
           "N" : 57,
           "percentile" : {
             "1.000000" : 17112760320,
@@ -500,24 +426,24 @@ trim : Saving output of prerun in trim.prerun.txt
           }
         },
         "lat_ns" : {
-          "min" : 23582614,
-          "max" : 493276757,
-          "mean" : 281085428.333333,
-          "stddev" : 124300346.108061,
+          "min" : 18511488,
+          "max" : 492472543,
+          "mean" : 249890159.526316,
+          "stddev" : 111089605.144867,
           "N" : 57,
           "percentile" : {
-            "1.000000" : 23461888,
-            "5.000000" : 69730304,
-            "10.000000" : 74973184,
-            "20.000000" : 143654912,
-            "30.000000" : 212860928,
-            "40.000000" : 283115520,
-            "50.000000" : 283115520,
-            "60.000000" : 350224384,
-            "70.000000" : 354418688,
-            "80.000000" : 396361728,
+            "1.000000" : 18481152,
+            "5.000000" : 67633152,
+            "10.000000" : 70778880,
+            "20.000000" : 141557760,
+            "30.000000" : 210763776,
+            "40.000000" : 212860928,
+            "50.000000" : 270532608,
+            "60.000000" : 283115520,
+            "70.000000" : 287309824,
+            "80.000000" : 354418688,
             "90.000000" : 421527552,
-            "95.000000" : 467664896,
+            "95.000000" : 425721856,
             "99.000000" : 492830720,
             "99.500000" : 492830720,
             "99.900000" : 492830720,
@@ -525,17 +451,17 @@ trim : Saving output of prerun in trim.prerun.txt
             "99.990000" : 492830720
           }
         },
-        "bw_min" : 121668469,
-        "bw_max" : 146859475,
+        "bw_min" : 121634948,
+        "bw_max" : 138504553,
         "bw_agg" : 100.000000,
-        "bw_mean" : 134263972.000000,
-        "bw_dev" : 1325693.072554,
-        "bw_samples" : 41,
-        "iops_min" : 57,
-        "iops_max" : 70,
-        "iops_mean" : 63.500000,
-        "iops_stddev" : 0.642262,
-        "iops_samples" : 41
+        "bw_mean" : 130069750.500000,
+        "bw_dev" : 1194720.391611,
+        "bw_samples" : 38,
+        "iops_min" : 55,
+        "iops_max" : 65,
+        "iops_mean" : 60.000000,
+        "iops_stddev" : 0.636715,
+        "iops_samples" : 38
       },
       "sync" : {
         "total_ios" : 0,
@@ -547,10 +473,10 @@ trim : Saving output of prerun in trim.prerun.txt
           "N" : 0
         }
       },
-      "job_runtime" : 48245,
-      "usr_cpu" : 12.764017,
-      "sys_cpu" : 0.082910,
-      "ctx" : 27847,
+      "job_runtime" : 31659,
+      "usr_cpu" : 0.022111,
+      "sys_cpu" : 0.012635,
+      "ctx" : 238,
       "majf" : 0,
       "minf" : 0,
       "iodepth_level" : {
@@ -597,26 +523,26 @@ trim : Saving output of prerun in trim.prerun.txt
         "4" : 0.000000,
         "10" : 0.000000,
         "20" : 0.000000,
-        "50" : 64.720488,
-        "100" : 34.375000,
-        "250" : 0.450482,
-        "500" : 0.134790,
-        "750" : 0.031924,
-        "1000" : 0.035471
-      },
-      "latency_ms" : {
-        "2" : 0.010641,
-        "4" : 0.000000,
-        "10" : 0.010641,
-        "20" : 0.014188,
         "50" : 0.000000,
         "100" : 0.000000,
         "250" : 0.000000,
         "500" : 0.000000,
         "750" : 0.000000,
-        "1000" : 0.014188,
+        "1000" : 0.000000
+      },
+      "latency_ms" : {
+        "2" : 0.000000,
+        "4" : 0.000000,
+        "10" : 0.000000,
+        "20" : 0.000000,
+        "50" : 0.000000,
+        "100" : 0.000000,
+        "250" : 0.000000,
+        "500" : 0.000000,
+        "750" : 0.000000,
+        "1000" : 0.000000,
         "2000" : 0.000000,
-        ">=2000" : 0.202185
+        ">=2000" : 100.000000
       },
       "latency_depth" : 1,
       "latency_target" : 0,
