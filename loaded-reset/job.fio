@@ -13,6 +13,9 @@ lat_percentiles=1
 [fill-prep]
 iodepth=1
 rw=write
+size=${CONCUR_FILL_SIZE}z
+numjobs=${CONCUR_FILL}
+offset_increment=${CONCUR_FILL_SIZE}z
 
 [trim]
 stonewall

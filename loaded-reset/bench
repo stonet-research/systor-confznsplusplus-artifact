@@ -20,12 +20,14 @@ mkdir -p data
 ## fio options for specific ZNS ##
 ##################################
 BS=$(echo "${DEV_SECT_SIZE} * ${DEV_ZONE_SIZE}" | bc)
-# 1 zone for writes, as lowest reset rate is 50% = 1 write for every 1 reset 
+# 4 zone for writes, as lowest reset rate is 50% = 1 write for every 1 reset 
 # issued which for 1000 zones is only 64K * 1023 = ~64MiB written (64K below). 
 # This is the smalles zone size we will have, so we do not need a lot of space 
-# for concurrent writing
-WRITE_SIZE=1 
-FILL_SIZE=$(echo "${DEV_ZONES} - ${WRITE_SIZE}" | bc) # All but the write zone
+# for concurrent writing.
+CONCUR_FILL=4 # concurrent fill jobs to speedup filling
+WRITE_SIZE=${CONCUR_FILL} 
+FILL_SIZE=$(echo "${DEV_ZONES} - ${WRITE_SIZE}" | bc) # All but the write zones
+CONCUR_FILL_SIZE=$(echo "scale=0; ${DEV_ZONES} / ${CONCUR_FILL} - 1" | bc)
 
 FILL_DIST=$(echo "${FILL_SIZE} * ${DEV_ZONE_SIZE} * ${DEV_SECT_SIZE}" | bc)
 WRITE_DIST=$(echo "${WRITE_SIZE} * ${DEV_ZONE_SIZE} * ${DEV_SECT_SIZE}" | bc)
@@ -41,10 +43,10 @@ for trim_iodepth in ${TRIM_IODEPTH[@]}; do
 
         # TODO: remove hardcoded paths
         if [[ ${write_flow} -eq 0 ]]; then
-            # With 0 write flow we want to disable the concurrent wirte workload
-            sudo env "DEV=${DEV}" "BS=${BS}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=0" "FILL_DIST=${FILL_DIST}" "WRITE_DIST=0" "WRITE_FLOW=0" "TRIM_FLOW=${trim_flow}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
+            # With 0 write flow we want to disable the concurrent write workload
+            sudo env "DEV=${DEV}" "BS=${BS}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=0" "FILL_DIST=${FILL_DIST}" "WRITE_DIST=0" "WRITE_FLOW=0" "TRIM_FLOW=${trim_flow}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
         else
-            sudo env "DEV=${DEV}" "BS=${BS}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=${WRITE_SIZE}" "FILL_DIST=${FILL_DIST}" "WRITE_DIST=${WRITE_DIST}" "WRITE_FLOW=${write_flow}" "TRIM_FLOW=${trim_flow}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
+            sudo env "DEV=${DEV}" "BS=${BS}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=${WRITE_SIZE}" "FILL_DIST=${FILL_DIST}" "WRITE_DIST=${WRITE_DIST}" "WRITE_FLOW=${write_flow}" "TRIM_FLOW=${trim_flow}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
         fi
     done
 done
