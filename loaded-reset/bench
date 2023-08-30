@@ -16,6 +16,21 @@ DEV_ZONE_SIZE_BLOCKS=$(cat /sys/block/$1/queue/chunk_sectors)
 DEV_ZONE_SIZE=$(echo "${DEV_ZONE_SIZE_BLOCKS} * 512" | bc)
 DEV_ZONES=$(cat /sys/block/$1/queue/nr_zones)
 
+echo "#########################################################"
+echo "####################### ZNS  SETUP ######################"
+echo "#########################################################"
+printf 'DEV: %52s\n' "/dev/${DEV}"
+echo "---------------------------------------------------------"
+printf 'SECTOR_SIZE: %44s\n' "${DEV_SECT_SIZE}"
+echo "---------------------------------------------------------"
+printf 'ZONE_SIZE_BLOCKS: %39s\n' "${DEV_ZONE_SIZE_BLOCKS}"
+echo "---------------------------------------------------------"
+printf 'ZONE_SIZE_BYTES: %40s\n' "${DEV_ZONE_SIZE}"
+echo "---------------------------------------------------------"
+printf 'DEV_ZONES: %46s\n' "${DEV_ZONES}"
+echo "---------------------------------------------------------"
+echo ""
+
 mkdir -p data
 
 ##################################
@@ -27,10 +42,31 @@ CONCUR_FILL=4 # concurrent fill jobs to speedup filling
 FILL_SIZE=$(echo "scale=0; ${DEV_ZONES} * 0.9" | bc | sed 's/\.[0-9]*//g')
 WRITE_ZONES=$(echo "${DEV_ZONES} - ${FILL_SIZE}" | bc) # All but the fill zones
 WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${CONCUR_FILL}" | bc)
-CONCUR_FILL_SIZE=$(echo "scale=0; ${DEV_ZONES} / ${CONCUR_FILL} - 1" | bc)
+CONCUR_FILL_SIZE=$(echo "scale=0; ${FILL_SIZE} / ${CONCUR_FILL}" | bc)
 
 TRIM_IODEPTH=(1 2 4 8 16 32 64 128)
 TRIM_FLOW=(100 99 95 90 75 50)
+
+echo "#########################################################"
+echo "###################### BENCH  SETUP #####################"
+echo "#########################################################"
+printf 'CONCUR_FILL_JOBS: %39s\n' "${CONCUR_FILL}"
+echo "---------------------------------------------------------"
+printf 'TRIM_SIZE: %46s\n' "${BS}"
+echo "---------------------------------------------------------"
+printf 'FILL_ZONES (Zones filled for resets): %19s\n' "${FILL_SIZE}"
+echo "---------------------------------------------------------"
+printf 'FILL_SIZE_PER_JOB: %38s\n' "${CONCUR_FILL_SIZE}"
+echo "---------------------------------------------------------"
+printf 'WRITE_ZONES (Empty zones for writes): %19s\n' "${WRITE_ZONES}"
+echo "---------------------------------------------------------"
+printf 'WRITE_SIZE_PER_JOB: %37s\n' "${WRITE_SIZE}"
+echo "---------------------------------------------------------"
+printf 'TRIM_NUMJOBS: %43s\n' "${TRIM_IODEPTH}"
+echo "---------------------------------------------------------"
+printf 'TRIM_RATE_FLOW: %41s\n' "${TRIM_FLOW}"
+echo "---------------------------------------------------------"
+echo ""
 
 echo "Benchmarking ZNS Device Write BW Rate Limit"
 sudo nvme zns reset-zone /dev/$1 -a
