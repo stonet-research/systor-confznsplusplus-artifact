@@ -1,12 +1,76 @@
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
+trim : Saving output of prerun in trim.prerun.txt
 {
   "fio version" : "fio-3.35",
-  "timestamp" : 1693393368,
-  "timestamp_ms" : 1693393368383,
-  "time" : "Wed Aug 30 11:02:48 2023",
+  "timestamp" : 1693407156,
+  "timestamp_ms" : 1693407156102,
+  "time" : "Wed Aug 30 14:52:36 2023",
   "global options" : {
     "name" : "loaded-reset",
     "ioengine" : "io_uring_cmd",
-    "size" : "60z",
+    "size" : "57z",
     "bs" : "64K",
     "zonemode" : "zbd",
     "thread" : "1",
@@ -20,7 +84,7 @@
       "groupid" : 0,
       "error" : 0,
       "eta" : 0,
-      "elapsed" : 57,
+      "elapsed" : 60,
       "job options" : {
         "iodepth" : "1",
         "rw" : "write",
@@ -72,13 +136,13 @@
         "iops_samples" : 0
       },
       "write" : {
-        "io_bytes" : 67448733696,
-        "io_kbytes" : 65867904,
-        "bw_bytes" : 1222406685,
-        "bw" : 1193756,
-        "iops" : 18652.445765,
-        "runtime" : 55177,
-        "total_ios" : 1029186,
+        "io_bytes" : 67595665408,
+        "io_kbytes" : 66011392,
+        "bw_bytes" : 1223672436,
+        "bw" : 1194992,
+        "iops" : 18671.759594,
+        "runtime" : 55240,
+        "total_ios" : 1031428,
         "short_ios" : 0,
         "drop_ios" : 0,
         "slat_ns" : {
@@ -89,42 +153,42 @@
           "N" : 0
         },
         "clat_ns" : {
-          "min" : 44792,
-          "max" : 4222043,
-          "mean" : 212114.275950,
-          "stddev" : 167631.196082,
-          "N" : 1029186,
+          "min" : 44439,
+          "max" : 6884129,
+          "mean" : 212005.348085,
+          "stddev" : 168319.987036,
+          "N" : 1031428,
           "percentile" : {
             "1.000000" : 55552,
             "5.000000" : 72192,
             "10.000000" : 82432,
             "20.000000" : 103936,
-            "30.000000" : 125440,
+            "30.000000" : 124416,
             "40.000000" : 146432,
             "50.000000" : 168960,
             "60.000000" : 197632,
             "70.000000" : 232448,
             "80.000000" : 284672,
             "90.000000" : 378880,
-            "95.000000" : 493568,
+            "95.000000" : 489472,
             "99.000000" : 806912,
-            "99.500000" : 970752,
-            "99.900000" : 1941504,
+            "99.500000" : 962560,
+            "99.900000" : 2179072,
             "99.950000" : 2736128,
-            "99.990000" : 3031040
+            "99.990000" : 3129344
           }
         },
         "lat_ns" : {
-          "min" : 45708,
-          "max" : 4223211,
-          "mean" : 213612.080762,
-          "stddev" : 167636.105998,
-          "N" : 1029186,
+          "min" : 45232,
+          "max" : 6885765,
+          "mean" : 213410.479704,
+          "stddev" : 168319.493212,
+          "N" : 1031428,
           "percentile" : {
             "1.000000" : 57088,
             "5.000000" : 73216,
             "10.000000" : 84480,
-            "20.000000" : 105984,
+            "20.000000" : 104960,
             "30.000000" : 126464,
             "40.000000" : 148480,
             "50.000000" : 168960,
@@ -132,24 +196,24 @@
             "70.000000" : 234496,
             "80.000000" : 284672,
             "90.000000" : 382976,
-            "95.000000" : 493568,
+            "95.000000" : 489472,
             "99.000000" : 806912,
-            "99.500000" : 970752,
-            "99.900000" : 1941504,
+            "99.500000" : 962560,
+            "99.900000" : 2179072,
             "99.950000" : 2736128,
-            "99.990000" : 3063808
+            "99.990000" : 3129344
           }
         },
-        "bw_min" : 1145088,
-        "bw_max" : 1227808,
+        "bw_min" : 1152320,
+        "bw_max" : 1233852,
         "bw_agg" : 100.000000,
-        "bw_mean" : 1194400.645455,
-        "bw_dev" : 3747.561087,
+        "bw_mean" : 1195640.354545,
+        "bw_dev" : 3679.835158,
         "bw_samples" : 440,
-        "iops_min" : 17892,
-        "iops_max" : 19183,
-        "iops_mean" : 18662.109091,
-        "iops_stddev" : 58.503127,
+        "iops_min" : 18005,
+        "iops_max" : 19277,
+        "iops_mean" : 18681.536364,
+        "iops_stddev" : 57.470263,
         "iops_samples" : 440
       },
       "ZNS Reset" : {
@@ -206,10 +270,10 @@
           "N" : 0
         }
       },
-      "job_runtime" : 220704,
-      "usr_cpu" : 99.992750,
-      "sys_cpu" : 0.001359,
-      "ctx" : 484,
+      "job_runtime" : 220956,
+      "usr_cpu" : 99.988686,
+      "sys_cpu" : 0.002715,
+      "ctx" : 286,
       "majf" : 0,
       "minf" : 0,
       "iodepth_level" : {
@@ -256,16 +320,16 @@
         "4" : 0.000000,
         "10" : 0.000000,
         "20" : 0.000000,
-        "50" : 0.343378,
-        "100" : 17.704866,
-        "250" : 55.949653,
-        "500" : 21.233868,
-        "750" : 3.457587,
-        "1000" : 0.872437
+        "50" : 0.363671,
+        "100" : 17.709719,
+        "250" : 55.924892,
+        "500" : 21.282436,
+        "750" : 3.402758,
+        "1000" : 0.886538
       },
       "latency_ms" : {
-        "2" : 0.339880,
-        "4" : 0.097844,
+        "2" : 0.324792,
+        "4" : 0.104903,
         "10" : 0.010000,
         "20" : 0.000000,
         "50" : 0.000000,
@@ -287,15 +351,16 @@
       "groupid" : 1,
       "error" : 0,
       "eta" : 0,
-      "elapsed" : 57,
+      "elapsed" : 60,
       "job options" : {
-        "rw" : "randwrite",
+        "rw" : "write",
         "iodepth" : "1",
-        "size" : "4z",
-        "offset" : "60z",
+        "size" : "1z",
+        "offset" : "57z",
+        "offset_increment" : "1z",
+        "numjobs" : "4",
         "bs" : "4K",
-        "flow_id" : "1",
-        "flow" : "5"
+        "rate" : ",15243680.21"
       },
       "read" : {
         "io_bytes" : 0,
@@ -341,13 +406,13 @@
         "iops_samples" : 0
       },
       "write" : {
-        "io_bytes" : 4096,
-        "io_kbytes" : 4,
-        "bw_bytes" : 4071,
-        "bw" : 3,
-        "iops" : 0.994036,
-        "runtime" : 1006,
-        "total_ios" : 1,
+        "io_bytes" : 194633728,
+        "io_kbytes" : 190072,
+        "bw_bytes" : 48597684,
+        "bw" : 47458,
+        "iops" : 11864.669164,
+        "runtime" : 4005,
+        "total_ios" : 47518,
         "short_ios" : 0,
         "drop_ios" : 0,
         "slat_ns" : {
@@ -358,78 +423,78 @@
           "N" : 0
         },
         "clat_ns" : {
-          "min" : 87959,
-          "max" : 87959,
-          "mean" : 87959.000000,
-          "stddev" : 0.000000,
-          "N" : 1,
+          "min" : 6222,
+          "max" : 794210295,
+          "mean" : 83137.165032,
+          "stddev" : 7285140.648030,
+          "N" : 47518,
           "percentile" : {
-            "1.000000" : 87552,
-            "5.000000" : 87552,
-            "10.000000" : 87552,
-            "20.000000" : 87552,
-            "30.000000" : 87552,
-            "40.000000" : 87552,
-            "50.000000" : 87552,
-            "60.000000" : 87552,
-            "70.000000" : 87552,
-            "80.000000" : 87552,
-            "90.000000" : 87552,
-            "95.000000" : 87552,
-            "99.000000" : 87552,
-            "99.500000" : 87552,
-            "99.900000" : 87552,
-            "99.950000" : 87552,
-            "99.990000" : 87552
+            "1.000000" : 14144,
+            "5.000000" : 14528,
+            "10.000000" : 14912,
+            "20.000000" : 15296,
+            "30.000000" : 15552,
+            "40.000000" : 15680,
+            "50.000000" : 15936,
+            "60.000000" : 16192,
+            "70.000000" : 16512,
+            "80.000000" : 17024,
+            "90.000000" : 18048,
+            "95.000000" : 18816,
+            "99.000000" : 20096,
+            "99.500000" : 21376,
+            "99.900000" : 28288,
+            "99.950000" : 48896,
+            "99.990000" : 350208
           }
         },
         "lat_ns" : {
-          "min" : 106134,
-          "max" : 106134,
-          "mean" : 106134.000000,
-          "stddev" : 0.000000,
-          "N" : 1,
+          "min" : 14202,
+          "max" : 794210628,
+          "mean" : 83552.777011,
+          "stddev" : 7285140.118345,
+          "N" : 47518,
           "percentile" : {
-            "1.000000" : 105984,
-            "5.000000" : 105984,
-            "10.000000" : 105984,
-            "20.000000" : 105984,
-            "30.000000" : 105984,
-            "40.000000" : 105984,
-            "50.000000" : 105984,
-            "60.000000" : 105984,
-            "70.000000" : 105984,
-            "80.000000" : 105984,
-            "90.000000" : 105984,
-            "95.000000" : 105984,
-            "99.000000" : 105984,
-            "99.500000" : 105984,
-            "99.900000" : 105984,
-            "99.950000" : 105984,
-            "99.990000" : 105984
+            "1.000000" : 14528,
+            "5.000000" : 14912,
+            "10.000000" : 15296,
+            "20.000000" : 15680,
+            "30.000000" : 15808,
+            "40.000000" : 16064,
+            "50.000000" : 16320,
+            "60.000000" : 16512,
+            "70.000000" : 17024,
+            "80.000000" : 17536,
+            "90.000000" : 18560,
+            "95.000000" : 19328,
+            "99.000000" : 20608,
+            "99.500000" : 21632,
+            "99.900000" : 29312,
+            "99.950000" : 52480,
+            "99.990000" : 350208
           }
         },
-        "bw_min" : 8,
-        "bw_max" : 8,
+        "bw_min" : 22478,
+        "bw_max" : 59640,
         "bw_agg" : 100.000000,
-        "bw_mean" : 8.000000,
-        "bw_dev" : 0.000000,
-        "bw_samples" : 1,
-        "iops_min" : 2,
-        "iops_max" : 2,
-        "iops_mean" : 2.000000,
-        "iops_stddev" : 0.000000,
-        "iops_samples" : 1
+        "bw_mean" : 54301.428571,
+        "bw_dev" : 3309.744810,
+        "bw_samples" : 28,
+        "iops_min" : 5618,
+        "iops_max" : 14910,
+        "iops_mean" : 13575.142857,
+        "iops_stddev" : 827.572545,
+        "iops_samples" : 28
       },
       "ZNS Reset" : {
-        "total_zone_resets" : 60,
-        "io_bytes" : 128849018880,
-        "io_kbytes" : 125829120,
-        "bw_bytes" : 121212623593,
-        "bw" : 118371702,
-        "iops" : 56.444026,
-        "runtime" : 1063,
-        "total_ios" : 60,
+        "total_zone_resets" : 59,
+        "io_bytes" : 122406567936,
+        "io_kbytes" : 119537664,
+        "bw_bytes" : 116688815954,
+        "bw" : 113953921,
+        "iops" : 54.337464,
+        "runtime" : 1049,
+        "total_ios" : 57,
         "short_ios" : 0,
         "drop_ios" : 0,
         "slat_ns" : {
@@ -440,11 +505,11 @@
           "N" : 0
         },
         "clat_ns" : {
-          "min" : 3252703181950,
-          "max" : 3253695848908,
-          "mean" : 3253197229136.350098,
-          "stddev" : 304960349.766838,
-          "N" : 60,
+          "min" : 17040447017704,
+          "max" : 17041392880349,
+          "mean" : 17040921153860.193359,
+          "stddev" : 292607665.070082,
+          "N" : 57,
           "percentile" : {
             "1.000000" : 17112760320,
             "5.000000" : 17112760320,
@@ -466,42 +531,42 @@
           }
         },
         "lat_ns" : {
-          "min" : 18692241,
-          "max" : 721572612,
-          "mean" : 380477472.983333,
-          "stddev" : 202473536.300207,
-          "N" : 60,
+          "min" : 36793242,
+          "max" : 813123195,
+          "mean" : 399749302.070175,
+          "stddev" : 218449395.564938,
+          "N" : 57,
           "percentile" : {
-            "1.000000" : 18743296,
-            "5.000000" : 69730304,
-            "10.000000" : 70778880,
-            "20.000000" : 160432128,
-            "30.000000" : 246415360,
-            "40.000000" : 316669952,
-            "50.000000" : 408944640,
-            "60.000000" : 459276288,
-            "70.000000" : 497025024,
-            "80.000000" : 583008256,
-            "90.000000" : 633339904,
-            "95.000000" : 650117120,
-            "99.000000" : 725614592,
-            "99.500000" : 725614592,
-            "99.900000" : 725614592,
-            "99.950000" : 725614592,
-            "99.990000" : 725614592
+            "1.000000" : 36962304,
+            "5.000000" : 70778880,
+            "10.000000" : 72876032,
+            "20.000000" : 145752064,
+            "30.000000" : 274726912,
+            "40.000000" : 346030080,
+            "50.000000" : 417333248,
+            "60.000000" : 488636416,
+            "70.000000" : 549453824,
+            "80.000000" : 599785472,
+            "90.000000" : 675282944,
+            "95.000000" : 750780416,
+            "99.000000" : 809500672,
+            "99.500000" : 809500672,
+            "99.900000" : 809500672,
+            "99.950000" : 809500672,
+            "99.990000" : 809500672
           }
         },
-        "bw_min" : 197132288,
-        "bw_max" : 197132288,
+        "bw_min" : 151095804,
+        "bw_max" : 159501222,
         "bw_agg" : 100.000000,
-        "bw_mean" : 197132288.000000,
-        "bw_dev" : 0.000000,
-        "bw_samples" : 56,
-        "iops_min" : 94,
-        "iops_max" : 94,
-        "iops_mean" : 94.000000,
-        "iops_stddev" : 0.000000,
-        "iops_samples" : 56
+        "bw_mean" : 155298513.000000,
+        "bw_dev" : 638986.737995,
+        "bw_samples" : 44,
+        "iops_min" : 72,
+        "iops_max" : 76,
+        "iops_mean" : 74.000000,
+        "iops_stddev" : 0.304997,
+        "iops_samples" : 44
       },
       "sync" : {
         "total_ios" : 0,
@@ -513,10 +578,10 @@
           "N" : 0
         }
       },
-      "job_runtime" : 66784,
-      "usr_cpu" : 4.041387,
-      "sys_cpu" : 0.010482,
-      "ctx" : 504,
+      "job_runtime" : 80806,
+      "usr_cpu" : 6.211172,
+      "sys_cpu" : 0.107665,
+      "ctx" : 47713,
       "majf" : 0,
       "minf" : 0,
       "iodepth_level" : {
@@ -561,12 +626,12 @@
       "latency_us" : {
         "2" : 0.000000,
         "4" : 0.000000,
-        "10" : 0.000000,
-        "20" : 0.000000,
-        "50" : 0.000000,
-        "100" : 1.639344,
-        "250" : 0.000000,
-        "500" : 0.000000,
+        "10" : 0.010000,
+        "20" : 98.675775,
+        "50" : 1.151865,
+        "100" : 0.012612,
+        "250" : 0.021019,
+        "500" : 0.010000,
         "750" : 0.000000,
         "1000" : 0.000000
       },
@@ -580,9 +645,9 @@
         "250" : 0.000000,
         "500" : 0.000000,
         "750" : 0.000000,
-        "1000" : 0.000000,
+        "1000" : 0.010000,
         "2000" : 0.000000,
-        ">=2000" : 98.360656
+        ">=2000" : 0.119811
       },
       "latency_depth" : 1,
       "latency_target" : 0,
