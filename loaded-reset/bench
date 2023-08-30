@@ -67,7 +67,6 @@ echo "---------------------------------------------------------"
 printf 'TRIM_RATE_FLOW: %41s\n' "${TRIM_FLOW[*]}"
 echo "---------------------------------------------------------"
 echo ""
-exit
 
 echo "Benchmarking ZNS Device Write BW Rate Limit"
 sudo nvme zns reset-zone /dev/$1 -a
