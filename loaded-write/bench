@@ -44,7 +44,7 @@ FILL_SIZE=$(echo "scale=0; ${DEV_ZONES} * 0.9" | bc | sed 's/\.[0-9]*//g')
 WRITE_ZONES=$(echo "${DEV_ZONES} - ${FILL_SIZE}" | bc) # All but the fill zones
 CONCUR_FILL_SIZE=$(echo "scale=0; ${FILL_SIZE} / ${CONCUR_FILL}" | bc)
 
-WRITE_IODEPTH=(1 2 4 8 16 32) # we do not have more than 91 zones for writes
+WRITE_IODEPTH=(1 2 4 8 14) # active zone limit for our ZNS is 14
 WRITE_FLOW=(100 99 95 90 75 50)
 
 echo "#########################################################"
@@ -73,7 +73,7 @@ sudo nvme zns reset-zone /dev/$1 -a
 sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/bw.json job-trim.fio
 
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
-echo "Found Sustainable BV for Reset Rate Limiting: ${BW} B/sec"
+echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
 
 for write_iodepth in ${WRITE_IODEPTH[@]}; do
     for write_flow in ${WRITE_FLOW[@]}; do
@@ -86,8 +86,10 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
 
         if [[ ${trim_flow} -eq 0 ]]; then
             # With 0 write flow we want to disable the concurrent write workload
-            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json job-bw.fio
+            CONCUR_FILL_SIZE=$(echo "scale=0; ${FILL_SIZE} / ${write_iodepth}" | bc)
+            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json job-bw.fio
         else
+            CONCUR_FILL_SIZE=$(echo "scale=0; ${FILL_SIZE} / ${CONCUR_FILL}" | bc)
             trim_rate_limit=$(echo "scale=2; ${trim_flow} / 100  * ${BW}" | bc)
             sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" "WRITE_SIZE=${WRITE_SIZE}" "RESET_LIMIT=${trim_rate_limit}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json job.fio
         fi

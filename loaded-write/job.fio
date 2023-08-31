@@ -34,6 +34,6 @@ size=${WRITE_SIZE}z
 offset=${FILL_SIZE}z
 offset_increment=${WRITE_SIZE}z
 numjobs=${WRITE_IODEPTH}
-bs=64K
+bs=8K
 exitall
 exit_what=stonewall
