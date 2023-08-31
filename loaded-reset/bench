@@ -64,7 +64,7 @@ printf 'WRITE_ZONES_PER_JOB: %36s\n' "${WRITE_SIZE}"
 echo "---------------------------------------------------------"
 printf 'TRIM_NUMJOBS: %43s\n' "${TRIM_IODEPTH[*]}"
 echo "---------------------------------------------------------"
-printf 'TRIM_RATE_FLOW: %41s\n' "${TRIM_FLOW[*]}"
+printf 'TRIM_RATE_FLOWS: %41s\n' "${TRIM_FLOW[*]}"
 echo "---------------------------------------------------------"
 echo ""
 
@@ -73,11 +73,12 @@ sudo nvme zns reset-zone /dev/$1 -a
 sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/bw.json job-bw.fio
 
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
-echo "Found Max BW for Write Rate Limiting: ${BW} B/sec"
+echo "Found Sustainable Max BW for Write Rate Limiting: ${BW} B/sec"
 
 for trim_iodepth in ${TRIM_IODEPTH[@]}; do
     for trim_flow in ${TRIM_FLOW[@]}; do
         write_flow=$((100 - ${trim_flow}))
+        echo ""
         echo "Benchmarking TRIM_IODEPTH ${trim_iodepth}: <TRIM_FLOW ${trim_flow} - WRITE_LIMIT ${write_flow}>"
         sudo nvme zns reset-zone /dev/$1 -a
 
