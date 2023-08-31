@@ -26,6 +26,8 @@ def parse_fio_data(data_path, data):
         with open(file, 'r') as f:
             for index, line in enumerate(f, 1):
                 # Removing all fio logs in json file by finding first {
+                if len(line.split()) == 0:
+                    continue
                 if line.split()[0] == "{":
                     rows = f.readlines()
                     with open(os.path.join(os.getcwd(), "temp.json"), 'w+') as temp:
@@ -62,6 +64,8 @@ if __name__ == "__main__":
     reset50_iops = [None] * len(queue_depths)
 
     for key, value in data.items():
+        if "bw" in key:
+            continue
         numjobs = int(re.search(r'\d+', key).group())
         if 'tflow_100' in key:
             reset100[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
