@@ -107,3 +107,44 @@ if __name__ == "__main__":
     plt.savefig(f"{file_path}/loaded_reset_latency.pdf", bbox_inches="tight")
     plt.savefig(f"{file_path}/loaded_reset_latency.png", bbox_inches="tight")
     plt.clf()
+
+
+    reset_iops = [reset50_iops[0], reset75_iops[0], reset90_iops[0], reset95_iops[0], reset99_iops[0], reset100_iops[0]]
+    reset_lat = [reset50[0], reset75[0], reset90[0], reset95[0], reset99[0], reset100[0]]
+    x = ["50", "75", "90", "95", "99", "100"]
+
+    fig, ax = plt.subplots()
+
+    ax.bar(np.arange(1,7), reset_iops)
+
+    fig.tight_layout()
+    ax.grid(which='major', linestyle='dashed', linewidth='1')
+    ax.set_axisbelow(True)
+    # ax.legend(loc='best', handles=handles)
+    # ax.legend(loc='best')
+    ax.set_ylim(bottom=0)
+    ax.set_xticks(np.arange(1,7), x)
+    # ax.set_xlim(left=0)
+    ax.set_ylabel("Total IOPS")
+    ax.set_xlabel("Reset Rate (%)")
+    plt.savefig(f"{file_path}/reset_iops.pdf", bbox_inches="tight")
+    plt.savefig(f"{file_path}/reset_iops.png", bbox_inches="tight")
+    plt.clf()
+
+    fig, ax = plt.subplots()
+
+    ax.bar(np.arange(1,7), reset_lat)
+
+    fig.tight_layout()
+    ax.grid(which='major', linestyle='dashed', linewidth='1')
+    ax.set_axisbelow(True)
+    # ax.legend(loc='best', handles=handles)
+    # ax.legend(loc='best')
+    ax.set_ylim(bottom=0)
+    ax.set_xticks(np.arange(1,7), x)
+    # ax.set_xlim(left=0)
+    ax.set_ylabel("p95 reset latency (msec)")
+    ax.set_xlabel("Reset Rate (%)")
+    plt.savefig(f"{file_path}/reset_lat.pdf", bbox_inches="tight")
+    plt.savefig(f"{file_path}/reset_lat.png", bbox_inches="tight")
+    plt.clf()
