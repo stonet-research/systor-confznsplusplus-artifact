@@ -1,0 +1,3 @@
+[submodule "fio"]
+	path = fio
+	url = https://github.com/stonet-research/fio

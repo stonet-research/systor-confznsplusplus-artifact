@@ -1,8 +1,5 @@
 #! /bin/bash
 
-# TODO: do we also ant reads? 
-# TODO: remove hardcoded paths
-
 set -e
 
 if [ $# != 1 ]; then
@@ -73,7 +70,7 @@ echo ""
 
 echo "Benchmarking ZNS Device Write BW Rate Limit"
 sudo nvme zns reset-zone /dev/$1 -a
-sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/bw.json job-bw.fio
+sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" ../fio/fio --output-format=json --output=data/bw.json job-bw.fio
 
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
 echo "Found Sustainable Max BW for Write Rate Limiting: ${BW} B/sec"
@@ -87,10 +84,10 @@ for trim_iodepth in ${TRIM_IODEPTH[@]}; do
 
         if [[ ${write_flow} -eq 0 ]]; then
             # With 0 write flow we want to disable the concurrent write workload
-            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=0" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job-trim.fio
+            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=0" ../fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job-trim.fio
         else
             write_rate_limit=$(echo "scale=2; ${write_flow} / 100  * ${BW} / ${CONCUR_WRITE}" | bc)
-            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=${WRITE_SIZE}" "CONCUR_WRITE=${CONCUR_WRITE}" "WRITE_LIMIT=${write_rate_limit}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
+            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=${WRITE_SIZE}" "CONCUR_WRITE=${CONCUR_WRITE}" "WRITE_LIMIT=${write_rate_limit}" ../fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
         fi
     done
 done
