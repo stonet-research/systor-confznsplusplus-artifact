@@ -92,15 +92,15 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots()
 
-    ax.plot(write100_iops, write100, markersize = 4, marker = '>', linestyle = 'solid', label="100% write")
-    ax.plot(write99_iops, write99, markersize = 4, marker = 'x', linestyle = 'dotted', label="  99% write")
-    ax.plot(write95_iops, write95, markersize = 4, marker = 'o', linestyle = 'solid', label="  95% write")
-    ax.plot(write90_iops, write90, markersize = 4, marker = '<', linestyle = '--', label="  90% write")
-    ax.plot(write75_iops, write75, markersize = 4, marker = '^', linestyle = 'solid', label="  75% write")
-    ax.plot(write50_iops, write50, markersize = 4, marker = '*', linestyle = '-.', label="  50% write")
+    ax.plot(write100_iops, write100, markersize = 4, marker = '>', label="100% write")
+    ax.plot(write99_iops, write99, markersize = 4, marker = 'x', label="  99% write")
+    ax.plot(write95_iops, write95, markersize = 4, marker = 'o', label="  95% write")
+    ax.plot(write90_iops, write90, markersize = 4, marker = '<', label="  90% write")
+    ax.plot(write75_iops, write75, markersize = 4, marker = '^',  label="  75% write")
+    ax.plot(write50_iops, write50, markersize = 4, marker = '*', label="  50% write")
 
     fig.tight_layout()
-    # ax.grid(which='major', linestyle='solid', linewidth='1')
+    ax.grid(which='major', linestyle='dashed', linewidth='1')
     ax.set_axisbelow(True)
     # ax.legend(loc='best', handles=handles)
     ax.legend(loc='best')
