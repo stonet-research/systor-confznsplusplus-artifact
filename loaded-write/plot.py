@@ -23,6 +23,8 @@ def parse_fio_data(data_path, data):
         return 0
 
     for file in glob.glob(f'{data_path}/*'):
+        if "bw" in file:
+            continue
         with open(file, 'r') as f:
             for index, line in enumerate(f, 1):
                 # Removing all fio logs in json file by finding first {
@@ -46,50 +48,56 @@ if __name__ == "__main__":
     data = dict()
     parse_fio_data(f"{file_path}/data", data)
 
-    queue_depths = [1, 2, 4, 8, 16, 32, 64, 128]
+    queue_depths = np.arange(1, 10)
 
-    reset100 = [None] * len(queue_depths)
-    reset100_iops = [None] * len(queue_depths)
-    reset99 = [None] * len(queue_depths)
-    reset99_iops = [None] * len(queue_depths)
-    reset95 = [None] * len(queue_depths)
-    reset95_iops = [None] * len(queue_depths)
-    reset90 = [None] * len(queue_depths)
-    reset90_iops = [None] * len(queue_depths)
-    reset75 = [None] * len(queue_depths)
-    reset75_iops = [None] * len(queue_depths)
-    reset50 = [None] * len(queue_depths)
-    reset50_iops = [None] * len(queue_depths)
+    write100 = [None] * len(queue_depths)
+    write100_iops = [None] * len(queue_depths)
+    write99 = [None] * len(queue_depths)
+    write99_iops = [None] * len(queue_depths)
+    write95 = [None] * len(queue_depths)
+    write95_iops = [None] * len(queue_depths)
+    write90 = [None] * len(queue_depths)
+    write90_iops = [None] * len(queue_depths)
+    write75 = [None] * len(queue_depths)
+    write75_iops = [None] * len(queue_depths)
+    write50 = [None] * len(queue_depths)
+    write50_iops = [None] * len(queue_depths)
 
     for key, value in data.items():
+        if "bw" in key:
+            continue
         numjobs = int(re.search(r'\d+', key).group())
-        if 'tflow_100' in key:
-            reset100[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
-            reset100_iops[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
-        elif 'tflow_99' in key:
-            reset99[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
-            reset99_iops[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
-        elif 'tflow_95' in key:
-            reset95[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
-            reset95_iops[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
-        elif 'tflow_90' in key:
-            reset90[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
-            reset90_iops[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
-        elif 'tflow_75' in key:
-            reset75[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
-            reset75_iops[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
-        elif 'tflow_50' in key:
-            reset50[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
-            reset50_iops[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
+        if numjobs == 14:
+            continue # We skip 14 as it turns out we were bottlenecked by not enough cpu cores, giving inaccurate results
+        else:
+            x = numjobs - 1
+        if 'wflow_100' in key:
+            write100[x] = value["jobs"][0]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
+            write100_iops[x] = value["jobs"][0]["write"]["iops_mean"]/1000
+        elif 'wflow_99' in key:
+            write99[x] = value["jobs"][1]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
+            write99_iops[x] = value["jobs"][1]["write"]["iops_mean"]/1000
+        elif 'wflow_95' in key:
+            write95[x] = value["jobs"][1]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
+            write95_iops[x] = value["jobs"][1]["write"]["iops_mean"]/1000
+        elif 'wflow_90' in key:
+            write90[x] = value["jobs"][1]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
+            write90_iops[x] = value["jobs"][1]["write"]["iops_mean"]/1000
+        elif 'wflow_75' in key:
+            write75[x] = value["jobs"][1]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
+            write75_iops[x] = value["jobs"][1]["write"]["iops_mean"]/1000
+        elif 'wflow_50' in key:
+            write50[x] = value["jobs"][1]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
+            write50_iops[x] = value["jobs"][1]["write"]["iops_mean"]/1000
 
     fig, ax = plt.subplots()
 
-    ax.plot(reset100_iops, reset100, markersize=6, marker='x', label="100% reset")
-    ax.plot(reset99_iops, reset99, markersize=6, marker='o', label="  99% reset")
-    ax.plot(reset95_iops, reset95, markersize=6, marker='*', label="  95% reset")
-    ax.plot(reset90_iops, reset90, markersize=6, marker='<', label="  90% reset")
-    ax.plot(reset75_iops, reset75, markersize=6, marker='+', label="  75% reset")
-    ax.plot(reset50_iops, reset50, markersize=6, marker='^', label="  50% reset")
+    ax.plot(write100_iops, write100, markersize = 4, marker = '>', label="100% write")
+    ax.plot(write99_iops, write99, markersize = 4, marker = 'x', label="  99% write")
+    ax.plot(write95_iops, write95, markersize = 4, marker = 'o', label="  95% write")
+    ax.plot(write90_iops, write90, markersize = 4, marker = '<', label="  90% write")
+    ax.plot(write75_iops, write75, markersize = 4, marker = '^',  label="  75% write")
+    ax.plot(write50_iops, write50, markersize = 4, marker = '*', label="  50% write")
 
     fig.tight_layout()
     ax.grid(which='major', linestyle='dashed', linewidth='1')
@@ -98,8 +106,8 @@ if __name__ == "__main__":
     ax.legend(loc='best')
     ax.set_ylim(bottom=0)
     # ax.set_xlim(left=0)
-    ax.set_ylabel("p95 Reset Latency (msec)")
-    ax.set_xlabel("Total IOPS")
-    plt.savefig(f"{file_path}/loaded_reset_latency.pdf", bbox_inches="tight")
-    plt.savefig(f"{file_path}/loaded_reset_latency.png", bbox_inches="tight")
+    ax.set_ylabel("p95 write Latency (usec)")
+    ax.set_xlabel("Total IOPS (x1000)")
+    plt.savefig(f"{file_path}/loaded_write_latency.pdf", bbox_inches="tight")
+    plt.savefig(f"{file_path}/loaded_write_latency.png", bbox_inches="tight")
     plt.clf()
