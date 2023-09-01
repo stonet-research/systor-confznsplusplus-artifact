@@ -38,13 +38,14 @@ mkdir -p data
 ##################################
 BS=$(echo "${DEV_SECT_SIZE} * ${DEV_ZONE_SIZE}" | bc)
 CONCUR_FILL=4 # concurrent fill jobs to speedup filling
+CONCUR_WRITE=1 # concurrent jobs for write interference
 # Use 90% of the zones for resets and 10% for writes
 FILL_SIZE=$(echo "scale=0; ${DEV_ZONES} * 0.9" | bc | sed 's/\.[0-9]*//g')
 WRITE_ZONES=$(echo "${DEV_ZONES} - ${FILL_SIZE}" | bc) # All but the fill zones
 WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${CONCUR_FILL}" | bc)
 CONCUR_FILL_SIZE=$(echo "scale=0; ${FILL_SIZE} / ${CONCUR_FILL}" | bc)
 
-TRIM_IODEPTH=(1 2 4 8 16 32 64 128)
+TRIM_IODEPTH=(1 2 3 4 5 6 7 8 9)
 TRIM_FLOW=(100 99 95 90 75 50)
 
 echo "#########################################################"
@@ -64,7 +65,9 @@ printf 'WRITE_ZONES_PER_JOB: %36s\n' "${WRITE_SIZE}"
 echo "---------------------------------------------------------"
 printf 'TRIM_NUMJOBS: %43s\n' "${TRIM_IODEPTH[*]}"
 echo "---------------------------------------------------------"
-printf 'TRIM_RATE_FLOWS: %41s\n' "${TRIM_FLOW[*]}"
+printf 'TRIM_RATE_FLOWS: %40s\n' "${TRIM_FLOW[*]}"
+echo "---------------------------------------------------------"
+printf 'CONCUR_WRITE_JOBS: %38s\n' "${CONCUR_WRITE}"
 echo "---------------------------------------------------------"
 echo ""
 
@@ -86,8 +89,8 @@ for trim_iodepth in ${TRIM_IODEPTH[@]}; do
             # With 0 write flow we want to disable the concurrent write workload
             sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=0" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job-trim.fio
         else
-            write_rate_limit=$(echo "scale=2; ${write_flow} / 100  * ${BW} / ${CONCUR_FILL}" | bc)
-            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=${WRITE_SIZE}" "CONCUR_WRITE=${CONCUR_FILL}" "WRITE_LIMIT=${write_rate_limit}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
+            write_rate_limit=$(echo "scale=2; ${write_flow} / 100  * ${BW} / ${CONCUR_WRITE}" | bc)
+            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" "WRITE_SIZE=${WRITE_SIZE}" "CONCUR_WRITE=${CONCUR_WRITE}" "WRITE_LIMIT=${write_rate_limit}" /home/user/src/zns-contracts/fio/fio --output-format=json --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json job.fio
         fi
     done
 done
