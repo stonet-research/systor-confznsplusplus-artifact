@@ -35,6 +35,7 @@ printf 'DEV_1_ZONE_SIZE_BYTES: %34s\n' "${DEV1_ZONE_SIZE}"
 echo "---------------------------------------------------------"
 printf 'DEV_1_ZONES: %44s\n' "${DEV1_ZONES}"
 echo "---------------------------------------------------------"
+echo "---------------------------------------------------------"
 printf 'DEV_2: %50s\n' "/dev/${DEV1}"
 echo "---------------------------------------------------------"
 printf 'DEV_2_SECTOR_SIZE: %38s\n' "${DEV2_SECT_SIZE}"
@@ -103,7 +104,7 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
 
         if [[ ${trim_flow} -eq 0 ]]; then
             # With 0 trim flow we want to disable the concurrent write workload
-            CONCUR_FILL_SIZE=$(echo "scale=0; ${DEV1_ZONES} / ${write_iodepth}" | bc)
+            CONCUR_FILL_SIZE=$(echo "scale=0; ${DEV2_ZONES} / ${write_iodepth}" | bc)
             sudo env "DEV=${DEV2}" "BS=${DEV2_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${DEV2_ZONES}" "WRITE_IODEPTH=${write_iodepth}" ../fio/fio --output-format=json --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json job-bw.fio
         else
             CONCUR_FILL_SIZE=$(echo "scale=0; ${DEV2_ZONES} / ${CONCUR_FILL}" | bc)
