@@ -14,7 +14,6 @@ lat_percentiles=1
 iodepth=1
 rw=write
 numjobs=1
-job_max_open_zones=1
 
 [trim]
 stonewall

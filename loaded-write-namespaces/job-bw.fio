@@ -17,4 +17,3 @@ runtime=1m
 [write]
 numjobs=${WRITE_IODEPTH}
 rw=write
-job_max_open_zones=1

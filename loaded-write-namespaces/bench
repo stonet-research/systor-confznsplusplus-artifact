@@ -60,7 +60,8 @@ TRIM_IODEPTH=1 # concurrent trim jobs to find trim bw limit
 # our setup only has 20 cores and we have a polling thread for each job
 # therefore we max to 9 write jobs, as there is 1 concurrent trim job
 # issuing zone resets with also its own polling thread
-WRITE_IODEPTH=(1 2 3 4 5 6 7 8 9) 
+# There are issues with more than 7 jobs and limiting the active zones
+WRITE_IODEPTH=(1 2 3 4 5 6 7) 
 WRITE_FLOW=(100 99 95 90 75 50)
 
 echo "#########################################################"

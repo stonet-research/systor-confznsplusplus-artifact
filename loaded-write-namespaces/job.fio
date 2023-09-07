@@ -9,14 +9,12 @@ group_reporting
 zonemode=zbd
 thread=1
 lat_percentiles=1
-max_open_zones=14
 
 [fill-prep]
 fill_device=1
 iodepth=1
 numjobs=1
 rw=write
-job_max_open_zones=1
 
 [trim]
 stonewall
@@ -27,7 +25,6 @@ bs=${BS}
 rate=,,${RESET_LIMIT}
 exitall
 exit_what=stonewall
-job_max_open_zones=1
 
 [write]
 filename=/dev/${DEV2}
@@ -39,4 +36,3 @@ numjobs=${WRITE_IODEPTH}
 bs=8K
 exitall
 exit_what=stonewall
-job_max_open_zones=1
