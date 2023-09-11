@@ -1,0 +1,91 @@
+#! /bin/bash
+
+set -e
+
+if [ $# != 1 ]; then
+    echo "Usage: $0 <ZNS device (e.g., nvme0n2)>"
+    exit 1
+fi
+
+DEV=$(echo $1 | sed 's/vme/g/g')
+DEV_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
+DEV_ZONE_SIZE_BLOCKS=$(cat /sys/block/$1/queue/chunk_sectors)
+DEV_ZONE_SIZE=$(echo "${DEV_ZONE_SIZE_BLOCKS} * 512" | bc)
+DEV_ZONES=$(cat /sys/block/$1/queue/nr_zones)
+
+echo "#########################################################"
+echo "####################### ZNS  SETUP ######################"
+echo "#########################################################"
+echo "---------------------------------------------------------"
+printf 'DEV: %52s\n' "/dev/${DEV}"
+echo "---------------------------------------------------------"
+printf 'SECTOR_SIZE: %44s\n' "${DEV_SECT_SIZE}"
+echo "---------------------------------------------------------"
+printf 'ZONE_SIZE_BLOCKS: %39s\n' "${DEV_ZONE_SIZE_BLOCKS}"
+echo "---------------------------------------------------------"
+printf 'ZONE_SIZE_BYTES: %40s\n' "${DEV_ZONE_SIZE}"
+echo "---------------------------------------------------------"
+printf 'DEV_ZONES: %46s\n' "${DEV_ZONES}"
+echo "---------------------------------------------------------"
+echo ""
+
+mkdir -p data
+
+##################################
+## fio options for specific ZNS ##
+##################################
+BS=$(echo "${DEV_SECT_SIZE} * ${DEV_ZONE_SIZE}" | bc)
+CONCUR_FILL=4 # concurrent fill jobs to speedup filling
+TRIM_IODEPTH=1 # concurrent trim jobs to find trim bw limit
+# Use 90% of the zones for resets and 10% for writes
+READ_ZONES=$(echo "scale=0; ${DEV_ZONES} * 0.3" | bc | sed 's/\.[0-9]*//g')
+FILL_SIZE=${DEV_ZONES}
+READ_OFFSET=$(echo "scale=0; ${DEV_ZONES} - ${READ_ZONES}" | bc)
+
+READ_IODEPTH=(1 2 4 8 16 32 64 128)
+READ_FLOW=(100 99 95 90 75 50)
+
+echo "#########################################################"
+echo "###################### BENCH  SETUP #####################"
+echo "#########################################################"
+echo "---------------------------------------------------------"
+printf 'TRIM_SIZE: %46s\n' "${BS}"
+echo "---------------------------------------------------------"
+printf 'TRIM_JOBS: %46s\n' "${TRIM_IODEPTH}"
+echo "---------------------------------------------------------"
+printf 'FILL_ZONES (Zones filled for resets): %19s\n' "${FILL_SIZE}"
+echo "---------------------------------------------------------"
+printf 'READ_ZONES (Empty zones for writes): %20s\n' "${READ_ZONES}"
+echo "---------------------------------------------------------"
+printf 'READ_OFFSET: %44s\n' "${READ_OFFSET}"
+echo "---------------------------------------------------------"
+printf 'READ_NUMJOBS: %43s\n' "${READ_IODEPTH[*]}"
+echo "---------------------------------------------------------"
+printf 'READ_RATE_FLOWS: %40s\n' "${READ_FLOW[*]}"
+echo "---------------------------------------------------------"
+echo ""
+
+echo "Benchmarking ZNS Device Reset Rate Limit"
+sudo nvme zns reset-zone /dev/$1 -a
+# sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../fio/fio --output-format=json --output=data/bw.json job-trim.fio
+
+BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
+echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
+
+for read_iodepth in ${READ_IODEPTH[@]}; do
+    for read_flow in ${READ_FLOW[@]}; do
+        trim_flow=$((100 - ${read_flow}))
+        READ_SIZE=$(echo "scale=0; ${READ_ZONES} / ${read_iodepth}" | bc)
+
+        echo ""
+        echo "Benchmarking READ_IODEPTH ${read_iodepth}: <READ_FLOW ${read_flow} - RESET_LIMIT ${trim_flow}>"
+        sudo nvme zns reset-zone /dev/$1 -a
+
+        if [[ ${trim_flow} -eq 0 ]]; then
+            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "READ_IODEPTH=${read_iodepth}" "READ_OFFSET=${READ_OFFSET}" ../fio/fio --output-format=json --output=data/data-read_iod_${read_iodepth}-rflow_${read_flow}.json job-bw.fio
+        else
+            trim_rate_limit=$(echo "scale=2; ${trim_flow} / 100  * ${BW}" | bc)
+            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "READ_IODEPTH=${read_iodepth}" "READ_SIZE=${READ_SIZE}" "READ_OFFSET=${READ_OFFSET}" "RESET_LIMIT=${trim_rate_limit}" ../fio/fio --output-format=json --output=data/data-read_iod_${read_iodepth}-rflow_${read_flow}.json job.fio
+        fi
+    done
+done
