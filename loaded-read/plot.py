@@ -50,54 +50,50 @@ if __name__ == "__main__":
 
     queue_depths = np.arange(1, 10)
 
-    write100 = [None] * len(queue_depths)
-    write100_iops = [None] * len(queue_depths)
-    write99 = [None] * len(queue_depths)
-    write99_iops = [None] * len(queue_depths)
-    write95 = [None] * len(queue_depths)
-    write95_iops = [None] * len(queue_depths)
-    write90 = [None] * len(queue_depths)
-    write90_iops = [None] * len(queue_depths)
-    write75 = [None] * len(queue_depths)
-    write75_iops = [None] * len(queue_depths)
-    write50 = [None] * len(queue_depths)
-    write50_iops = [None] * len(queue_depths)
+    read100 = [None] * len(queue_depths)
+    read100_iops = [None] * len(queue_depths)
+    read99 = [None] * len(queue_depths)
+    read99_iops = [None] * len(queue_depths)
+    read95 = [None] * len(queue_depths)
+    read95_iops = [None] * len(queue_depths)
+    read90 = [None] * len(queue_depths)
+    read90_iops = [None] * len(queue_depths)
+    read75 = [None] * len(queue_depths)
+    read75_iops = [None] * len(queue_depths)
+    read50 = [None] * len(queue_depths)
+    read50_iops = [None] * len(queue_depths)
 
     for key, value in data.items():
         if "bw" in key:
             continue
-        numjobs = int(re.search(r'\d+', key).group())
-        if numjobs == 14:
-            continue # We skip 14 as it turns out we were bottlenecked by not enough cpu cores, giving inaccurate results
-        else:
-            x = numjobs - 1
-        if 'wflow_100' in key:
-            write100[x] = value["jobs"][0]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
-            write100_iops[x] = value["jobs"][0]["write"]["iops_mean"]/1000
-        elif 'wflow_99' in key:
-            write99[x] = value["jobs"][1]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
-            write99_iops[x] = value["jobs"][1]["write"]["iops_mean"]/1000
-        elif 'wflow_95' in key:
-            write95[x] = value["jobs"][1]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
-            write95_iops[x] = value["jobs"][1]["write"]["iops_mean"]/1000
-        elif 'wflow_90' in key:
-            write90[x] = value["jobs"][1]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
-            write90_iops[x] = value["jobs"][1]["write"]["iops_mean"]/1000
-        elif 'wflow_75' in key:
-            write75[x] = value["jobs"][1]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
-            write75_iops[x] = value["jobs"][1]["write"]["iops_mean"]/1000
-        elif 'wflow_50' in key:
-            write50[x] = value["jobs"][1]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
-            write50_iops[x] = value["jobs"][1]["write"]["iops_mean"]/1000
+        x = int(math.log2(int(value["jobs"][1]["job options"]["iodepth"])))
+        if 'rflow_100' in key:
+            read100[x] = value["jobs"][1]["read"]["lat_ns"]["percentile"]["95.000000"]/1000
+            read100_iops[x] = value["jobs"][1]["read"]["iops_mean"]/1000
+        elif 'rflow_99' in key:
+            read99[x] = value["jobs"][1]["read"]["lat_ns"]["percentile"]["95.000000"]/1000
+            read99_iops[x] = value["jobs"][1]["read"]["iops_mean"]/1000
+        elif 'rflow_95' in key:
+            read95[x] = value["jobs"][1]["read"]["lat_ns"]["percentile"]["95.000000"]/1000
+            read95_iops[x] = value["jobs"][1]["read"]["iops_mean"]/1000
+        elif 'rflow_90' in key:
+            read90[x] = value["jobs"][1]["read"]["lat_ns"]["percentile"]["95.000000"]/1000
+            read90_iops[x] = value["jobs"][1]["read"]["iops_mean"]/1000
+        elif 'rflow_75' in key:
+            read75[x] = value["jobs"][1]["read"]["lat_ns"]["percentile"]["95.000000"]/1000
+            read75_iops[x] = value["jobs"][1]["read"]["iops_mean"]/1000
+        elif 'rflow_50' in key:
+            read50[x] = value["jobs"][1]["read"]["lat_ns"]["percentile"]["95.000000"]/1000
+            read50_iops[x] = value["jobs"][1]["read"]["iops_mean"]/1000
 
     fig, ax = plt.subplots()
 
-    ax.plot(write100_iops, write100, markersize = 4, marker = '>', label="100% write")
-    ax.plot(write99_iops, write99, markersize = 4, marker = 'x', label="  99% write")
-    ax.plot(write95_iops, write95, markersize = 4, marker = 'o', label="  95% write")
-    ax.plot(write90_iops, write90, markersize = 4, marker = '<', label="  90% write")
-    ax.plot(write75_iops, write75, markersize = 4, marker = '^',  label="  75% write")
-    ax.plot(write50_iops, write50, markersize = 4, marker = '*', label="  50% write")
+    ax.plot(read100_iops, read100, markersize = 4, marker = '>', label="  0% reset")
+    ax.plot(read99_iops, read99, markersize = 4, marker = 'x', label="  1% reset")
+    ax.plot(read95_iops, read95, markersize = 4, marker = 'o', label="  5% reset")
+    ax.plot(read90_iops, read90, markersize = 4, marker = '<', label=" 10% reset")
+    ax.plot(read75_iops, read75, markersize = 4, marker = '^',  label=" 25% reset")
+    ax.plot(read50_iops, read50, markersize = 4, marker = '*', label=" 50% reset")
 
     fig.tight_layout()
     ax.grid(which='major', linestyle='dashed', linewidth='1')
@@ -106,8 +102,8 @@ if __name__ == "__main__":
     ax.legend(loc='best')
     ax.set_ylim(bottom=0)
     # ax.set_xlim(left=0)
-    ax.set_ylabel("p95 write Latency (usec)")
+    ax.set_ylabel("p95 read Latency (usec)")
     ax.set_xlabel("Total IOPS (x1000)")
-    plt.savefig(f"{file_path}/loaded_write_latency.pdf", bbox_inches="tight")
-    plt.savefig(f"{file_path}/loaded_write_latency.png", bbox_inches="tight")
+    plt.savefig(f"{file_path}/loaded_read_latency.pdf", bbox_inches="tight")
+    plt.savefig(f"{file_path}/loaded_read_latency.png", bbox_inches="tight")
     plt.clf()

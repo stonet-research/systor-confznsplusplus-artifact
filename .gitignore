@@ -1,3 +1,4 @@
 *.swp
 */venv/*
 *.txt
+.DS_Store

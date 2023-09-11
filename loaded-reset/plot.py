@@ -48,7 +48,7 @@ if __name__ == "__main__":
     data = dict()
     parse_fio_data(f"{file_path}/data", data)
 
-    queue_depths = [1, 2, 4, 8, 16, 32, 64, 128]
+    queue_depths = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     reset100 = [None] * len(queue_depths)
     reset100_iops = [None] * len(queue_depths)
@@ -67,33 +67,34 @@ if __name__ == "__main__":
         if "bw" in key:
             continue
         numjobs = int(re.search(r'\d+', key).group())
+        x = numjobs - 1
         if 'tflow_100' in key:
-            reset100[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
-            reset100_iops[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
+            reset100[x] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
+            reset100_iops[x] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
         elif 'tflow_99' in key:
-            reset99[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
-            reset99_iops[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
+            reset99[x] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
+            reset99_iops[x] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
         elif 'tflow_95' in key:
-            reset95[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
-            reset95_iops[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
+            reset95[x] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
+            reset95_iops[x] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
         elif 'tflow_90' in key:
-            reset90[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
-            reset90_iops[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
+            reset90[x] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
+            reset90_iops[x] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
         elif 'tflow_75' in key:
-            reset75[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
-            reset75_iops[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
+            reset75[x] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
+            reset75_iops[x] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
         elif 'tflow_50' in key:
-            reset50[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
-            reset50_iops[int(math.log2(int(numjobs)))] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
+            reset50[x] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000/1000
+            reset50_iops[x] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
 
     fig, ax = plt.subplots()
 
-    ax.plot(reset100_iops, reset100, markersize=6, marker='x', label="100% reset")
-    ax.plot(reset99_iops, reset99, markersize=6, marker='o', label="  99% reset")
-    ax.plot(reset95_iops, reset95, markersize=6, marker='*', label="  95% reset")
-    ax.plot(reset90_iops, reset90, markersize=6, marker='<', label="  90% reset")
-    ax.plot(reset75_iops, reset75, markersize=6, marker='+', label="  75% reset")
-    ax.plot(reset50_iops, reset50, markersize=6, marker='^', label="  50% reset")
+    ax.plot(reset100_iops, reset100, markersize=4, marker='x', label="100% reset")
+    ax.plot(reset99_iops, reset99, markersize=4, marker='o', label="  99% reset")
+    ax.plot(reset95_iops, reset95, markersize=4, marker='*', label="  95% reset")
+    ax.plot(reset90_iops, reset90, markersize=4, marker='<', label="  90% reset")
+    ax.plot(reset75_iops, reset75, markersize=4, marker='+', label="  75% reset")
+    ax.plot(reset50_iops, reset50, markersize=4, marker='^', label="  50% reset")
 
     fig.tight_layout()
     ax.grid(which='major', linestyle='dashed', linewidth='1')

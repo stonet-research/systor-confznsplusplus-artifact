@@ -48,7 +48,7 @@ if __name__ == "__main__":
     data = dict()
     parse_fio_data(f"{file_path}/data", data)
 
-    queue_depths = np.arange(1, 10)
+    queue_depths = np.arange(1, 8)
 
     write100 = [None] * len(queue_depths)
     write100_iops = [None] * len(queue_depths)
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         if "bw" in key:
             continue
         numjobs = int(re.search(r'\d+', key).group())
-        if numjobs == 14:
+        if numjobs > 7:
             continue # We skip 14 as it turns out we were bottlenecked by not enough cpu cores, giving inaccurate results
         else:
             x = numjobs - 1
@@ -92,19 +92,19 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots()
 
-    ax.plot(write100_iops, write100, markersize = 4, marker = '>', label="100% write")
-    ax.plot(write99_iops, write99, markersize = 4, marker = 'x', label="  99% write")
-    ax.plot(write95_iops, write95, markersize = 4, marker = 'o', label="  95% write")
-    ax.plot(write90_iops, write90, markersize = 4, marker = '<', label="  90% write")
-    ax.plot(write75_iops, write75, markersize = 4, marker = '^',  label="  75% write")
-    ax.plot(write50_iops, write50, markersize = 4, marker = '*', label="  50% write")
+    ax.plot(write100_iops, write100, markersize = 4, marker = '>', label="  0% reset")
+    ax.plot(write99_iops, write99, markersize = 4, marker = 'x', label="  1% reset")
+    ax.plot(write95_iops, write95, markersize = 4, marker = 'o', label="  5% reset")
+    ax.plot(write90_iops, write90, markersize = 4, marker = '<', label=" 10% reset")
+    ax.plot(write75_iops, write75, markersize = 4, marker = '^',  label=" 25% reset")
+    ax.plot(write50_iops, write50, markersize = 4, marker = '*', label=" 50% reset")
 
     fig.tight_layout()
     ax.grid(which='major', linestyle='dashed', linewidth='1')
     ax.set_axisbelow(True)
     # ax.legend(loc='best', handles=handles)
     ax.legend(loc='best')
-    ax.set_ylim(bottom=0)
+    ax.set_ylim(bottom=0, top=140)
     # ax.set_xlim(left=0)
     ax.set_ylabel("p95 write Latency (usec)")
     ax.set_xlabel("Total IOPS (x1000)")
