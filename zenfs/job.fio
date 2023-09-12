@@ -26,5 +26,5 @@ iodepth=1
 numjobs=1
 bs=${BS}
 runtime=2m
-offset=400z
+offset=100z
 size=${TRIM_SIZE}z

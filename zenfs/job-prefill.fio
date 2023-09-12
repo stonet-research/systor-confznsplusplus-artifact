@@ -3,7 +3,7 @@ name=loaded-reset
 filename=/dev/${DEV}
 ioengine=io_uring_cmd 
 sqthread_poll=1
-size=300z
+size=700z
 bs=64K
 group_reporting
 zonemode=zbd
@@ -14,4 +14,4 @@ lat_percentiles=1
 iodepth=1
 rw=write
 numjobs=1
-offset=400z
+offset=100z
