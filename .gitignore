@@ -2,3 +2,4 @@
 */venv/*
 *.txt
 .DS_Store
+applications/filebench/filebench/
