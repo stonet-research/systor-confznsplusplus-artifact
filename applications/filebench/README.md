@@ -1,12 +1,12 @@
 # Install filebench locally
 ```bash
-./install_filebench
+./install_filebench.sh
 ```
 
 # Usage
 
 ```bash
-./run_filebench nvme_device zns_device workload
+./run_filebench.sh nvme_device zns_device workload
 ```
 Workload can be:
 * varmail

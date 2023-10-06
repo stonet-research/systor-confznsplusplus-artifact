@@ -23,8 +23,8 @@
 # Use is subject to license terms.
 #
 
-set $dir=/mnt/f2fs
-set $nfiles=500000
+set $dir=/mnt/filebench
+set $nfiles=10000
 set $meandirwidth=20
 set $filesize=cvar(type=cvar-gamma,parameters=mean:131072;gamma:1.5)
 set $nthreads=50

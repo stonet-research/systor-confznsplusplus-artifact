@@ -4,7 +4,7 @@
 scriptdir=$(cd $(dirname "$0") && pwd)
 
 filebenchdir="/mnt/filebench"
-filebenchbinary="./filebench/filebench"
+filebenchbinary="setarch `arch` --addr-no-randomize ./filebench/filebench"
 resultdir="./results"
 
 if [ $# != 3 ]; then
