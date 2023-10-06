@@ -3,3 +3,4 @@
 *.txt
 .DS_Store
 applications/filebench/filebench/
+nohup.out

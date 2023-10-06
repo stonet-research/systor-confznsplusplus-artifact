@@ -25,7 +25,7 @@
 
 set $dir=/mnt/filebench
 set $nfiles=1000
-set $meandirwidth=10000000
+set $meandirwidth=1000000
 set $filesize=cvar(type=cvar-gamma,parameters=mean:16384;gamma:1.5)
 set $nthreads=16
 set $iosize=1m

@@ -4,7 +4,7 @@
 scriptdir=$(cd $(dirname "$0") && pwd)
 
 filebenchdir="/mnt/filebench"
-filebenchbinary="setarch `arch` --addr-no-randomize ./filebench/filebench"
+filebenchbinary="setarch `arch` --addr-no-randomize $scriptdir/filebench/filebench"
 resultdir="./results"
 
 if [ $# != 3 ]; then
@@ -32,13 +32,13 @@ mkdir -p "$resultdir"
 
 case $workload in
   *"varmail"*)
-    sudo "$filebenchbinary" -f "varmail_custom.f" 1> "$resultdir/varmail-$(date +%s).out" 2> "$resultdir/varmail-$(date +%s).err"
+    sudo $filebenchbinary -f "varmail_custom.f" 1> "$resultdir/varmail-$(date +%s).out" 2> "$resultdir/varmail-$(date +%s).err"
     ;;
   *"webserver"*)
-   sudo "$filebenchbinary" -f "webserver_custom.f" 1> "$resultdir/webserver-$(date +%s).out" 2> "$resultdir/webserver-$(date +%s).err"
+   sudo $filebenchbinary -f "webserver_custom.f" 1> "$resultdir/webserver-$(date +%s).out" 2> "$resultdir/webserver-$(date +%s).err"
     ;;
   *"fileserver"*)
-   sudo "$filebenchbinary" -f "fileserver_custom.f" 1> "$resultdir/fileserver-$(date +%s).out" 2> "$resultdir/fileserver-$(date +%s).err"
+   sudo $filebenchbinary -f "fileserver_custom.f" 1> "$resultdir/fileserver-$(date +%s).out" 2> "$resultdir/fileserver-$(date +%s).err"
     ;;
   *) echo "UNKNOWN WORKLOAD";;
 esac

@@ -6,7 +6,7 @@
 # Usage
 
 ```bash
-./run_filebench.sh nvme_device zns_device workload
+sudo nohup ./run_filebench.sh nvme_device zns_device workload &
 ```
 Workload can be:
 * varmail
