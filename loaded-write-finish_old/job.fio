@@ -11,7 +11,6 @@ lat_percentiles=1
 iodepth=1
 numjobs=1
 bs=4K
-runtime=5m
 
 [write]
 numjobs=${WRITE_IODEPTH}
@@ -19,15 +18,13 @@ rw=write
 bs=8K
 size=${CONCUR_WRITE_SIZE}z
 offset_increment=${CONCUR_WRITE_SIZE}z
+time_based
+runtime=10
 offset=${FINISH_SIZE}z
 exitall
-exit_what=all
 
 [finish]
-new_group
-rw=write
-bs=4K
-rate=,${FINISH_LIMIT},
+rw=trim
+bs=2147483648
+rate=,,${FINISH_LIMIT}
 finish=1
-exitall
-exit_what=all

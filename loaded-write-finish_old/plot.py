@@ -4,7 +4,6 @@ import os
 import re
 import glob
 import json
-from pathlib import Path
 import math
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,11 +37,10 @@ def parse_fio_data(data_path, data):
                         temp.writelines(rows)
                     break
 
-        if Path(os.path.join(os.getcwd(), "temp.json")).exists(): 
-            with open(os.path.join(os.getcwd(), "temp.json"), 'r') as temp:
-                data[file] = dict()
-                data[file] = json.load(temp)
-                os.remove(os.path.join(os.getcwd(), "temp.json"))
+        with open(os.path.join(os.getcwd(), "temp.json"), 'r') as temp:
+            data[file] = dict()
+            data[file] = json.load(temp)
+            os.remove(os.path.join(os.getcwd(), "temp.json"))
 
     return 1
 
@@ -76,23 +74,23 @@ if __name__ == "__main__":
         else:
             x = numjobs - 1
         if 'wflow_100' in key:
-            write100[x] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
-            write100_iops[x] = value["jobs"][0]["finish"]["iops_mean"]/1000
+            write100[x] = value["jobs"][0]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
+            write100_iops[x] = value["jobs"][0]["write"]["iops_mean"]/1000
         elif 'wflow_99' in key:
-            write99[x] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
-            write99_iops[x] = value["jobs"][0]["finish"]["iops_mean"]/1000
+            write99[x] = value["jobs"][1]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
+            write99_iops[x] = value["jobs"][1]["write"]["iops_mean"]/1000
         elif 'wflow_95' in key:
-            write95[x] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
-            write95_iops[x] = value["jobs"][0]["finish"]["iops_mean"]/1000
+            write95[x] = value["jobs"][1]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
+            write95_iops[x] = value["jobs"][1]["write"]["iops_mean"]/1000
         elif 'wflow_90' in key:
-            write90[x] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
-            write90_iops[x] = value["jobs"][0]["finish"]["iops_mean"]/1000
+            write90[x] = value["jobs"][1]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
+            write90_iops[x] = value["jobs"][1]["write"]["iops_mean"]/1000
         elif 'wflow_75' in key:
-            write75[x] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
-            write75_iops[x] = value["jobs"][0]["finish"]["iops_mean"]/1000
+            write75[x] = value["jobs"][1]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
+            write75_iops[x] = value["jobs"][1]["write"]["iops_mean"]/1000
         elif 'wflow_50' in key:
-            write50[x] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
-            write50_iops[x] = value["jobs"][0]["finish"]["iops_mean"]/1000
+            write50[x] = value["jobs"][1]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
+            write50_iops[x] = value["jobs"][1]["write"]["iops_mean"]/1000
 
     fig, ax = plt.subplots()
 
@@ -108,7 +106,7 @@ if __name__ == "__main__":
     ax.set_axisbelow(True)
     # ax.legend(loc='best', handles=handles)
     ax.legend(loc='best')
-    ax.set_ylim(bottom=0, top=130)
+    ax.set_ylim(bottom=0, top=140)
     # ax.set_xlim(left=0)
     ax.set_ylabel("p95 write Latency (usec)")
     ax.set_xlabel("Total IOPS (x1000)")
