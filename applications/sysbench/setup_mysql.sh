@@ -39,13 +39,27 @@ sudo mkdir -p $auxdir
 sudo chown mysql:mysql $auxdir
 sudo chmod 750 $auxdir
 
-# Create file system
+# Force RocksDB to be enabled in MySQL (it will not be by default...)
+sudo service mysql stop
+echo "Comment out 'loose-rocksdb-fs-uri' and 'default-storage-engine' in /etc/mysql/conf.d/mysql.cnf"
+read
+sudo service mysql start
+sudo ps-admin --enable-rocksdb -u root -p
+
+# Create file system, this ttme do add RocksDB configuration
 sudo service mysql stop
 echo "Please edit [mysqlid] in /etc/mysql/conf.d/mysql.cnf to add:"
-echo "loose-rocksdb-fs-uri		= zenfs://dev:$1"
-echo "plugin-load-add=rocksdb		= ha_rocksdb.so"
-echo "default-storage-engine		= rocksdb"
-echo "Also try 'sudo ps-admin --enable-rocksdb -u root -p' if it keeps failing"
+echo "pid-file    = /var/run/mysqld/mysqld.pid"
+echo "socket      = /var/run/mysqld/mysqld.sock"
+echo "datadir     = /var/lib/mysql"
+echo "log-error   = /var/log/mysql/error.log"
+echo ""
+echo "rocksdb"
+echo "default-storage-engine        =   rocksdb"
+echo "skip-innodb"
+echo "default-tmp-storage-engine    =   MyISAM"
+echo "log-error                     =   /var/log/mysql/error.log"
+echo "loose-rocksdb-fs-uri          =   zenfs://dev:$1"
 read
 sudo -H -u mysql zenfs mkfs --zbd=$1 --aux_path=$auxdir --finish_threshold=0 --force
 sudo service mysql start
