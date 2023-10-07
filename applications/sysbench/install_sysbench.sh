@@ -16,7 +16,7 @@ sudo apt-get installi libssl-dev libmysqlclient-dev
 
 ## From source, does work
 git clone https://github.com/percona/percona-server.git percona-server
-cd percona-server
+cd percona-server || exit 1
 git checkout  0fe62c853e2c710ef2e3804cc9bef9c09466de0
 mkdir build && cd build
 cmake -DBUILD_CONFIG=mysql_release \
@@ -64,7 +64,7 @@ cmake -DBUILD_CONFIG=mysql_release \
                 -DWITH_ENCRYPTION_UDF=ON \
                 -DWITH_NUMA=ON \
                 -DWITH_LDAP=system \
-                -DWITH_EXTRA_CHARSETS=all $(TOKUDB_OPTS_DEBUG) \
+                -DWITH_EXTRA_CHARSETS=all \
                 -DROCKSDB_PLUGINS=zenfs \
                 -DWITH_ZENFS_UTILITY=ON \
                 -DWITH_ZBD=bundled  ..

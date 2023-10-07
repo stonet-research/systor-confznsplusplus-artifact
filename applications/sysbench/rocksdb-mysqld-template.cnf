@@ -1,0 +1,7 @@
+# Setup RocksDB engine
+rocksdb
+default-storage-engine      = rocksdb
+skip-innodb
+default-tmp-storage-engine  = MyISAM
+log-error                   = /var/log/mysql/error.log
+loose-rocksdb-fs-uri        = zenfs://dev:REPLACE
