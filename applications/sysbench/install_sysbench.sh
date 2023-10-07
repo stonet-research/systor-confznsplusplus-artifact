@@ -19,6 +19,10 @@ git clone https://github.com/percona/percona-server.git percona-server
 cd percona-server || exit 1
 git checkout  0fe62c853e2c710ef2e3804cc9bef9c09466de0
 mkdir build && cd build
+echo "Beware the next step might need to be repeated if dependencies are missing..."
+echo "After each recompilation do 'rm CMakeCache.txt'"
+echo "Press <ENTER> if understood"
+read
 cmake -DBUILD_CONFIG=mysql_release \
                 -DCMAKE_INSTALL_PREFIX=/usr \
                 -DINSTALL_DOCDIR=share/mysql/docs \
