@@ -9,33 +9,108 @@ if [ $# != 1 ]; then
     exit 1
 fi
 
-sysbenchbinary="$scriptdir/sysbench/sysbench"
-resultsdir="$scriptdir/results"
+sysbenchbinarydir="./sysbench/src/lua"
+resultsdir="results"
 auxdir="/tmp/mysql_aux_$1"
+conffile="/etc/mysql/mysql.conf.d/mysqld.cnf" 
+tablesize=1000 #250000000
+tables=10 #20
 
-mkdir -p "$resultdir"
+mkdir -p "$resultsdir"
+echo "Setting environment"
 
-# Create file system
+# Create ZenFS file system
 sudo service mysql stop
 sudo rm -r $auxdir
-sudo mkdir -p $auxdir
 sudo -H -u mysql zenfs mkfs --zbd=$1 --aux_path=$auxdir --finish_threshold=0 --force
+sudo chown mysql:mysql $auxdir
+sudo chmod 750 $auxdir
 sudo service mysql start
 
+# Generate database if needed
+sudo mysql -u root -e 'CREATE DATABASE IF NOT EXISTS sbtest'
+
 # Prepare for fill
-sudo mv /etc/mysql/mysql.conf.d/mysqld.cnf /etc/mysql/mysql.conf.d/mysqld.cnf-bkup
-sudo cp ./bulkload-mysqld.cnf /etc/mysql/mysql.conf.d/mysqld.cnf
-sed "s/REPLACE/$1/g"  /etc/mysql/mysql.conf.d/mysqld.cnf
+sudo -s -- <<EOF
+service mysql stop
+cp "$conffile" /etc/mysql/mysql.conf.d/mysqld-default-bkup.cnf
+cp ./default-mysqld.cnf "$conffile"
+cat rocksdb-mysqld-template.cnf >>  "$conffile"
+sed "s/REPLACE/$1/g"  -i "$conffile"
+cat rocksdb-bulkload-mysqld.cnf >>  "$conffile"
 service mysql restart
+EOF
 
 # Run fill
-/usr/local/share/sysbench/oltp_write_only.lua --db-driver=mysql --mysql-user=root --time=0 --create_secondary=off --mysql-password=password --mysql-host=localhost --mysql-db=sbtest --mysql-storage-engine=rocksdb --table-size=250000000 --tables=20 --threads=64 --report-interval=5 prepare 1> "$resultsdir/fill-$(date +%s).out" 2> "$resultsdir/fill-$(date +%s).err";
+echo "Filling database"
+sudo $sysbenchbinarydir/oltp_write_only.lua \
+    --db-driver=mysql \
+    --mysql-user=root \
+    --time=0 \
+    --create_secondary=off \
+    --mysql-password=password \
+    --mysql-host=localhost \
+    --mysql-db=sbtest \
+    --mysql-storage-engine=rocksdb \
+    --table-size=$tablesize \
+    --tables=$tables \
+    --threads=64 \
+    --report-interval=5 \
+    prepare 1> "$resultsdir/fill-$(date +%s).out" 2> "$resultsdir/fill-$(date +%s).err";
 
-sudo mv /etc/mysql/mysql.conf.d/mysqld.cnf /etc/mysql/mysql.conf.d/mysqld.cnf-bulkoad-bkup
-sudo cp ./workload-mysqld.cnf /etc/mysql/mysql.conf.d/mysqld.cnf
-sed "s/REPLACE/$1/g"  /etc/mysql/mysql.conf.d/mysqld.cnf
+# Prepare for run
+sudo -s -- <<EOF
+service mysql stop
+cp "$conffile" /etc/mysql/mysql.conf.d/mysqld-default-bkup.cnf
+cp ./default-mysqld.cnf "$conffile"
+cat rocksdb-mysqld-template.cnf >>  "$conffile"
+sed "s/REPLACE/$1/g"  -i "$conffile"
+cat rocksdb-workload-mysqld.cnf >>  "$conffile"
 service mysql restart
+EOF
 
-/usr/local/share/sysbench/oltp_update_index.lua --db-driver=mysql --mysql-user=root --time=60 --create_secondary=off --mysql-password=<password> --mysql-host=localhost --mysql-db=sbtest --mysql-storage-engine=rocksdb --table-size=250000000 --tables=20 --threads=64 --report-interval=5 run 1> "$resultsdir/run-$(date +%s).out" 2> "$resultsdir/run-$(date +%s).err"
+echo "OLTP update index"
+sudo $sysbenchbinarydir/oltp_update_index.lua \
+    --db-driver=mysql \
+    --mysql-user=root \
+    --time=600 \
+    --create_secondary=off \
+    --mysql-password=password \
+    --mysql-host=localhost \
+    --mysql-db=sbtest \
+    --mysql-storage-engine=rocksdb \
+    --table-size=$tablesize \
+    --tables=$tables \
+    --threads=64 \
+    --report-interval=5 \
+    --warmup-time=20 \
+    run 1> "$resultsdir/run-$(date +%s).out" 2> "$resultsdir/run-$(date +%s).err"
 
-/usr/local/share/sysbench/oltp_update_index.lua --db-driver=mysql --mysql-user=root --time=60 --create_secondary=off --mysql-password=<password> --mysql-host=localhost --mysql-db=sbtest --mysql-storage-engine=rocksdb --table-size=250000000 --tables=20 --threads=64 --report-interval=5 cleanup 1> "$resultsdir/cleanup-$(date +%s).out" 2> "$resultsdir/cleanup-$(date +%s).err"
+echo "Cleanup database"
+sudo $sysbenchbinarydir/oltp_update_index.lua \
+    --db-driver=mysql \
+    --mysql-user=root \
+    --time=60 \
+    --create_secondary=off \
+    --mysql-password=password \
+    --mysql-host=localhost \
+    --mysql-db=sbtest \
+    --mysql-storage-engine=rocksdb \
+    --table-size=$tablesize \
+    --tables=$tables \
+    --threads=64 \
+    --report-interval=5 \
+    cleanup 1> "$resultsdir/cleanup-$(date +%s).out" 2> "$resultsdir/cleanup-$(date +%s).err"
+
+# Destroy database
+sudo mysql -u root -e 'DROP DATABASE IF EXISTS sbtest'
+
+# Reset
+sudo -s -- <<EOF
+service mysql stop
+cp "$conffile" /etc/mysql/mysql.conf.d/mysqld-default-bkup.cnf
+cp ./default-mysqld.cnf "$conffile"
+cat rocksdb-mysqld-template.cnf >>  "$conffile"
+sed "s/REPLACE/$1/g"  -i "$conffile"
+service mysql restart
+EOF
