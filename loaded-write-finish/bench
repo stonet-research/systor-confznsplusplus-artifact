@@ -46,7 +46,7 @@ WRITE_ZONES=$(echo "${DEV_ZONES} - ${FINISH_SIZE}" | bc) # All but the fill zone
 # therefore we max to 9 write jobs, as there is 1 concurrent trim job
 # issuing zone finish with also its own polling thread
 WRITE_IODEPTH=(1 2 3 4 5 6 7) 
-WRITE_FLOW=(100 99 95 90 75 50)
+WRITE_FLOW=(100 99 95 90 75 50) # 25)
 
 echo "#########################################################"
 echo "###################### BENCH  SETUP #####################"

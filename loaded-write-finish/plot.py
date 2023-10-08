@@ -66,6 +66,8 @@ if __name__ == "__main__":
     write75_iops = [None] * len(queue_depths)
     write50 = [None] * len(queue_depths)
     write50_iops = [None] * len(queue_depths)
+    write25 = [None] * len(queue_depths)
+    write25_iops = [None] * len(queue_depths)
 
     for key, value in data.items():
         if "bw" in key:
@@ -93,6 +95,9 @@ if __name__ == "__main__":
         elif 'wflow_50' in key:
             write50[x] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
             write50_iops[x] = value["jobs"][0]["finish"]["iops_mean"]/1000
+        elif 'wflow_25' in key:
+            write25[x] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
+            write25_iops[x] = value["jobs"][0]["finish"]["iops_mean"]/1000
 
     fig, ax = plt.subplots()
 
@@ -102,6 +107,7 @@ if __name__ == "__main__":
     ax.plot(write90_iops, write90, markersize = 4, marker = '<',   label=" 10% finish")
     ax.plot(write75_iops, write75, markersize = 4, marker = '^',   label=" 25% finish")
     ax.plot(write50_iops, write50, markersize = 4, marker = '*',   label=" 50% finish")
+    # ax.plot(write25_iops, write25, markersize = 4, marker = 'p',   label=" 75% finish")
 
     fig.tight_layout()
     ax.grid(which='major', linestyle='dashed', linewidth='1')
