@@ -36,9 +36,10 @@ mkdir -p data
 ##################################
 BS=$(echo "${DEV_SECT_SIZE} * ${DEV_ZONE_SIZE}" | bc)
 
-# Use 90% of the zones for finish and 10% for writes
-# FINISH_SIZE=$(echo "scale=0; ${DEV_ZONES} * 0.9" | bc | sed 's/\.[0-9]*//g')
-FINISH_SIZE=100
+# Use 300 finish zones as with ~1 finish/sec and at 50% rate limit we can do 1 finish every 2 seconds
+# and benchmarks try to run for 10 minutes (10*60/2) = 300 and peak write bandwidth is 1.2GB/s = ~1 zone so within 10
+# minutes we can fill (10*60) = 600 and we have a total of 904 zones
+FINISH_SIZE=300
 WRITE_ZONES=$(echo "${DEV_ZONES} - ${FINISH_SIZE}" | bc) # All but the fill zones
 
 # our setup only has 20 cores and we have a polling thread for each job
@@ -84,6 +85,8 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
         else
             CONCUR_WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
             finish_rate_limit=$(echo "scale=2; ${finish_flow} / 100  * ${BW}" | bc)
+
+            # Write job has a ramp time because fio will directly issue 2 finishs and then realize it needs to rate limit, therefore we don't want to account this period in the write performance
             sudo env "DEV=${DEV}" "CONCUR_WRITE_SIZE=${CONCUR_WRITE_SIZE}" "WRITE_IODEPTH=${write_iodepth}" "FINISH_SIZE=${FINISH_SIZE}" "FINISH_LIMIT=${finish_rate_limit}" ../fio/fio --output-format=json --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json job.fio
         fi
     done

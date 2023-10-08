@@ -11,9 +11,10 @@ lat_percentiles=1
 iodepth=1
 numjobs=1
 bs=4K
-runtime=5m
+runtime=10m
 
 [write]
+ramp_time=5s
 numjobs=${WRITE_IODEPTH}
 rw=write
 bs=8K
