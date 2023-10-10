@@ -104,7 +104,7 @@ if __name__ == "__main__":
     ax.set_axisbelow(True)
     # ax.legend(loc='best', handles=handles)
     # ax.legend(loc='best')
-    ax.set_ylim(bottom=0)
+    ax.set_ylim(bottom=0, top=1.05)
     # ax.set_xlim(left=0)
     ax.set_ylabel("relative reset bandwidth")
     ax.set_xlabel("concurrent write jobs")
