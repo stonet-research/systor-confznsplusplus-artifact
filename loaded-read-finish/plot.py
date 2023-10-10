@@ -111,7 +111,7 @@ if __name__ == "__main__":
     # ax.legend(loc='best', handles=handles)
     ax.legend(loc='upper left')
     ax.set_ylim(bottom=0, top=2250)
-    # ax.set_xlim(left=0)
+    ax.set_xlim(left=0)
     ax.set_ylabel("p95 read Latency (usec)")
     ax.set_xlabel("Total IOPS (x1000)")
     plt.savefig(f"{file_path}/loaded_read_latency.pdf", bbox_inches="tight")
