@@ -1,0 +1,65 @@
+diff --git a/format_mkfs.sh b/format_mkfs.sh
+index 803eda1..8d3e7e5 100755
+--- a/format_mkfs.sh
++++ b/format_mkfs.sh
+@@ -34,6 +34,9 @@ make
+ cd ../../..
+ fi
+
++PCIE_ADDR="0000:00:06.0"
++ZENFS_DEV="nvme0n2"
++
+ ./plugin/zenfs/util/zenfs format --zbd=$ZENFS_DEV --aux_path=/tmp/aux_zenfs --zns_pci=$PCIE_ADDR
+
+ rm -rf /tmp/aux_zenfs
+diff --git a/identify_zns b/identify_zns
+index c3adfdd..451ec0f 100644
+--- a/identify_zns
++++ b/identify_zns
+@@ -1,2 +1,2 @@
+-PCIeAddress: 01:00.0
+-DeviceName: nvme0n1
++PCIeAddress:0000:00:06.0
++DeviceName:Ultra
+diff --git a/plugin/zenfs/fs/zbd_zenfs.cc b/plugin/zenfs/fs/zbd_zenfs.cc
+index ee3fbe9..9af2585 100644
+--- a/plugin/zenfs/fs/zbd_zenfs.cc
++++ b/plugin/zenfs/fs/zbd_zenfs.cc
+@@ -517,7 +517,7 @@ Status ZonedBlockDevice::Format(){
+ }
+
+ // [JS] SPDK-related struct & definition
+-#define NVME_ZNS_NAMESPACE (1) // we only use namespace 1
++#define NVME_ZNS_NAMESPACE (2) // we only use namespace 1
+
+ // [JS] SPDK probe callback
+ static bool zns_probe(void * /*cb_ctx*/,
+@@ -543,6 +543,8 @@ static void zns_attach(void * /*cb_ctx*/,
+
+   g_stInfo->maxqd = opts->io_queue_size;
+
++  printf("Try out device %u==%u \n", spdk_nvme_ns_get_csi(g_stInfo->ns), SPDK_NVME_CSI_ZNS);
++
+   if (spdk_nvme_ns_get_csi(g_stInfo->ns) == SPDK_NVME_CSI_ZNS) {
+     g_stInfo->zns = spdk_nvme_zns_ns_get_data(g_stInfo->ns);
+     if (spdk_nvme_ctrlr_get_flags(ctrlr) & SPDK_NVME_CTRLR_ZONE_APPEND_SUPPORTED) {
+diff --git a/plugin/zenfs/util/Makefile b/plugin/zenfs/util/Makefile
+index f641ec4..93f5085 100644
+--- a/plugin/zenfs/util/Makefile
++++ b/plugin/zenfs/util/Makefile
+@@ -7,6 +7,7 @@ CXX ?= g++
+
+ SPDK_LIBRARIES += -lspdk
+ SPDK_LIBRARIES += -lspdk_env_dpdk
++SPDK_LIBRARIES += -L/home/user/src/WALTZ/plugin/spdk/dpdk/build/lib
+ SPDK_LIBRARIES += -lrte_ring
+ SPDK_LIBRARIES += -lrte_mempool
+ SPDK_LIBRARIES += -lrte_bus_pci
+@@ -17,7 +18,7 @@ SPDK_LIBRARIES += -lrte_vhost
+ SPDK_LIBRARIES += -lrte_power
+
+ EXTRA_LDFLAGS += -Wl,--whole-archive
+-EXTRA_LDFLAGS += -lisal
++#EXTRA_LDFLAGS += -lisal
+ EXTRA_LDFLAGS += $(SPDK_LIBRARIES)
+ EXTRA_LDFLAGS += -Wl,--no-whole-archive
