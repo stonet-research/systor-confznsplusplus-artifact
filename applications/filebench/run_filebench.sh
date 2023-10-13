@@ -24,6 +24,7 @@ if [[ "$ismounted" == *"f2fs"* ]]; then
 fi
 
 # mkfs
+echo mq-deadline | sudo tee "/sys/block/$2/queue/scheduler"
 sudo mkfs.f2fs -f -m -c $devzns $devnvmei || exit
 sudo mkdir -p "$filebenchdir" || exit 1
 sudo mount -t f2fs $devnvme "$filebenchdir" || exit 1
