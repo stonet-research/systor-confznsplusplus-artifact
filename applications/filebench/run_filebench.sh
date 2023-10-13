@@ -34,19 +34,19 @@ mkdir -p "$resultdir"
 case $workload in
   *"varmail"*)
     sudo $filebenchbinary -f "varmail_custom.f" 1> "$resultdir/varmail-$(date +%s).out" 2> "$resultdir/varmail-$(date +%s).err";
-    sudo cat /sys/kernel/debug/f2fs/status >  "$resultdir/varmail-f2fs-info-$(date +%s).out";
+    sudo cat /sys/kernel/debug/f2fs/status | sudo tee "$resultdir/varmail-f2fs-info-$(date +%s).out";
     for i in $(sudo find /sys/fs/f2fs/$1 -type f); do echo $i=$(sudo cat $i); done | sudo tee -a "$resultdir/varmail-f2fs-info-$(date +%s).out";
     for i in $(sudo find /sys/fs/f2fs/$1/stat -type f); do echo $i=$(sudo cat $i); done | sudo tee -a "$resultdir/varmail-f2fs-info-$(date +%s).out";
     ;;
   *"webserver"*)
     sudo $filebenchbinary -f "webserver_custom.f" 1> "$resultdir/webserver-$(date +%s).out" 2> "$resultdir/webserver-$(date +%s).err";
-    sudo cat /sys/kernel/debug/f2fs/status >  "$resultdir/webserver-f2fs-info-$(date +%s).out";
+    sudo cat /sys/kernel/debug/f2fs/status | sudo tee "$resultdir/webserver-f2fs-info-$(date +%s).out";
     for i in $(sudo find /sys/fs/f2fs/$1 -type f); do echo $i=$(sudo cat $i); done | sudo tee -a "$resultdir/webserver-f2fs-info-$(date +%s).out";
     for i in $(sudo find /sys/fs/f2fs/$1/stat -type f); do echo $i=$(sudo cat $i); done | sudo tee -a "$resultdir/webserver-f2fs-info-$(date +%s).out";
     ;;
   *"fileserver"*)
     sudo $filebenchbinary -f "fileserver_custom.f" 1> "$resultdir/fileserver-$(date +%s).out" 2> "$resultdir/fileserver-$(date +%s).err";
-    sudo cat /sys/kernel/debug/f2fs/status >  "$resultdir/fileserver-f2fs-info-$(date +%s).out";
+    sudo cat /sys/kernel/debug/f2fs/status | sudo tee "$resultdir/fileserver-f2fs-info-$(date +%s).out";
     for i in $(sudo find /sys/fs/f2fs/$1 -type f); do echo $i=$(sudo cat $i); done | sudo tee -a "$resultdir/fileserver-f2fs-info-$(date +%s).out";
     for i in $(sudo find /sys/fs/f2fs/$1/stat -type f); do echo $i=$(sudo cat $i); done | sudo tee -a "$resultdir/fileserver-f2fs-info-$(date +%s).out";
     ;;
