@@ -18,3 +18,5 @@ autoconf
 ./configure
 make
 
+# Install globally (needed to prevent issues)
+sudo make install
