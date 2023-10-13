@@ -1,0 +1,14 @@
+diff --git a/ipc.h b/ipc.h
+index 8361799..c6dc795 100644
+--- a/ipc.h
++++ b/ipc.h
+@@ -74,7 +74,8 @@
+  * has to increase these values
+  */
+ #define        FILEBENCH_NFILESETS             (16)
+-#define        FILEBENCH_NFILESETENTRIES       (1024 * 1024)
++#define        FILEBENCH_NFILESETENTRIES       (1024 * 1024 * 10)
++//#define      FILEBENCH_NFILESETENTRIES       (1024 * 1024)
+ #define        FILEBENCH_NPROCFLOWS            (1024)
+ #define        FILEBENCH_NTHREADFLOWS          (1024)
+ /* 16 flowops per threadflow seems reasonable */

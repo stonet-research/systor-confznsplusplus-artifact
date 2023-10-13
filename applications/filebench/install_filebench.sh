@@ -5,6 +5,7 @@ cd filebench || exit 1
 
 # pin version
 git checkout 22620e602cbbebad90c0bd041896ebccf70dbf5f
+git apply ./filebench.patch
 
 # Generate autotool scripts
 libtoolize
