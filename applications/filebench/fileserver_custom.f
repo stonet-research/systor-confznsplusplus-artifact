@@ -24,7 +24,7 @@
 #
 
 set $dir=/mnt/filebench
-set $nfiles=10000
+set $nfiles=100000
 set $meandirwidth=20
 set $filesize=cvar(type=cvar-gamma,parameters=mean:131072;gamma:1.5)
 set $nthreads=50
@@ -58,4 +58,4 @@ create files
 system "sync"
 system "echo 3 > /proc/sys/vm/drop_caches"
 
-psrun -5 800
+psrun -5 2700
