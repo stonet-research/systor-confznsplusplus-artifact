@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# Move to current dir
+scriptdir=$(cd $(dirname "$0") && pwd)
+
+filebenchbinary="setarch `arch` --addr-no-randomize $scriptdir/filebench/filebench"
+resultdir="./results"
+
+if [ $# != 4 ]; then
+    echo "Usage: nvme (shortname) zns (shortname) workload filebenchdir"
+  exit 1
+fi
+
+# Run with reset interference, have to currently manually comment it out after first bench start and only start second once filling is done 
+# TODO code this as a cmd line argument (-r or so) [if already running interference, skip this ]
+# HAVE A PARENT SCRIPT IN THE PARENT DIR TO SEE IF WE WANT TO RUN WITH MULTIPLE NS, INTERFERENCE ... PASS RESPECTIVE FLAGS (START JOBS - WAIT FOR JOBS, ETC.) AND SETUP NS AS WELL
+# RESET="nvme0n4"
+
+# if [ -n "${RESET}" ]; then
+#   echo "Running with Reset Interference"
+#   DEV=$(echo ${RESET} | sed 's/vme/g/g')
+
+#   DEV_SECT_SIZE=$(cat /sys/block/${RESET}/queue/hw_sector_size)
+#   DEV_ZONE_SIZE_BLOCKS=$(cat /sys/block/${RESET}/queue/chunk_sectors)
+#   DEV_ZONE_SIZE=$(echo "${DEV_ZONE_SIZE_BLOCKS} * 512" | bc)
+#   DEV_ZONES=$(cat /sys/block/${RESET}/queue/nr_zones)
+#   FILL_SIZE=$(echo "scale=0; ${DEV_ZONES} * 0.9" | bc | sed 's/\.[0-9]*//g')
+
+#   echo "Benchmarking ZNS Device Reset Rate Limit"
+#   # sudo nvme zns reset-zone /dev/${RESET} -a
+#   # sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../../fio/fio --output-format=json --output=bw.json ../fio-interference-loads/job-trim.fio
+
+#   BW=$(cat bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
+#   echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
+
+#   # sudo env "DEV=${DEV}" "FILL_SIZE=${DEV_ZONES}" ../../fio/fio --output-format=json --output=${resultdir}/fill.json ../fio-interference-loads/job-fill.fio
+
+#   # rate limit to 10%
+#   trim_rate_limit=$(echo "scale=2; 10 / 100  * ${BW}" | bc)
+#   (sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "RESET_LIMIT=${trim_rate_limit}" ../../fio/fio --output-format=json --output=${resultdir}/interference.json ../fio-interference-loads/job-reset.fio) &
+# fi
+
+devnvme="/dev/$1"
+devzns="/dev/$2"
+workload="$3"
+filebenchdir="/mnt/$4"
+
+# Unmount if needed
+ismounted=$(mount | grep -i "$filebenchdir")
+if [[ "$ismounted" == *"f2fs"* ]]; then
+  echo "unmounting previous f2fs";
+  sudo umount "$filebenchdir";
+fi
+
+# mkfs
+echo mq-deadline | sudo tee "/sys/block/$2/queue/scheduler"
+sudo env "PATH=$PATH" mkfs.f2fs -f -m -c $devzns $devnvme || exit
+sudo mkdir -p "$filebenchdir" || exit 1
+sudo mount -t f2fs -o active_logs=4 $devnvme "$filebenchdir" || exit 1
+
+mkdir -p "$resultdir"
+
+case $workload in
+  *"varmail"*)
+    sed -i "s|/mnt/.*$|/mnt/$4|g" varmail_custom.f
+    sudo $filebenchbinary -f "varmail_custom.f" 1> "$resultdir/varmail-$(date +%s)-$1.out" 2> "$resultdir/varmail-$(date +%s)-$1.err";
+    sudo cat /sys/kernel/debug/f2fs/status | sudo tee "$resultdir/varmail-f2fs-info-$(date +%s)-$1.out";
+    for i in $(sudo find /sys/fs/f2fs/$1 -type f); do echo $i=$(sudo cat $i); done | sudo tee -a "$resultdir/varmail-f2fs-info-$(date +%s)-$1.out";
+    for i in $(sudo find /sys/fs/f2fs/$1/stat -type f); do echo $i=$(sudo cat $i); done | sudo tee -a "$resultdir/varmail-f2fs-info-$(date +%s)-$1.out";
+    ;;
+  *"webserver"*)
+    sed -i "s|/mnt/.*$|/mnt/$4|g" webserver_custom.f
+    sudo $filebenchbinary -f "webserver_custom.f" 1> "$resultdir/webserver-$(date +%s)-$1.out" 2> "$resultdir/webserver-$(date +%s)-$1.err";
+    sudo cat /sys/kernel/debug/f2fs/status | sudo tee "$resultdir/webserver-f2fs-info-$(date +%s)-$1.out";
+    for i in $(sudo find /sys/fs/f2fs/$1 -type f); do echo $i=$(sudo cat $i); done | sudo tee -a "$resultdir/webserver-f2fs-info-$(date +%s)-$1.out";
+    for i in $(sudo find /sys/fs/f2fs/$1/stat -type f); do echo $i=$(sudo cat $i); done | sudo tee -a "$resultdir/webserver-f2fs-info-$(date +%s)-$1.out";
+    ;;
+  *"fileserver"*)
+    sed -i "s|/mnt/.*$|/mnt/$4|g" fileserver_custom.f
+    sudo $filebenchbinary -f "fileserver_custom.f" 1> "$resultdir/fileserver-$(date +%s)-$1.out" 2> "$resultdir/fileserver-$(date +%s)-$1.err";
+    sudo cat /sys/kernel/debug/f2fs/status | sudo tee "$resultdir/fileserver-f2fs-info-$(date +%s)-$1.out";
+    for i in $(sudo find /sys/fs/f2fs/$1 -type f); do echo $i=$(sudo cat $i); done | sudo tee -a "$resultdir/fileserver-f2fs-info-$(date +%s)-$1.out";
+    for i in $(sudo find /sys/fs/f2fs/$1/stat -type f); do echo $i=$(sudo cat $i); done | sudo tee -a "$resultdir/fileserver-f2fs-info-$(date +%s)-$1.out";
+    ;;
+  *) echo "UNKNOWN WORKLOAD";;
+esac
+
+# For 301 zones and 3 namespaces
+#sudo nvme create-ns /dev/nvme0 -s 157810688 -c 157810688 -b 4096 --csi=2

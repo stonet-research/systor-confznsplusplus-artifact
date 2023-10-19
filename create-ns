@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -x
+
+if [ $# != 2 ]; then
+    echo "Usage: $0 <ZNS device Namespace> <Number of Namespaces to create>"
+    exit 1
+fi
+
+MAX_NS=$(sudo nvme id-ctrl /dev/$1 | grep "nn" | awk '{print $3}')
+
+for i in $(seq 0 ${MAX_NS}); do
+    # Ignore any errors for non existing namespaces, just delete all
+    sudo nvme delete-ns -n $i /dev/$1 &> /dev/null
+    # if [ $? != 0]; then
+
+    # fi
+done
+
+# For the conventional 2G namespace
+sudo nvme create-ns /dev/$1 -s 524288 -c 524288 -b 4096 --csi=0
+
+# TODO get the namespace id from output
+sudo nvme attach-ns /dev/$1 -n 1 -c 0
+
+exit
+
+UNVMCAP=$(sudo nvme id-ctrl /dev/$1 | grep "unvmcap" | awk '{print $3}')
+NS_SIZE_BYTES=$(echo "scale = 0; ${UNVMCAP} / $2" | bc)
+
+BS=4096
+
+NS_SIZE=$(echo "scale = 0; ${NS_SIZE_BYTES} / 4096" | bc)
+
+# Should be 236978176 for 2 namespaces of 452 zones each
+
+for i in $(seq 0 $2); do
+    sudo nvme create-ns /dev/$1 -s ${NS_SIZE} -c ${NS_SIZE} -b 4096 --csi=2
+    ns=$(echo "$i + 2" | bc)
+    sudo nvme attach-ns /dev/$1 -n ${ns} -c 0
+done

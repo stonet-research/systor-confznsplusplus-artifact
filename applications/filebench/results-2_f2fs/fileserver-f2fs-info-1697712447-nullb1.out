@@ -1,0 +1,320 @@
+
+=====[ partition info(nullb0). #0, RW, CP: Good]=====
+[SBI: fs_dirty]
+[SB: 1] [CP: 2] [SIT: 34] [NAT: 86] [SSA: 1926] [MAIN: 462848(OverProv:35357 Resv:20377)]
+
+Current Time Sec: 5016 / Mounted Time Sec: 2270
+
+Policy:
+  - IPU: [ DISABLE ]
+
+Utilization: 2% (2903431 valid blocks, 0 discard blocks)
+  - Node: 85465 (Inode: 85465, Other: 0)
+  - Data: 2817966
+  - Inline_xattr Inode: 85464
+  - Inline_data Inode: 190
+  - Inline_dentry Inode: 5105
+  - Compressed Inode: 0, Blocks: 0
+  - Swapfile Inode: 0
+  - Orphan/Append/Update Inode: 15, 0, 0
+
+Main area: 462848 segs, 452 secs 452 zones
+    TYPE            segno    secno   zoneno  dirty_seg   full_seg  valid_blk
+  - COLD   data:     5120        5        5          0          0          0
+  - WARM   data:   421950      412      412      10453       3144    2817965
+  - HOT    data:     3072        3        3          1          0          1
+  - Dir   dnode:        0        0        0          0          0          0
+  - File  dnode:   414975      405      405       1070         80      80359
+  - Indir nodes:   118883      116      116         68          7       5106
+  - Pinned file:       -1       -1       -1
+  - ATGC   data:       -1       -1       -1
+
+  - Valid: 222464
+  - Dirty: 11581
+  - Prefree: 0
+  - Free: 228803 (362)
+
+CP calls: 8111 (BG: 8109)
+CP count: 5532
+  - cp blocks : 22812
+  - sit blocks : 897347
+  - nat blocks : 1157869
+  - ssa blocks : 706506
+CP merge:
+  - Queued :    0
+  - Issued : 5564
+  - Total : 8111
+  - Cur time :  213(ms)
+  - Peak time : 1326(ms)
+GC calls: 1 (gc_thread: 1)
+  - data sections : 0 (BG: 0)
+  - node sections : 1 (BG: 1)
+  - data segments : 0 (BG: 0)
+  - node segments : 10 (BG: 10)
+  - Reclaimed segs :
+    - Normal : 10
+    - Idle CB : 0
+    - Idle Greedy : 0
+    - Idle AT : 0
+    - Urgent High : 0
+    - Urgent Mid : 0
+    - Urgent Low : 0
+Try to move 251 blocks (BG: 251)
+  - data blocks : 0 (0)
+  - node blocks : 251 (251)
+BG skip : IO: 28, Other: 17
+
+Extent Cache (Read):
+  - Hit Count: L1-1:4467156 L1-2:251347 L2:1835
+  - Hit Ratio: 10% (4720338 / 45129669)
+  - Inner Struct Count: tree: 80359(0), node: 62321
+
+Extent Cache (Block Age):
+  - Allocated Data Blocks: 304969309
+  - Hit Count: L1:0 L2:0
+  - Hit Ratio: 0% (0 / 0)
+  - Inner Struct Count: tree: 0(0), node: 0
+
+Balancing F2FS Async:
+  - DIO (R:    0, W:    0)
+  - IO_R (Data:    0, Node:    0, Meta:    0
+  - IO_W (CP:    0, Data:    0, Flush: (   0    0    1), Discard: (   0  864)) cmd:  362 undiscard:189792256
+  - atomic IO:    0 (Max.    0)
+  - compress:    0, hit:       0
+  - nodes:  251 in 85614
+  - dents:    0 in dirs:   0 (   0)
+  - datas:    0 in files:   0
+  - quota datas:    0 in quota files:   0
+  - meta:    0 in 252203
+  - imeta:    0
+  - fsync mark:    0
+  - NATs:         0/    99866
+  - SITs:         0/   462848
+  - free_nids:     22420/  9931812
+  - alloc_nids:         0
+
+Distribution of User Blocks: [ valid | invalid | free ]
+  [-|---|----------------------------------------------]
+
+IPU: 0 blocks
+SSR: 0 blocks in 0 segments
+LFS: 361396403 blocks in 706506 segments
+
+BDF: 97, avg. vblocks: 21435
+
+Memory: 1473158 KB
+  - static: 106908 KB
+  - cached all: 14982 KB
+  - read extent cache: 11287 KB
+  - block age extent cache: 0 KB
+  - paged : 1351268 KB
+
+=====[ partition info(nullb1). #1, RW, CP: Good]=====
+[SBI: fs_dirty]
+[SB: 1] [CP: 2] [SIT: 34] [NAT: 86] [SSA: 1926] [MAIN: 462848(OverProv:35357 Resv:20377)]
+
+Current Time Sec: 5016 / Mounted Time Sec: 2283
+
+Policy:
+  - IPU: [ DISABLE ]
+
+Utilization: 2% (2899425 valid blocks, 0 discard blocks)
+  - Node: 85429 (Inode: 85429, Other: 0)
+  - Data: 2813996
+  - Inline_xattr Inode: 85428
+  - Inline_data Inode: 176
+  - Inline_dentry Inode: 5105
+  - Compressed Inode: 0, Blocks: 0
+  - Swapfile Inode: 0
+  - Orphan/Append/Update Inode: 38, 0, 0
+
+Main area: 462848 segs, 452 secs 452 zones
+    TYPE            segno    secno   zoneno  dirty_seg   full_seg  valid_blk
+  - COLD   data:     5120        5        5          0          0          0
+  - WARM   data:   449709      439      439       8002        620    1072049
+  - HOT    data:     3072        3        3          1          0          1
+  - Dir   dnode:        0        0        0          0          0          0
+  - File  dnode:   444942      434      434        857         17      80323
+  - Indir nodes:   118159      115      115         70          7       5106
+  - Pinned file:       -1       -1       -1
+  - ATGC   data:       -1       -1       -1
+
+  - Valid: 219869
+  - Dirty: 8925
+  - Prefree: 0
+  - Free: 234054 (359)
+
+CP calls: 8856 (BG: 8854)
+CP count: 6540
+  - cp blocks : 26938
+  - sit blocks : 989854
+  - nat blocks : 1350041
+  - ssa blocks : 710854
+CP merge:
+  - Queued :    0
+  - Issued : 6563
+  - Total : 8856
+  - Cur time :   39(ms)
+  - Peak time : 1111(ms)
+GC calls: 0 (gc_thread: 0)
+  - data sections : 0 (BG: 0)
+  - node sections : 0 (BG: 0)
+  - data segments : 0 (BG: 0)
+  - node segments : 0 (BG: 0)
+  - Reclaimed segs :
+    - Normal : 0
+    - Idle CB : 0
+    - Idle Greedy : 0
+    - Idle AT : 0
+    - Urgent High : 0
+    - Urgent Mid : 0
+    - Urgent Low : 0
+Try to move 0 blocks (BG: 0)
+  - data blocks : 0 (0)
+  - node blocks : 0 (0)
+BG skip : IO: 30, Other: 14
+
+Extent Cache (Read):
+  - Hit Count: L1-1:4496903 L1-2:258818 L2:1582
+  - Hit Ratio: 10% (4757303 / 44770694)
+  - Inner Struct Count: tree: 80323(0), node: 24717
+
+Extent Cache (Block Age):
+  - Allocated Data Blocks: 306956508
+  - Hit Count: L1:0 L2:0
+  - Hit Ratio: 0% (0 / 0)
+  - Inner Struct Count: tree: 0(0), node: 0
+
+Balancing F2FS Async:
+  - DIO (R:    0, W:    0)
+  - IO_R (Data:    0, Node:    0, Meta:    0
+  - IO_W (CP:    0, Data: 20173, Flush: (   0    0    1), Discard: (   0  871)) cmd:  359 undiscard:188219392
+  - atomic IO:    0 (Max.    0)
+  - compress:    0, hit:       0
+  - nodes: 2086 in 85449
+  - dents:    0 in dirs:   0 ( 792)
+  - datas: 1753911 in files:   0
+  - quota datas:    0 in quota files:   0
+  - meta:  107 in 252146
+  - imeta:    1
+  - fsync mark:    0
+  - NATs:         0/    99578
+  - SITs:       313/   462848
+  - free_nids:     23838/  9931848
+  - alloc_nids:         0
+
+Distribution of User Blocks: [ valid | invalid | free ]
+  [|---|-----------------------------------------------]
+
+IPU: 0 blocks
+SSR: 0 blocks in 0 segments
+LFS: 363676322 blocks in 710963 segments
+
+BDF: 98, avg. vblocks: 12719
+
+Memory: 1469694 KB
+  - static: 106908 KB
+  - cached all: 12406 KB
+  - read extent cache: 8642 KB
+  - block age extent cache: 0 KB
+  - paged : 1350380 KB
+/sys/fs/f2fs/nullb1/atgc_candidate_count=10
+/sys/fs/f2fs/nullb1/cp_foreground_calls=2
+/sys/fs/f2fs/nullb1/current_reserved_blocks=0
+/sys/fs/f2fs/nullb1/lifetime_write_kbytes=1467002304
+/sys/fs/f2fs/nullb1/ckpt_thread_ioprio=be,3
+/sys/fs/f2fs/nullb1/feature_list/readonly=unsupported
+/sys/fs/f2fs/nullb1/feature_list/casefold=unsupported
+/sys/fs/f2fs/nullb1/feature_list/extra_attr=unsupported
+/sys/fs/f2fs/nullb1/feature_list/quota_ino=unsupported
+/sys/fs/f2fs/nullb1/feature_list/sb_checksum=unsupported
+/sys/fs/f2fs/nullb1/feature_list/project_quota=unsupported
+/sys/fs/f2fs/nullb1/feature_list/block_zoned=supported
+/sys/fs/f2fs/nullb1/feature_list/lost_found=unsupported
+/sys/fs/f2fs/nullb1/feature_list/verity=unsupported
+/sys/fs/f2fs/nullb1/feature_list/flexible_inline_xattr=unsupported
+/sys/fs/f2fs/nullb1/feature_list/inode_crtime=unsupported
+/sys/fs/f2fs/nullb1/feature_list/inode_checksum=unsupported
+/sys/fs/f2fs/nullb1/feature_list/encryption=unsupported
+/sys/fs/f2fs/nullb1/feature_list/compression=unsupported
+/sys/fs/f2fs/nullb1/compr_written_block=0
+/sys/fs/f2fs/nullb1/committed_atomic_block=0
+/sys/fs/f2fs/nullb1/readdir_ra=1
+/sys/fs/f2fs/nullb1/data_io_flag=0
+/sys/fs/f2fs/nullb1/idle_interval=5
+/sys/fs/f2fs/nullb1/gc_no_gc_sleep_time=300000
+/sys/fs/f2fs/nullb1/max_io_bytes=0
+/sys/fs/f2fs/nullb1/max_ordered_discard=16
+/sys/fs/f2fs/nullb1/reserved_blocks=0
+/sys/fs/f2fs/nullb1/discard_io_aware_gran=512
+/sys/fs/f2fs/nullb1/max_fragment_chunk=4
+/sys/fs/f2fs/nullb1/compress_watermark=0
+/sys/fs/f2fs/nullb1/atgc_age_weight=60
+/sys/fs/f2fs/nullb1/max_roll_forward_node_blocks=0
+/sys/fs/f2fs/nullb1/max_victim_search=4096
+/sys/fs/f2fs/nullb1/compr_new_inode=0
+/sys/fs/f2fs/nullb1/avg_vblocks=13956
+/sys/fs/f2fs/nullb1/compress_percent=0
+/sys/fs/f2fs/nullb1/gc_idle=0
+/sys/fs/f2fs/nullb1/current_atomic_write=0
+/sys/fs/f2fs/nullb1/max_discard_request=8
+/sys/fs/f2fs/nullb1/dir_level=0
+/sys/fs/f2fs/nullb1/min_fsync_blocks=8
+/sys/fs/f2fs/nullb1/gc_pin_file_thresh=2048
+/sys/fs/f2fs/nullb1/cp_background_calls=8855
+/sys/fs/f2fs/nullb1/compr_saved_block=0
+/sys/fs/f2fs/nullb1/min_ipu_util=70
+/sys/fs/f2fs/nullb1/peak_atomic_write=0
+/sys/fs/f2fs/nullb1/gc_segment_mode=0
+/sys/fs/f2fs/nullb1/free_segments=233767
+/sys/fs/f2fs/nullb1/ipu_policy=0
+/sys/fs/f2fs/nullb1/gc_max_sleep_time=60000
+/sys/fs/f2fs/nullb1/min_discard_issue_time=50
+/sys/fs/f2fs/nullb1/gc_urgent=0
+/sys/fs/f2fs/nullb1/atgc_candidate_ratio=20
+/sys/fs/f2fs/nullb1/gc_urgent_sleep_time=500
+/sys/fs/f2fs/nullb1/min_seq_blocks=512
+/sys/fs/f2fs/nullb1/seq_file_ra_mul=2
+/sys/fs/f2fs/nullb1/stat/cp_status=c6
+/sys/fs/f2fs/nullb1/stat/sb_status=1
+/sys/fs/f2fs/nullb1/discard_idle_interval=5
+/sys/fs/f2fs/nullb1/last_age_weight=30
+/sys/fs/f2fs/nullb1/moved_blocks_background=0
+/sys/fs/f2fs/nullb1/cp_interval=60
+/sys/fs/f2fs/nullb1/ovp_segments=35357
+/sys/fs/f2fs/nullb1/dirty_nats_ratio=10
+/sys/fs/f2fs/nullb1/dirty_segments=8902
+/sys/fs/f2fs/nullb1/encoding=(none)
+/sys/fs/f2fs/nullb1/mid_discard_issue_time=500
+/sys/fs/f2fs/nullb1/gc_foreground_calls=0
+/sys/fs/f2fs/nullb1/unusable=0
+/sys/fs/f2fs/nullb1/warm_data_age_threshold=2621440
+/sys/fs/f2fs/nullb1/unusable_blocks_per_sec=248576
+/sys/fs/f2fs/nullb1/gc_min_sleep_time=30000
+/sys/fs/f2fs/nullb1/ram_thresh=1
+/sys/fs/f2fs/nullb1/ra_nid_pages=0
+/sys/fs/f2fs/nullb1/migration_granularity=1024
+/sys/fs/f2fs/nullb1/umount_discard_timeout=5
+/sys/fs/f2fs/nullb1/extension_list=cold file extension: mp wm og jp avi m4v m4p mkv mov webm wav m4a 3gp opus flac gif png svg webp jar deb iso gz xz zst pdf pyc ttc ttf exe apk cnt exo odex vdex so hot file extension: db vmdk vdi qcow2
+/sys/fs/f2fs/nullb1/node_io_flag=0
+/sys/fs/f2fs/nullb1/discard_urgent_util=80
+/sys/fs/f2fs/nullb1/revoked_atomic_block=0
+/sys/fs/f2fs/nullb1/min_ssr_sections=19
+/sys/fs/f2fs/nullb1/max_fragment_hole=4
+/sys/fs/f2fs/nullb1/gc_remaining_trials=0
+/sys/fs/f2fs/nullb1/gc_mode=GC_NORMAL
+/sys/fs/f2fs/nullb1/max_small_discards=236978176
+/sys/fs/f2fs/nullb1/gc_reclaimed_segments=0
+/sys/fs/f2fs/nullb1/hot_data_age_threshold=262144
+/sys/fs/f2fs/nullb1/mounted_time_sec=2283
+/sys/fs/f2fs/nullb1/atgc_age_threshold=604800
+/sys/fs/f2fs/nullb1/features=blkzoned, pin_file
+/sys/fs/f2fs/nullb1/pending_discard=357
+/sys/fs/f2fs/nullb1/discard_granularity=524288
+/sys/fs/f2fs/nullb1/gc_background_calls=0
+/sys/fs/f2fs/nullb1/moved_blocks_foreground=0
+/sys/fs/f2fs/nullb1/gc_idle_interval=5
+/sys/fs/f2fs/nullb1/main_blkaddr=1835008
+/sys/fs/f2fs/nullb1/reclaim_segments=4096
+/sys/fs/f2fs/nullb1/max_discard_issue_time=60000
+/sys/fs/f2fs/nullb1/min_hot_blocks=16

@@ -7,14 +7,21 @@ filebenchdir="/mnt/filebench"
 filebenchbinary="setarch `arch` --addr-no-randomize $scriptdir/filebench/filebench"
 resultdir="./results"
 
-if [ $# != 3 ]; then
-    echo "Usage: nvme (shortname) zns (shortname) workload"
+if [ $# != 4 ]; then
+    echo "Usage: nvme (shortname) zns (shortname) workload zns (interference namespace shortname)"
   exit 1
 fi
 
 devnvme="/dev/$1"
 devzns="/dev/$2"
 workload="$3"
+DEV=$(echo $4 | sed 's/vme/g/g')
+
+DEV_SECT_SIZE=$(cat /sys/block/$4/queue/hw_sector_size)
+DEV_ZONE_SIZE_BLOCKS=$(cat /sys/block/$4/queue/chunk_sectors)
+DEV_ZONE_SIZE=$(echo "${DEV_ZONE_SIZE_BLOCKS} * 512" | bc)
+DEV_ZONES=$(cat /sys/block/$4/queue/nr_zones)
+FILL_SIZE=$(echo "scale=0; ${DEV_ZONES} * 0.9" | bc | sed 's/\.[0-9]*//g')
 
 # Unmount if needed
 ismounted=$(mount | grep -i "$filebenchdir")
@@ -25,11 +32,24 @@ fi
 
 # mkfs
 echo mq-deadline | sudo tee "/sys/block/$2/queue/scheduler"
-sudo mkfs.f2fs -f -m -c $devzns $devnvmei || exit
+sudo env "PATH=$PATH" mkfs.f2fs -f -m -c $devzns $devnvme || exit
 sudo mkdir -p "$filebenchdir" || exit 1
 sudo mount -t f2fs $devnvme "$filebenchdir" || exit 1
 
 mkdir -p "$resultdir"
+
+echo "Benchmarking ZNS Device Reset Rate Limit"
+sudo nvme zns reset-zone /dev/$4 -a
+# sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../../fio/fio --output-format=json --output=bw.json ../fio-interference-loads/job-trim.fio
+
+BW=$(cat bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
+echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
+
+sudo env "DEV=${DEV}" "FILL_SIZE=${DEV_ZONES}" ../../fio/fio --output-format=json --output=${resultdir}/fill.json ../fio-interference-loads/job-fill.fio
+
+# rate limit to 25%
+trim_rate_limit=$(echo "scale=2; 25 / 100  * ${BW}" | bc)
+(sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "RESET_LIMIT=${trim_rate_limit}" ../../fio/fio --output-format=json --output=${resultdir}/interference.json ../fio-interference-loads/job-reset.fio) &
 
 case $workload in
   *"varmail"*)
