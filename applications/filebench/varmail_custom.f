@@ -61,4 +61,4 @@ create files
 system "sync"
 system "echo 3 > /proc/sys/vm/drop_caches"
 
-psrun -5 2700
+psrun -1 2700

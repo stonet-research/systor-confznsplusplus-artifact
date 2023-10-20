@@ -35,7 +35,7 @@ mkdir -p "$resultdir"
 #   BW=$(cat bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
 #   echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
 
-#   # sudo env "DEV=${DEV}" "FILL_SIZE=${DEV_ZONES}" ../../fio/fio --output-format=json --output=${resultdir}/fill.json ../fio-interference-loads/job-fill.fio
+#   sudo env "DEV=${DEV}" "FILL_SIZE=${DEV_ZONES}" ../../fio/fio --output-format=json --output=${resultdir}/fill.json ../fio-interference-loads/job-fill.fio
 
 #   # rate limit to 25%
 #   trim_rate_limit=$(echo "scale=2; 25 / 100  * ${BW}" | bc)
