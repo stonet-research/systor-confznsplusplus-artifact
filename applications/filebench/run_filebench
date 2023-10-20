@@ -11,6 +11,8 @@ if [ $# != 4 ]; then
   exit 1
 fi
 
+mkdir -p "$resultdir"
+
 # Run with reset interference, have to currently manually comment it out after first bench start and only start second once filling is done 
 # TODO code this as a cmd line argument (-r or so) [if already running interference, skip this ]
 # HAVE A PARENT SCRIPT IN THE PARENT DIR TO SEE IF WE WANT TO RUN WITH MULTIPLE NS, INTERFERENCE ... PASS RESPECTIVE FLAGS (START JOBS - WAIT FOR JOBS, ETC.) AND SETUP NS AS WELL
@@ -35,8 +37,8 @@ fi
 
 #   # sudo env "DEV=${DEV}" "FILL_SIZE=${DEV_ZONES}" ../../fio/fio --output-format=json --output=${resultdir}/fill.json ../fio-interference-loads/job-fill.fio
 
-#   # rate limit to 10%
-#   trim_rate_limit=$(echo "scale=2; 10 / 100  * ${BW}" | bc)
+#   # rate limit to 25%
+#   trim_rate_limit=$(echo "scale=2; 25 / 100  * ${BW}" | bc)
 #   (sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "RESET_LIMIT=${trim_rate_limit}" ../../fio/fio --output-format=json --output=${resultdir}/interference.json ../fio-interference-loads/job-reset.fio) &
 # fi
 
@@ -57,8 +59,6 @@ echo mq-deadline | sudo tee "/sys/block/$2/queue/scheduler"
 sudo env "PATH=$PATH" mkfs.f2fs -f -m -c $devzns $devnvme || exit
 sudo mkdir -p "$filebenchdir" || exit 1
 sudo mount -t f2fs -o active_logs=4 $devnvme "$filebenchdir" || exit 1
-
-mkdir -p "$resultdir"
 
 case $workload in
   *"varmail"*)

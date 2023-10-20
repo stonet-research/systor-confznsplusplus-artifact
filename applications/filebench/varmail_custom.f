@@ -31,6 +31,8 @@ set $nthreads=16
 set $iosize=1m
 set $meanappendsize=16k
 
+enable lathist
+
 define fileset name=bigfileset,path=$dir,size=$filesize,entries=$nfiles,dirwidth=$meandirwidth,prealloc=80
 
 define process name=filereader,instances=1
