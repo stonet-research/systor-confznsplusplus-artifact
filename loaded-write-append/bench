@@ -1,0 +1,90 @@
+#! /bin/bash
+
+set -e
+
+if [ $# != 1 ]; then
+    echo "Usage: $0 <ZNS device (e.g., nvme0n2)>"
+    exit 1
+fi
+
+DEV=$(echo $1 | sed 's/vme/g/g')
+DEV_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
+DEV_ZONE_SIZE_BLOCKS=$(cat /sys/block/$1/queue/chunk_sectors)
+DEV_ZONE_SIZE=$(echo "${DEV_ZONE_SIZE_BLOCKS} * 512" | bc)
+DEV_ZONES=$(cat /sys/block/$1/queue/nr_zones)
+
+echo "#########################################################"
+echo "####################### ZNS  SETUP ######################"
+echo "#########################################################"
+echo "---------------------------------------------------------"
+printf 'DEV: %52s\n' "/dev/${DEV}"
+echo "---------------------------------------------------------"
+printf 'SECTOR_SIZE: %44s\n' "${DEV_SECT_SIZE}"
+echo "---------------------------------------------------------"
+printf 'ZONE_SIZE_BLOCKS: %39s\n' "${DEV_ZONE_SIZE_BLOCKS}"
+echo "---------------------------------------------------------"
+printf 'ZONE_SIZE_BYTES: %40s\n' "${DEV_ZONE_SIZE}"
+echo "---------------------------------------------------------"
+printf 'DEV_ZONES: %46s\n' "${DEV_ZONES}"
+echo "---------------------------------------------------------"
+echo ""
+
+mkdir -p data
+
+##################################
+## fio options for specific ZNS ##
+##################################
+BS=$(echo "${DEV_SECT_SIZE} * ${DEV_ZONE_SIZE}" | bc)
+
+APPEND_SIZE=300
+WRITE_ZONES=$(echo "${DEV_ZONES} - ${APPEND_SIZE}" | bc) # All but the fill zones
+
+# our setup only has 20 cores and we have a polling thread for each job
+# therefore we max to 9 write jobs, as there is 1 concurrent trim job
+# issuing zone finish with also its own polling thread
+WRITE_IODEPTH=(1 2 3 4 5 6 7) 
+WRITE_FLOW=(100 99 95 90 75 50) # 25)
+
+echo "#########################################################"
+echo "###################### BENCH  SETUP #####################"
+echo "#########################################################"
+echo "---------------------------------------------------------"
+printf 'APPEND_ZONES (Empty zones for append): %18s\n' "${APPEND_SIZE}"
+echo "---------------------------------------------------------"
+printf 'WRITE_ZONES (Empty zones for writes): %19s\n' "${WRITE_ZONES}"
+echo "---------------------------------------------------------"
+printf 'WRITE_NUMJOBS: %42s\n' "${WRITE_IODEPTH[*]}"
+echo "---------------------------------------------------------"
+printf 'WRITE_RATE_FLOWS: %39s\n' "${WRITE_FLOW[*]}"
+echo "---------------------------------------------------------"
+echo ""
+
+echo "Benchmarking ZNS Device Append Rate Limit"
+sudo nvme zns reset-zone /dev/$1 -a
+sudo env "DEV=${DEV}" "APPEND_SIZE=${APPEND_SIZE}" ../fio/fio --output-format=json --output=data/bw.json job-append.fio
+
+BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
+echo "Found Sustainable BW for Append Rate Limiting: ${BW} B/sec"
+
+for write_iodepth in ${WRITE_IODEPTH[@]}; do
+    for write_flow in ${WRITE_FLOW[@]}; do
+        append_flow=$((100 - ${write_flow}))
+        WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
+
+        echo ""
+        echo "Benchmarking WRITE_IODEPTH ${write_iodepth}: <WRITE_FLOW ${write_flow} - APPEND_LIMIT ${append_flow}>"
+        sudo nvme zns reset-zone /dev/$1 -a
+
+        if [[ ${append_flow} -eq 0 ]]; then
+            # With 0 append flow we want to disable the concurrent append workload
+            CONCUR_WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
+            sudo env "DEV=${DEV}" "CONCUR_WRITE_SIZE=${CONCUR_WRITE_SIZE}" "WRITE_IODEPTH=${write_iodepth}" ../fio/fio --output-format=json --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json job-write.fio
+        else
+            CONCUR_WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
+            append_rate_limit=$(echo "scale=2; ${append_flow} / 100  * ${BW}" | bc)
+
+            sudo env "DEV=${DEV}" "CONCUR_WRITE_SIZE=${CONCUR_WRITE_SIZE}" "WRITE_IODEPTH=${write_iodepth}" "APPEND_SIZE=${APPEND_SIZE}" "APPEND_LIMIT=${append_rate_limit}" ../fio/fio --output-format=json --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json job.fio
+        fi
+    done
+done
+
