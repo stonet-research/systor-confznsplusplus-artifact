@@ -116,7 +116,7 @@ if __name__ == "__main__":
     ax.set_axisbelow(True)
     # ax.legend(loc='best', handles=handles)
     ax.legend(loc='best')
-    ax.set_ylim(bottom=0, top=1400)
+    ax.set_ylim(bottom=0, top=850)
     ax.set_xlim(left=0)
     ax.set_ylabel("p95 append Latency (usec)")
     ax.set_xlabel("Total IOPS (x1000)")
