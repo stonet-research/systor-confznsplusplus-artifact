@@ -62,6 +62,13 @@ printf 'READ_IODEPTH: %43s\n' "${READ_IODEPTH[*]}"
 echo "---------------------------------------------------------"
 echo ""
 
+echo "Benchmarking ZNS Device Read Rate Limit"
+sudo nvme zns reset-zone /dev/$1 -a
+sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../fio/fio --output-format=json --output=data/bw.json job-read.fio
+
+BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
+echo "Found Sustainable BW for Reset: ${BW} B/sec"
+
 for read_iodepth in ${READ_IODEPTH[@]}; do
     echo ""
     echo "Benchmarking READ_IODEPTH ${read_iodepth}"
