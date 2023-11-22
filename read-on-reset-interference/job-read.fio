@@ -17,9 +17,9 @@ size=${CONCUR_FILL_SIZE}z
 numjobs=${CONCUR_FILL}
 offset_increment=${CONCUR_FILL_SIZE}z
 
-[trim]
+[read]
 stonewall
-rw=randtrim
+rw=randread
 iodepth=1
-numjobs=${TRIM_IODEPTH}
-bs=${BS}
+numjobs=1
+bs=64K
