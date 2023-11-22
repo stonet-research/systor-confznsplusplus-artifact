@@ -50,9 +50,9 @@ echo "#########################################################"
 echo "---------------------------------------------------------"
 printf 'FINISH_ZONES (Empty zones for finish): %18s\n' "${FINISH_SIZE}"
 echo "---------------------------------------------------------"
-printf 'READ_ZONES (zones for reads): %19s\n' "${READ_ZONES}"
+printf 'READ_ZONES (Full zones for reads): %22s\n' "${READ_ZONES}"
 echo "---------------------------------------------------------"
-printf 'READ_IODEPTH: %42s\n' "${READ_IODEPTH[*]}"
+printf 'READ_IODEPTH: %43s\n' "${READ_IODEPTH[*]}"
 echo "---------------------------------------------------------"
 echo ""
 
@@ -70,5 +70,6 @@ for read_iodepth in ${READ_IODEPTH[@]}; do
     sudo nvme zns reset-zone /dev/$1 -a
 
     sudo env "DEV=${DEV}" "READ_IODEPTH=${read_iodepth}" "FINISH_SIZE=${FINISH_SIZE}" "READ_SIZE=${READ_ZONES}" ../fio/fio --output-format=json --output=data/data-read_iod_${read_iodepth}.json job.fio
+
 done
 

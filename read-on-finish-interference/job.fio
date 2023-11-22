@@ -11,14 +11,16 @@ lat_percentiles=1
 iodepth=1
 numjobs=1
 bs=4K
-runtime=10m
 
 [fill-read]
 rw=write
+bs=64K
 offset=${FINISH_SIZE}z
 size=${READ_SIZE}z
 
 [finish]
+stonewall
+runtime=10m
 new_group
 rw=write
 bs=4K

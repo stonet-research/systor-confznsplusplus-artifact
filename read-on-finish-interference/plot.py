@@ -51,7 +51,7 @@ if __name__ == "__main__":
     data = dict()
     parse_fio_data(f"{file_path}/data", data)
 
-    queue_depths = np.arange(1, 8)
+    queue_depths = np.arange(1, 9)
 
     peak = 0
     bw = [None] * (len(queue_depths))
@@ -61,8 +61,7 @@ if __name__ == "__main__":
         if "bw" in key:
              peak = value["jobs"][0]["finish"]["bw_bytes"]
         else:
-            numjobs = int(re.search(r'\d+', key).group())
-            x = numjobs - 1
+            x = int(math.log2(int(value["jobs"][2]["job options"]["iodepth"])))
 
             bw[x] = value["jobs"][1]["finish"]["bw_bytes"]
 
@@ -78,7 +77,7 @@ if __name__ == "__main__":
     x = np.arange(0, len(queue_depths) + 1)
     X_Y_Spline = make_interp_spline(x, bw_plot)
 
-    X_ = np.linspace(x.min(), x.max(), 505)
+    X_ = np.linspace(x.min(), x.max(), 577)
     Y_ = X_Y_Spline(X_)
 
     fig, ax = plt.subplots()
@@ -91,9 +90,10 @@ if __name__ == "__main__":
     # ax.legend(loc='best', handles=handles)
     # ax.legend(loc='best')
     ax.set_ylim(bottom=0, top=1.05)
+    ax.set_xticklabels([0,0,1,2,4,8,16,32,64,128])
     # ax.set_xlim(left=0)
     ax.set_ylabel("relative finish bandwidth")
-    ax.set_xlabel("concurrent write jobs")
+    ax.set_xlabel("read I/O depth")
     plt.savefig(f"{file_path}/finish-performance.pdf", bbox_inches="tight")
     plt.savefig(f"{file_path}/finish-performance.png", bbox_inches="tight")
     plt.clf()
