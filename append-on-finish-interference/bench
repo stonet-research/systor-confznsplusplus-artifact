@@ -35,46 +35,40 @@ mkdir -p data
 ## fio options for specific ZNS ##
 ##################################
 BS=$(echo "${DEV_SECT_SIZE} * ${DEV_ZONE_SIZE}" | bc)
-CONCUR_FILL=4 # concurrent fill jobs to speedup filling
-TRIM_IODEPTH=1 # concurrent trim jobs to find trim bw limit
-# Use 70% of the zones for resets and 30% for writes
-FILL_SIZE=$(echo "scale=0; ${DEV_ZONES} * 0.7" | bc | sed 's/\.[0-9]*//g')
-WRITE_ZONES=$(echo "${DEV_ZONES} - ${FILL_SIZE}" | bc) # All but the fill zones
-CONCUR_FILL_SIZE=$(echo "scale=0; ${FILL_SIZE} / ${CONCUR_FILL}" | bc)
 
-# our setup only has 20 cores and we have a polling thread for each job
-# therefore we max to 9 write jobs, as there is 1 concurrent trim job
-# issuing zone resets with also its own polling thread
-APPEND_IODEPTH=(1 2 3 4 5 6 7)
+# Use 300 finish zones as with ~1 finish/sec and at 50% rate limit we can do 1 finish every 2 seconds
+# and benchmarks try to run for 10 minutes (10*60/2) = 300 and peak write bandwidth is 1.2GB/s = ~1 zone so within 10
+# minutes we can fill (10*60) = 600 and we have a total of 904 zones
+FINISH_SIZE=300
+WRITE_ZONES=$(echo "${DEV_ZONES} - ${FINISH_SIZE}" | bc) # All but the fill zones
+
+APPEND_IODEPTH=(1 2 3 4 5 6 7) 
 
 echo "#########################################################"
 echo "###################### BENCH  SETUP #####################"
 echo "#########################################################"
 echo "---------------------------------------------------------"
-printf 'TRIM_SIZE: %46s\n' "${BS}"
+printf 'FINISH_ZONES (Empty zones for finish): %18s\n' "${FINISH_SIZE}"
 echo "---------------------------------------------------------"
-printf 'TRIM_JOBS: %46s\n' "${TRIM_IODEPTH}"
-echo "---------------------------------------------------------"
-printf 'FILL_ZONES (Zones filled for resets): %19s\n' "${FILL_SIZE}"
-echo "---------------------------------------------------------"
-printf 'APPEND_ZONES (Empty zones for appends): %18s\n' "${WRITE_ZONES}"
+printf 'APPEND_ZONES (Empty zones for appends): %19s\n' "${WRITE_ZONES}"
 echo "---------------------------------------------------------"
 printf 'APPEND_IODEPTH: %42s\n' "${APPEND_IODEPTH[*]}"
 echo "---------------------------------------------------------"
 echo ""
 
-echo "Benchmarking ZNS Device Reset Rate Limit"
+echo "Benchmarking ZNS Device Finish Limit"
 sudo nvme zns reset-zone /dev/$1 -a
-sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../fio/fio --output-format=json --output=data/bw.json job-trim.fio
+sudo env "DEV=${DEV}" "FINISH_SIZE=${FINISH_SIZE}" ../fio/fio --output-format=json --output=data/bw.json job-finish.fio
 
-BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
-echo "Found Sustainable BW for Reset: ${BW} B/sec"
+BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
+echo "Found Sustainable BW for Finish: ${BW} B/sec"
 
 for append_iodepth in ${APPEND_IODEPTH[@]}; do
 
     echo ""
-    echo "Benchmarking APPEND_IODEPTH ${append_iodepth}"
+    echo "Benchmarking with CONCURRENT APPEND_IODEPTH: ${append_iodepth}"
     sudo nvme zns reset-zone /dev/$1 -a
 
-    sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "APPEND_IODEPTH=${append_iodepth}" "WRITE_SIZE=${WRITE_ZONES}" ../fio/fio --output-format=json --output=data/data-append_iod_${append_iodepth}.json job.fio
+    sudo env "DEV=${DEV}" "APPEND_IODEPTH=${append_iodepth}" "APPEND_SIZE=${WRITE_ZONES}" "FINISH_SIZE=${FINISH_SIZE}" ../fio/fio --output-format=json --output=data/data-append_iod_${append_iodepth}.json job.fio
 done
+
