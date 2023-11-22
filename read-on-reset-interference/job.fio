@@ -3,7 +3,6 @@ name=read-on-reset-interference
 filename=/dev/${DEV}
 ioengine=io_uring_cmd 
 sqthread_poll=1
-size=${FILL_SIZE}z
 bs=64K
 group_reporting
 zonemode=zbd
@@ -18,6 +17,7 @@ size=${FILL_SIZE}z
 
 [fill-read]
 rw=write
+iodepth=1
 offset=${FILL_SIZE}z
 size=${READ_SIZE}z
 
@@ -25,6 +25,7 @@ size=${READ_SIZE}z
 stonewall
 rw=randtrim
 iodepth=1
+size=${FILL_SIZE}z
 bs=${BS}
 exitall
 exit_what=all

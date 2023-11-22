@@ -51,20 +51,19 @@ if __name__ == "__main__":
     data = dict()
     parse_fio_data(f"{file_path}/data", data)
 
-    queue_depths = np.arange(1, 8)
+    queue_depths = np.arange(1, 9)
 
     peak = 0
     bw = [None] * (len(queue_depths))
     bw_plot = [None] * (len(queue_depths) + 1)
     bw_err = [None] * (len(queue_depths) + 1)
-    bw_plot_err = [0] * 505
+    bw_plot_err = [0] * 577
 
     for key, value in data.items():
         if "bw" in key:
             peak = value["jobs"][1]["ZNS Reset"]["bw_mean"]
         else:
-            numjobs = int(re.search(r'\d+', key).group())
-            x = numjobs - 1
+            x = int(math.log2(int(value["jobs"][2]["job options"]["iodepth"])))
 
             bw[x] = value["jobs"][1]["ZNS Reset"]["bw_mean"]
             bw_err[x] = value["jobs"][1]["ZNS Reset"]["bw_dev"]
@@ -90,24 +89,25 @@ if __name__ == "__main__":
     x = np.arange(0, len(queue_depths) + 1)
     X_Y_Spline = make_interp_spline(x, bw_plot)
 
-    X_ = np.linspace(x.min(), x.max(), 505)
+    X_ = np.linspace(x.min(), x.max(), 577)
     Y_ = X_Y_Spline(X_)
 
     fig, ax = plt.subplots()
 
 
-    # plt.errorbar(X_, Y_, yerr=bw_plot_err, markersize = 4, marker = 'o', markevery=72) # 505 points = 504/8 (x-axis points) = 72 + Remainder 1 so the last marker shows
-    plt.plot(X_, Y_, markersize = 4, marker = 'o', markevery=72) # 505 points = 504/8 (x-axis points) = 72 + Remainder 1 so the last marker shows
+    # plt.errorbar(X_, Y_, yerr=bw_plot_err, markersize = 4, marker = 'o', markevery=72)
+    plt.plot(X_, Y_, markersize = 4, marker = 'o', markevery=72)
 
     fig.tight_layout()
     ax.grid(which='major', linestyle='dashed', linewidth='1')
     ax.set_axisbelow(True)
     # ax.legend(loc='best', handles=handles)
     # ax.legend(loc='best')
-    ax.set_ylim(bottom=0, top=1.05)
+    ax.set_ylim(bottom=0, top=1.15)
     # ax.set_xlim(left=0)
+    ax.set_xticklabels([0,0,1,2,4,8,16,32,64,128])
     ax.set_ylabel("relative reset bandwidth")
-    ax.set_xlabel("concurrent read jobs")
+    ax.set_xlabel("read I/O depth")
     plt.savefig(f"{file_path}/reset-performance.pdf", bbox_inches="tight")
     plt.savefig(f"{file_path}/reset-performance.png", bbox_inches="tight")
     plt.clf()
