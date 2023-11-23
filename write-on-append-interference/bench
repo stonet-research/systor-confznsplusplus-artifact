@@ -39,7 +39,7 @@ BS=$(echo "${DEV_SECT_SIZE} * ${DEV_ZONE_SIZE}" | bc)
 APPEND_SIZE=$(echo "scale=0; ${DEV_ZONES} * 0.5" | bc | sed 's/\.[0-9]*//g')
 WRITE_ZONES=$(echo "${DEV_ZONES} - ${APPEND_SIZE}" | bc) # All but the fill zones
 
-APPEND_IODEPTH=(1 2 4 8 16 32) 
+APPEND_IODEPTH=(1 2 3 4 5 6 7) 
 APPEND_FLOW=(100 99 95 90 75 50) # 25)
 
 echo "#########################################################"

@@ -73,31 +73,31 @@ if __name__ == "__main__":
         if "bw" in key:
             continue
         if 'aflow_100' in key:
-            x = int(math.log2(int(value["jobs"][0]["job options"]["iodepth"])))
+            x = int(value["jobs"][0]["job options"]["iodepth"]) - 1
             write100[x] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
             write100_iops[x] = value["jobs"][0]["finish"]["iops_mean"]/1000
         elif 'aflow_99' in key:
-            x = int(math.log2(int(value["jobs"][1]["job options"]["iodepth"])))
+            x = int(value["jobs"][1]["job options"]["iodepth"]) - 1
             write99[x] = value["jobs"][1]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
             write99_iops[x] = value["jobs"][1]["finish"]["iops_mean"]/1000
         elif 'aflow_95' in key:
-            x = int(math.log2(int(value["jobs"][1]["job options"]["iodepth"])))
+            x = int(value["jobs"][1]["job options"]["iodepth"]) - 1
             write95[x] = value["jobs"][1]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
             write95_iops[x] = value["jobs"][1]["finish"]["iops_mean"]/1000
         elif 'aflow_90' in key:
-            x = int(math.log2(int(value["jobs"][1]["job options"]["iodepth"])))
+            x = int(value["jobs"][1]["job options"]["iodepth"]) - 1
             write90[x] = value["jobs"][1]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
             write90_iops[x] = value["jobs"][1]["finish"]["iops_mean"]/1000
         elif 'aflow_75' in key:
-            x = int(math.log2(int(value["jobs"][1]["job options"]["iodepth"])))
+            x = int(value["jobs"][1]["job options"]["iodepth"]) - 1
             write75[x] = value["jobs"][1]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
             write75_iops[x] = value["jobs"][1]["finish"]["iops_mean"]/1000
         elif 'aflow_50' in key:
-            x = int(math.log2(int(value["jobs"][1]["job options"]["iodepth"])))
+            x = int(value["jobs"][1]["job options"]["iodepth"]) - 1
             write50[x] = value["jobs"][1]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
             write50_iops[x] = value["jobs"][1]["finish"]["iops_mean"]/1000
         elif 'aflow_25' in key:
-            x = int(math.log2(int(value["jobs"][1]["job options"]["iodepth"])))
+            x = int(value["jobs"][1]["job options"]["iodepth"]) - 1
             write25[x] = value["jobs"][1]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
             write25_iops[x] = value["jobs"][1]["finish"]["iops_mean"]/1000
 

@@ -9,6 +9,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.patches as mpatches
 
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from interference_model.quantification import get_interference_rms
+
 plt.rc('font', size=12)          # controls default text sizes
 plt.rc('axes', titlesize=12)     # fontsize of the axes title
 plt.rc('axes', labelsize=12)    # fontsize of the x and y labels
@@ -89,6 +94,8 @@ if __name__ == "__main__":
         elif 'wflow_50' in key:
             write50[x] = value["jobs"][1]["write"]["lat_ns"]["percentile"]["95.000000"]/1000
             write50_iops[x] = value["jobs"][1]["write"]["iops_mean"]/1000
+
+    print(f"Interference RMS 0% - 50% {get_interference_rms(write100_iops, write50_iops, write100, write50)}")
 
     fig, ax = plt.subplots()
 
