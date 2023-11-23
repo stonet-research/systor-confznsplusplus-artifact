@@ -19,6 +19,6 @@ rw=write
 stonewall
 numjobs=1
 rw=randread
-iodepth=64
+iodepth=128
 bs=8K
 runtime=1m
