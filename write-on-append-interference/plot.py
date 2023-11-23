@@ -10,6 +10,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.patches as mpatches
 
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from interference_model.quantification import get_interference_rms,get_emd
+
 plt.rc('font', size=12)          # controls default text sizes
 plt.rc('axes', titlesize=12)     # fontsize of the axes title
 plt.rc('axes', labelsize=12)    # fontsize of the x and y labels
@@ -52,7 +57,7 @@ if __name__ == "__main__":
     data = dict()
     parse_fio_data(f"{file_path}/data", data)
 
-    queue_depths = np.arange(1, 11)
+    queue_depths = np.arange(1, 8)
 
     write100 = [None] * len(queue_depths)
     write100_iops = [None] * len(queue_depths)
@@ -101,6 +106,8 @@ if __name__ == "__main__":
             write25[x] = value["jobs"][1]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
             write25_iops[x] = value["jobs"][1]["finish"]["iops_mean"]/1000
 
+    print(f"Interference RMS 0% - 50% {get_interference_rms(write100_iops, write50_iops, write100, write50)}")
+
     fig, ax = plt.subplots()
 
     ax.plot(write100_iops, write100, markersize = 4, marker = '>', label="   0% write")
@@ -116,7 +123,7 @@ if __name__ == "__main__":
     ax.set_axisbelow(True)
     # ax.legend(loc='best', handles=handles)
     ax.legend(loc='best')
-    ax.set_ylim(bottom=0, top=850)
+    ax.set_ylim(bottom=0, top=250)
     ax.set_xlim(left=0)
     ax.set_ylabel("p95 append Latency (usec)")
     ax.set_xlabel("Total IOPS (x1000)")
