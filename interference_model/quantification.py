@@ -60,7 +60,7 @@ def get_interference_rms(iops_0, iops_1, lat_0, lat_1, alpha=0.5, beta=0.5):
         print("ERROR: Lines have different number of data points.")
         return -1
 
-    if alpha + beta > 1:
+    if alpha + beta != 1:
         print("ERROR: Alpha and Beta should be equal to 1 in total (100%).")
         return -1
 
