@@ -2,3 +2,4 @@
 */venv/*
 *.txt
 .DS_Store
+interference_model/__pycache__/*

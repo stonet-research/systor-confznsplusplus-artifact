@@ -11,6 +11,11 @@ import numpy as np
 import matplotlib.patches as mpatches
 from scipy.interpolate import make_interp_spline
 
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from interference_model.quantification import get_interference_rms
+
 plt.rc('font', size=12)          # controls default text sizes
 plt.rc('axes', titlesize=12)     # fontsize of the axes title
 plt.rc('axes', labelsize=12)    # fontsize of the x and y labels
@@ -54,41 +59,44 @@ if __name__ == "__main__":
     queue_depths = np.arange(1, 8)
 
     peak = 0
-    bw = [None] * (len(queue_depths))
-    bw_plot = [None] * (len(queue_depths) + 1)
-    bw_err = [None] * (len(queue_depths) + 1)
-    bw_plot_err = [0] * 505
+    iops = [None] * (len(queue_depths))
+    iops_plot = [None] * (len(queue_depths) + 1)
+    iops_err = [None] * (len(queue_depths) + 1)
+    iops_plot_err = [0] * 505
 
     for key, value in data.items():
         if "bw" in key:
-            peak = value["jobs"][1]["ZNS Reset"]["bw_mean"]
+            peak = value["jobs"][1]["ZNS Reset"]["iops"]
         else:
             numjobs = int(re.search(r'\d+', key).group())
             x = numjobs - 1
 
-            bw[x] = value["jobs"][1]["ZNS Reset"]["bw_mean"]
-            bw_err[x] = value["jobs"][1]["ZNS Reset"]["bw_dev"]
+            iops[x] = value["jobs"][1]["ZNS Reset"]["iops"]
+            iops_err[x] = value["jobs"][1]["ZNS Reset"]["iops"]
 
-    bw_plot[0] = 1 # peak relative bw
-    bw_err[0] = 0
+    iops_plot[0] = 1 # peak relative iops
+    iops_err[0] = 0
+
+    iops_max = [iops[0]] * (len(queue_depths))
+
+    print(f"Interference RMS 0% - 50% {get_interference_rms(iops_max, iops, iops, iops, 1, 0)}")
 
     i = 1;
-    for value in bw:
+    for value in iops:
         if value == None:
             continue
-        bw_plot[i] = value / peak
+        iops_plot[i] = value / peak
         i += 1
 
     i = 1
-    for value in bw_err:
+    for value in iops_err:
         if value == None:
             continue
-        bw_plot_err[i * 72] = value / peak
+        iops_plot_err[i * 72] = value / peak
         i += 1
 
-
     x = np.arange(0, len(queue_depths) + 1)
-    X_Y_Spline = make_interp_spline(x, bw_plot)
+    X_Y_Spline = make_interp_spline(x, iops_plot)
 
     X_ = np.linspace(x.min(), x.max(), 505)
     Y_ = X_Y_Spline(X_)
@@ -106,7 +114,7 @@ if __name__ == "__main__":
     # ax.legend(loc='best')
     ax.set_ylim(bottom=0, top=1.05)
     # ax.set_xlim(left=0)
-    ax.set_ylabel("relative reset bandwidth")
+    ax.set_ylabel("relative reset IOPS")
     ax.set_xlabel("concurrent write jobs")
     plt.savefig(f"{file_path}/reset-performance.pdf", bbox_inches="tight")
     plt.savefig(f"{file_path}/reset-performance.png", bbox_inches="tight")
