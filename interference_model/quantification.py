@@ -32,16 +32,21 @@ def get_emd(iops_0, iops_1, lat_0, lat_1):
 
     
 
-def get_interference_rms(iops_0, iops_1, lat_0, lat_1):
+def get_interference_rms(iops_0, iops_1, lat_0, lat_1, alpha=0.5, beta=0.5):
     """
     Get the earth movers distance of the data points.
 
-     Parameters
+    Parameters
     ----------
     iops_0: IOPS data points (x-axis) of the baseline (0% interference)
     iops_1: IOPS data points (x-axis) of the interference line (50% interference)
     lat_0:  Latency data points (y-axis) of the baseline (0% interference)
     lat_1:  Latency data points (y-axis) of the interference line (50% interference)
+
+    Optional
+    ----------
+    alpha: The alpha coefficient for the weight of IOPS (default: 0.5)
+    beta: The beta coefficient for the weight of Latency (default: 0.5)
 
     Returns
     -------
@@ -55,9 +60,14 @@ def get_interference_rms(iops_0, iops_1, lat_0, lat_1):
         print("ERROR: Lines have different number of data points.")
         return -1
 
+    if alpha + beta > 1:
+        print("ERROR: Alpha and Beta should be equal to 1 in total (100%).")
+        return -1
+
+    n = len(iops_0)
     sum = 0
 
-    for i in range(len(iops_0)):
-        sum += math.sqrt(math.pow(((iops_1[i] - iops_0[i]) / iops_0[i]), 2) + math.pow(((lat_1[i] - lat_0[i]) / lat_0[i]), 2))
+    for i in range(n):
+        sum += math.sqrt(alpha * math.pow(((iops_1[i] - iops_0[i]) / iops_0[i]), 2) + beta * math.pow(((lat_1[i] - lat_0[i]) / lat_0[i]), 2))
 
-    return (sum / len(iops_0))
+    return (sum / n)
