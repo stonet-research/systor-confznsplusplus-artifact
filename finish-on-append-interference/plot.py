@@ -125,6 +125,6 @@ if __name__ == "__main__":
     ax.set_xlim(left=0)
     ax.set_ylabel("p95 write Latency (usec)")
     ax.set_xlabel("Total IOPS (x1000)")
-    plt.savefig(f"{file_path}/loaded_write_latency.pdf", bbox_inches="tight")
-    plt.savefig(f"{file_path}/loaded_write_latency.png", bbox_inches="tight")
+    plt.savefig(f"{file_path}/loaded_append_latency-finish.pdf", bbox_inches="tight")
+    plt.savefig(f"{file_path}/loaded_append_latency-finish.png", bbox_inches="tight")
     plt.clf()
