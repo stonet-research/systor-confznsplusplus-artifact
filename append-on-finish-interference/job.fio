@@ -21,6 +21,7 @@ rw=write
 bs=8K
 size=${APPEND_SIZE}z
 offset=${FINISH_SIZE}z
+zone_append=1
 exitall
 exit_what=all
 
