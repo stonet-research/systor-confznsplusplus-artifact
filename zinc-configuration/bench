@@ -106,7 +106,9 @@ done
 ## Run the zinc configuration workloads ##
 ##########################################
 WRITE_THRESHOLD=4 # the knee point of write performance at which the device becomes saturated
-RESET_TIME_CONFS=(1 20 50 100 250 500)
+# jiffies is based on 250HZ by default so 1s/250HZ=4ms lowest precision, therefore we need timers to be multiples of four
+# Otherwise any value not a multiple of 4 will be automatically changed to the nearest one in the scheduler
+RESET_TIME_CONFS=(4 20 40 100 200 500) 
 RESET_WRITE_RATIO_CONFS=(1000 5000 10000 25000 50000)
 TOTAL_WORKLOADS=$((${#RESET_TIME_CONFS[@]} * ${#RESET_WRITE_RATIO_CONFS[@]} * ${#WRITE_IODEPTH[@]}))
 
@@ -121,6 +123,7 @@ for reset_time_conf in ${RESET_TIME_CONFS[@]}; do
     for write_ratio_conf in ${RESET_WRITE_RATIO_CONFS[@]}; do
 
         cur_data="data-reset_time_${reset_time_conf}-write_ratio_${write_ratio_conf}"
+        echo -e ""${BLUE}"Benchmarking RESET_TIMER - WRITE_RATIO: <${reset_time_conf}ms - ${write_ratio_conf}>"${CLOSE}""
 
         mkdir -p ${cur_data}
 
@@ -145,10 +148,11 @@ for reset_time_conf in ${RESET_TIME_CONFS[@]}; do
             AVG_WL_DURATION=$(echo "scale=4; ${DURATION} / ${WL_COUNTER}" | bc)
             ETA=$(echo "scale=4; (${TOTAL_WORKLOADS} - ${WL_COUNTER}) * ${AVG_WL_DURATION}" | bc)
             SECS=$((${ETA%.*} % 60))
-            MINS=$((${ETA%.*} / 60))
-            HRS=$((${MINS} % 60))
+            MINS_ETA=$((${ETA%.*} / 60))
+            HRS=$((${MINS_ETA%.*} / 60))
+            MINS=$((${MINS_ETA%.*} % 60))
 
-            echo -e ""${GREEN}"FINISHED ${PERCENTAGE_DONE}% (Workloads ${WL_COUNTER}/${TOTAL_WORKLOADS}) [ETA: ${HRS}h:${MINS}:${SECS}s]"${CLOSE}""
+            echo -e ""${GREEN}"FINISHED ${PERCENTAGE_DONE}% (Workloads ${WL_COUNTER}/${TOTAL_WORKLOADS}) [ETA: ${HRS}h:${MINS}m:${SECS}s]"${CLOSE}""
             WL_COUNTER+=1
         done
     done

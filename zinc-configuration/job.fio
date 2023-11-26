@@ -28,6 +28,7 @@ exitall
 exit_what=stonewall
 
 [write]
+new_group
 rw=write
 iodepth=1
 size=${WRITE_SIZE}z
