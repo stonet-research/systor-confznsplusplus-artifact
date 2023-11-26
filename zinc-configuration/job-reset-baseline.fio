@@ -22,5 +22,3 @@ iodepth=1
 numjobs=1
 bs=${BS}
 rate=,,${RESET_LIMIT}
-exitall
-exit_what=stonewall
