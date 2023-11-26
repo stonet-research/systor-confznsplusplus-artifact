@@ -8,6 +8,8 @@ import math
 import matplotlib.pyplot as plt
 from pathlib import Path
 import numpy as np
+import colorama
+from colorama import Fore, Style
 import matplotlib.patches as mpatches
 
 import os, sys
@@ -108,6 +110,8 @@ if __name__ == "__main__":
             config = re.findall(r'\d+', dir)
             config_string = f"reset_lat_{config[0]}-write_ratio_{config[1]}"
             data[config_string] = dict()
+            data[config_string]["reset_limit_val"] = config[0]
+            data[config_string]["write_ratio_val"] = config[1]
             parse_fio_data(f"{file_path}/{dir}", data[config_string])
 
     os.makedirs(f"{file_path}/figures", exist_ok=True)
@@ -119,6 +123,9 @@ if __name__ == "__main__":
     reset_baseline_lat = [None] * len(queue_depths)
     write_baseline_iops = [None] * len(queue_depths)
     write_baseline_lat = [None] * len(queue_depths)
+    config_reset_limit = []
+    config_write_ratio = []
+    config_interference = []
 
     parse_write_baseline(write_baseline_iops, write_baseline_lat)
     parse_reset_baseline(reset_baseline_iops, reset_baseline_lat)
@@ -132,6 +139,8 @@ if __name__ == "__main__":
         for key, value in conf_value.items():
             if conf_key == "baseline":
                continue
+            elif "reset_limit_val" in key or "write_ratio_val" in key:
+                continue
             else:
                 head, tail = os.path.split(key)
                 numjobs = int(re.search(r'\d+', tail).group())
@@ -150,7 +159,11 @@ if __name__ == "__main__":
             # print(f"Config {conf_key} RESET Interference RMS {reset_interference}")
 
             interference = WRITE_INTERFERENCE_GAMMA * write_interference + RESET_INTERFERENCE_DELTA * reset_interference
-            print(f"Config {conf_key} Interference RMS {interference}")
+            print(f"Config {conf_key : >40} Interference RMS {interference : >20}")
+
+            config_reset_limit.append(int(conf_value["reset_limit_val"]))
+            config_write_ratio.append(int(conf_value["write_ratio_val"]))
+            config_interference.append(int(interference))
 
             inter = lowest_interference[1]
             if inter == None:
@@ -160,7 +173,7 @@ if __name__ == "__main__":
 
             fig, ax = plt.subplots()
 
-            ax.plot(write_baseline_iops, write_baseline_lat, markersize = 4, marker = '>', label="  0% reset")
+            ax.plot(write_baseline_iops, write_baseline_lat, markersize = 4, marker = '>', label="   0% reset")
             ax.plot(write_iops, write_lat, markersize = 4, marker = '*', label=" 50% reset")
 
             fig.tight_layout()
@@ -176,4 +189,26 @@ if __name__ == "__main__":
             plt.savefig(f"{file_path}/figures/loaded_write_latency-{conf_key}.png", bbox_inches="tight")
             plt.clf()
 
-    print(f"Lowest Interference {lowest_interference[0]} Interference RMS 0% - 50% {lowest_interference[1]}")
+    print("\n-------------------------------------------------------------------------------------")
+    print(f"{Fore.GREEN}Lowest{Style.RESET_ALL} {lowest_interference[0] : >40} Interference RMS {lowest_interference[1] : >20}")
+
+    # TODO: THIS IS TEMP FOR DEBUG
+    config_reset_limit=config_reset_limit[1:]
+    config_write_ratio=config_write_ratio[1:]
+    config_interference=config_interference[1:]
+    x = np.reshape(config_reset_limit, (2, 2))
+    y = np.reshape(config_write_ratio, (2, 2))
+    z = np.reshape(config_interference, (2, 2))
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.plot_surface(x, y, z)
+
+    ax.set_xlabel('Reset Latency (ms)')
+    ax.set_ylabel('Write Ratio')
+    ax.set_zlabel('Interference RMS')
+    
+    plt.savefig(f"{file_path}/figures/configuration-space.png", bbox_inches="tight")
+    plt.savefig(f"{file_path}/figures/configuration-space.pdf", bbox_inches="tight")
+
