@@ -90,6 +90,7 @@ echo -e ""${GREEN}"Baseline Benchmarking 50% Reset Rate Limit Performance"${CLOS
 trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc) 
 sudo nvme zns reset-zone /dev/$1 -a
 # Not using ZINC for the baseline as it would hold resets and we want the best case reset performance, hence none scheduler is used
+echo none | sudo tee /sys/block/$1/queue/scheduler >> /dev/null
 # TODO UNCOMMENT BELOW JOB AFTER ALL RUNS DONE
 # sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ../fio/fio --output-format=json --output=data/data-reset_baseline-rflow-50.json job-reset-baseline.fio
 
@@ -152,7 +153,7 @@ for reset_time_conf in ${RESET_TIME_CONFS[@]}; do
             PERCENTAGE_DONE=$(echo "scale=2; ${WL_COUNTER} / ${TOTAL_WORKLOADS} * 100" | bc)
             DURATION=$SECONDS
             AVG_WL_DURATION=$(echo "scale=4; ${DURATION} / ${WL_COUNTER}" | bc)
-            ETA=$(echo "scale=4; (${TOTAL_WORKLOADS} - ${WL_COUNTER}) * ${AVG_WL_DURATION}" | bc)
+            ETA=$(echo "scale=2; (${TOTAL_WORKLOADS} - ${WL_COUNTER}) * ${AVG_WL_DURATION}" | bc)
             SECS=$((${ETA%.*} % 60))
             MINS_ETA=$((${ETA%.*} / 60))
             HRS=$((${MINS_ETA%.*} / 60))
