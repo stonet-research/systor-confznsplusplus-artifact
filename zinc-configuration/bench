@@ -2,6 +2,8 @@
 
 set -e
 
+###### TODO: UNCOMMENT THE SKIPPED RUNS ONCE ALL DONE, ALL MARKED WITH TODO
+
 if [ $# != 1 ]; then
     echo "Usage: $0 <ZNS device (e.g., nvme0n2)>"
     exit 1
@@ -72,7 +74,7 @@ mkdir -p data
 #####################################
 
 echo -e ""${GREEN}"Benchmarking ZNS Device Reset Rate Limit"${CLOSE}""
-sudo nvme zns reset-zone /dev/$1 -a
+sudo nvme zns reset-zone /dev/$1 -a  # TODO UNCOMMENT BELOW JOB AFTER ALL RUNS DONE
 # sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../fio/fio --output-format=json --output=data/bw.json job-trim.fio
 
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
@@ -82,10 +84,14 @@ echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
 ## Identify Reset Performance Baseline at 50% reset rate limit without concurrent writes ##
 ###########################################################################################
 
+# TODOO RERUN THIS WITHOUT IO_URING_CMD
 echo ""
 echo -e ""${GREEN}"Baseline Benchmarking 50% Reset Rate Limit Performance"${CLOSE}""
-trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc)
-# sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ../fio/fio --output-format=json --output=data/data-reset_baseline-rflow-50.json job-reset-baseline.fio
+trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc) 
+sudo nvme zns reset-zone /dev/$1 -a
+# Not using ZINC for the baseline as it would hold resets and we want the best case reset performance, hence none scheduler is used
+# TODO UNCOMMENT BELOW JOB AFTER ALL RUNS DONE
+# sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ../fio/fio --output-format=json --output=data/data-reset_baseline-rflow-50.json job-reset-baseline.fio
 
 ####################################################################
 ## Identify Baseline Write Performance with 0% Reset Interference ##
@@ -143,7 +149,7 @@ for reset_time_conf in ${RESET_TIME_CONFS[@]}; do
             trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc)
             sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" "WRITE_SIZE=${WRITE_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ../fio/fio --output-format=json --output=${cur_data}/data-write_iod_${write_iodepth}-wflow_50.json job.fio
 
-            PERCENTAGE_DONE=$(echo "scale=4; ${WL_COUNTER} / ${TOTAL_WORKLOADS} * 100" | bc)
+            PERCENTAGE_DONE=$(echo "scale=2; ${WL_COUNTER} / ${TOTAL_WORKLOADS} * 100" | bc)
             DURATION=$SECONDS
             AVG_WL_DURATION=$(echo "scale=4; ${DURATION} / ${WL_COUNTER}" | bc)
             ETA=$(echo "scale=4; (${TOTAL_WORKLOADS} - ${WL_COUNTER}) * ${AVG_WL_DURATION}" | bc)
@@ -153,7 +159,7 @@ for reset_time_conf in ${RESET_TIME_CONFS[@]}; do
             MINS=$((${MINS_ETA%.*} % 60))
 
             echo -e ""${GREEN}"FINISHED ${PERCENTAGE_DONE}% (Workloads ${WL_COUNTER}/${TOTAL_WORKLOADS}) [ETA: ${HRS}h:${MINS}m:${SECS}s]"${CLOSE}""
-            WL_COUNTER+=1
+            WL_COUNTER=$((${WL_COUNTER} + 1))
         done
     done
 done
