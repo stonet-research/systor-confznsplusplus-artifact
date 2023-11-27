@@ -18,8 +18,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from interference_model.quantification import get_interference_rms
 
 # TODO: retrieve these values from ZenFS tracing for final calculation
-WRITE_INTERFERENCE_GAMMA = 0.5
-RESET_INTERFERENCE_DELTA = 0.5
+WRITE_INTERFERENCE_GAMMA = 0.95
+RESET_INTERFERENCE_DELTA = 0.05
 
 plt.rc('font', size=12)          # controls default text sizes
 plt.rc('axes', titlesize=12)     # fontsize of the axes title
@@ -155,11 +155,13 @@ if __name__ == "__main__":
             write_interference = get_interference_rms(write_baseline_iops, write_iops, write_baseline_lat, write_lat)
             reset_interference = get_interference_rms(reset_baseline_iops, reset_iops, reset_baseline_lat, reset_lat)
 
-            # print(f"Config {conf_key} WRITE Interference RMS {write_interference}")
-            # print(f"Config {conf_key} RESET Interference RMS {reset_interference}")
+            print("-------------------------------------------------------------------------------------")
+            print(f"Config {conf_key: >40} WRITE Interference RMS {write_interference: >20.15f}")
+            print(f"Config {conf_key: >40} RESET Interference RMS {reset_interference: >20.15f}")
 
             interference = WRITE_INTERFERENCE_GAMMA * write_interference + RESET_INTERFERENCE_DELTA * reset_interference
-            print(f"Config {conf_key : >40} Interference RMS {interference : >20}")
+            print(f"Config {conf_key : >40} Interference RMS {interference : >26.15f}")
+            print("-------------------------------------------------------------------------------------")
 
             config_reset_limit.append(int(conf_value["reset_limit_val"]))
             config_write_ratio.append(int(conf_value["write_ratio_val"]))
@@ -189,26 +191,28 @@ if __name__ == "__main__":
             plt.savefig(f"{file_path}/figures/loaded_write_latency-{conf_key}.png", bbox_inches="tight")
             plt.clf()
 
-    print("\n-------------------------------------------------------------------------------------")
-    print(f"{Fore.GREEN}Lowest{Style.RESET_ALL} {lowest_interference[0] : >40} Interference RMS {lowest_interference[1] : >20}")
+    print("\n=====================================================================================")
+    print(f"{Fore.GREEN}Lowest{Style.RESET_ALL} {lowest_interference[0] : >40} Interference RMS {lowest_interference[1]:>26.15f}")
+
+
 
     # TODO: THIS IS TEMP FOR DEBUG
-    config_reset_limit=config_reset_limit[1:]
-    config_write_ratio=config_write_ratio[1:]
-    config_interference=config_interference[1:]
-    x = np.reshape(config_reset_limit, (2, 2))
-    y = np.reshape(config_write_ratio, (2, 2))
-    z = np.reshape(config_interference, (2, 2))
+    # config_reset_limit=config_reset_limit[1:]
+    # config_write_ratio=config_write_ratio[1:]
+    # config_interference=config_interference[1:]
+    # x = np.reshape(config_reset_limit, (2, 2))
+    # y = np.reshape(config_write_ratio, (2, 2))
+    # z = np.reshape(config_interference, (2, 2))
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
 
-    ax.plot_surface(x, y, z)
+    # ax.plot_surface(x, y, z)
 
-    ax.set_xlabel('Reset Latency (ms)')
-    ax.set_ylabel('Write Ratio')
-    ax.set_zlabel('Interference RMS')
+    # ax.set_xlabel('Reset Latency (ms)')
+    # ax.set_ylabel('Write Ratio')
+    # ax.set_zlabel('Interference RMS')
     
-    plt.savefig(f"{file_path}/figures/configuration-space.png", bbox_inches="tight")
-    plt.savefig(f"{file_path}/figures/configuration-space.pdf", bbox_inches="tight")
+    # plt.savefig(f"{file_path}/figures/configuration-space.png", bbox_inches="tight")
+    # plt.savefig(f"{file_path}/figures/configuration-space.pdf", bbox_inches="tight")
 
