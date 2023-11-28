@@ -1,6 +1,7 @@
 #! /bin/bash
 
 set -e
+set -x
 
 ###### TODO: UNCOMMENT THE SKIPPED RUNS ONCE ALL DONE, ALL MARKED WITH TODO
 
@@ -74,7 +75,7 @@ mkdir -p data
 #####################################
 
 echo -e ""${GREEN}"Benchmarking ZNS Device Reset Rate Limit"${CLOSE}""
-sudo nvme zns reset-zone /dev/$1 -a  # TODO UNCOMMENT BELOW JOB AFTER ALL RUNS DONE
+sudo nvme zns reset-zone /dev/$1 -a
 # sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../fio/fio --output-format=json --output=data/bw.json job-trim.fio
 
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
@@ -91,7 +92,6 @@ trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc)
 sudo nvme zns reset-zone /dev/$1 -a
 # Not using ZINC for the baseline as it would hold resets and we want the best case reset performance, hence none scheduler is used
 echo none | sudo tee /sys/block/$1/queue/scheduler >> /dev/null
-# TODO UNCOMMENT BELOW JOB AFTER ALL RUNS DONE
 # sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ../fio/fio --output-format=json --output=data/data-reset_baseline-rflow-50.json job-reset-baseline.fio
 
 ####################################################################
@@ -106,8 +106,10 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
     sudo nvme zns reset-zone /dev/$1 -a
     echo zinc | sudo tee /sys/block/$1/queue/scheduler >> /dev/null # use default zinc options for baseline (no resets in the baseline)
 
-    # sudo env "DEV=$1" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" ../fio/fio --output-format=json --output=data/data-write_iod_${write_iodepth}-wflow_100.json job-bw.fio
+    sudo env "DEV=${DEV}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" ../fio/fio --output-format=json --output=data/data-write_iod_${write_iodepth}-wflow_100.json job-bw.fio
 done
+
+exit
 
 ##########################################
 ## Run the zinc configuration workloads ##

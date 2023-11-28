@@ -75,7 +75,7 @@ def parse_write_baseline(write_baseline_iops, write_baseline_lat):
                 else:
                     head, tail = os.path.split(key)
                     numjobs = int(re.search(r'\d+', tail).group())
-                    write_baseline_iops[numjobs - 1] =  value["jobs"][0]["finish"]["iops_mean"]/1000  # this is a bug in fio it being under the "finish" instead of "write"
+                    write_baseline_iops[numjobs - 1] =  value["jobs"][0]["finish"]["iops_mean"]/1000
                     write_baseline_lat[numjobs - 1] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
             else:
                 continue
