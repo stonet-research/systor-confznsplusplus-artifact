@@ -76,7 +76,7 @@ mkdir -p data
 
 echo -e ""${GREEN}"Benchmarking ZNS Device Reset Rate Limit"${CLOSE}""
 sudo nvme zns reset-zone /dev/$1 -a
-# sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../fio/fio --output-format=json --output=data/bw.json job-trim.fio
+sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../fio/fio --output-format=json --output=data/bw.json job-trim.fio
 
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
 echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
@@ -85,14 +85,13 @@ echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
 ## Identify Reset Performance Baseline at 50% reset rate limit without concurrent writes ##
 ###########################################################################################
 
-# TODOO RERUN THIS WITHOUT IO_URING_CMD
 echo ""
 echo -e ""${GREEN}"Baseline Benchmarking 50% Reset Rate Limit Performance"${CLOSE}""
 trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc) 
 sudo nvme zns reset-zone /dev/$1 -a
 # Not using ZINC for the baseline as it would hold resets and we want the best case reset performance, hence none scheduler is used
 echo none | sudo tee /sys/block/$1/queue/scheduler >> /dev/null
-# sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ../fio/fio --output-format=json --output=data/data-reset_baseline-rflow-50.json job-reset-baseline.fio
+sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ../fio/fio --output-format=json --output=data/data-reset_baseline-rflow-50.json job-reset-baseline.fio
 
 ####################################################################
 ## Identify Baseline Write Performance with 0% Reset Interference ##
