@@ -18,8 +18,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from interference_model.quantification import get_interference_rms
 
 # TODO: retrieve these values from ZenFS tracing for final calculation
-WRITE_INTERFERENCE_GAMMA = 0.95
-RESET_INTERFERENCE_DELTA = 0.05
+WRITE_INTERFERENCE_GAMMA = 0.7238
+RESET_INTERFERENCE_DELTA = 0.2762
 
 plt.rc('font', size=12)          # controls default text sizes
 plt.rc('axes', titlesize=12)     # fontsize of the axes title
@@ -190,6 +190,7 @@ if __name__ == "__main__":
             plt.savefig(f"{file_path}/figures/loaded_write_latency-{conf_key}.pdf", bbox_inches="tight")
             plt.savefig(f"{file_path}/figures/loaded_write_latency-{conf_key}.png", bbox_inches="tight")
             plt.clf()
+            plt.close()
 
     print("\n=====================================================================================")
     print(f"{Fore.GREEN}Lowest{Style.RESET_ALL} {lowest_interference[0] : >40} Interference RMS {lowest_interference[1]:>26.15f}")
