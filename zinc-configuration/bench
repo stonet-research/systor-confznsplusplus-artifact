@@ -108,8 +108,6 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
     sudo env "DEV=${DEV}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" ../fio/fio --output-format=json --output=data/data-write_iod_${write_iodepth}-wflow_100.json job-bw.fio
 done
 
-exit
-
 ##########################################
 ## Run the zinc configuration workloads ##
 ##########################################
