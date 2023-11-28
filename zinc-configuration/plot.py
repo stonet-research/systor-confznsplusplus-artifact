@@ -5,11 +5,13 @@ import re
 import glob
 import json
 import math
+import matplotlib
 import matplotlib.pyplot as plt
 from pathlib import Path
 import numpy as np
 import colorama
 from colorama import Fore, Style
+import seaborn as sns
 import matplotlib.patches as mpatches
 
 import os, sys
@@ -18,8 +20,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from interference_model.quantification import get_interference_rms
 
 # TODO: retrieve these values from ZenFS tracing for final calculation
-WRITE_INTERFERENCE_GAMMA = 0.7238
-RESET_INTERFERENCE_DELTA = 0.2762
+WRITE_INTERFERENCE_GAMMA = 0.5
+RESET_INTERFERENCE_DELTA = 0.5
 
 plt.rc('font', size=12)          # controls default text sizes
 plt.rc('axes', titlesize=12)     # fontsize of the axes title
@@ -27,6 +29,39 @@ plt.rc('axes', labelsize=12)    # fontsize of the x and y labels
 plt.rc('xtick', labelsize=12)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=12)    # fontsize of the tick labels
 plt.rc('legend', fontsize=12)    # legend fontsize
+
+# Switch to Type 1 Fonts.
+# matplotlib.rcParams['text.usetex'] = True
+plt.rc('font', **{'family': 'serif', 'serif': ['Times']})
+
+matplotlib_color = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5']
+m_color_index = 0
+
+matplotlib_colors = [
+    'blue', 'green', 'red', 'cyan', 'magenta', 'yellw', 'white'
+]
+
+dot_style = [
+    '+',
+    'X',
+    'o',
+    'v',
+    's',
+    'P',
+]
+
+# Global parameters
+linewidth = 4
+markersize = 15
+
+datalabel_size = 36
+datalabel_va = 'bottom'
+axis_tick_font_size = 46
+axis_label_font_size = 52
+legend_font_size = 46
+
+heatmap_axis_tick_font_size = 26
+heatmap_data_tag_size = 16
 
 def parse_fio_data(data_path, data):
     if not os.path.exists(f'{data_path}') or \
@@ -97,6 +132,106 @@ def parse_reset_baseline(reset_baseline_iops, reset_baseline_write):
             else:
                 continue
 
+
+def get_matrix_col(val):
+    """Get the config index for the col which represents the reset latency"""
+    match(val):
+        case 4:
+            return 5
+        case 20:
+            return 4
+        case 40:
+            return 3
+        case 100:
+            return 2
+        case 200:
+            return 1
+        case 500:
+            return 0
+
+def get_matrix_row(val):
+    """Get the config index for the row which represents the write ratio"""
+    match(val):
+        case 1000:
+            return 0
+        case 5000:
+            return 1
+        case 10000:
+            return 2
+        case 25000:
+            return 3
+        case 50000:
+            return 4
+        
+def generate_heatmap(config_interference, job, max):
+    reset_latency = [4, 20, 40, 100, 200, 500]
+    write_ratio    = [1000, 5000, 10000, 25000, 50000]
+
+    cmap = sns.color_palette('rocket_r', as_cmap=True).copy()
+    cmap.set_under('#88CCEE')
+    
+    ax = sns.heatmap(config_interference, 
+                    linewidth=0.1, 
+                    xticklabels=True, 
+                    cmap=cmap, 
+                    yticklabels=True, 
+                    clip_on=False, 
+                    # cbar_kws={'shrink': 0.8, 'extend': 'min', 'extendrect': True, 'format': '%d Blocks (512B)'}, 
+                    square=True, 
+                    cbar=True, 
+                    vmin=0,
+                    vmax=max,
+                    linecolor='black',  annot_kws={"size": 20})
+
+    ax.set_xticks([x+0.5 for x in np.arange(len(write_ratio))])
+    ax.set_xticklabels(labels=write_ratio,
+                fontsize=heatmap_axis_tick_font_size)
+    ax.xaxis.set_label_position('top') 
+    ax.xaxis.tick_top()
+
+    ax.set_yticks([x+0.5 for x in np.arange(len(reset_latency))])
+    ax.set_yticklabels(labels=reset_latency[::-1],
+                    fontsize=heatmap_axis_tick_font_size)
+
+    plt.setp(ax.get_xticklabels(),
+                rotation=45,
+                ha="left",
+                rotation_mode="anchor")
+    
+    plt.setp(ax.get_yticklabels(),
+                rotation=45,
+                ha="right",
+                rotation_mode="anchor")
+    
+    ax.set_ylabel("Reset Latency")
+    ax.set_xlabel("Write Ratio")
+    
+    for i in range(len(config_interference)):
+        for j in range(len(config_interference[0])):
+            text = round(config_interference[i][j], 3)
+            if config_interference[i][j] >= 0.9:
+                color = 'w'
+            elif config_interference[i][j] == 0:
+                color = 'black'
+            else:
+                color = 'black'
+            text = ax.text(j+0.5,
+                            i+0.5,
+                            text,
+                            ha="center",
+                            va="center",
+                            color=color,
+                            fontsize=heatmap_data_tag_size)
+
+    cbar = ax.collections[0].colorbar
+    # here set the labelsize by 20
+    cbar.ax.tick_params(labelsize=20)
+
+    plt.savefig(f"{file_path}/figures/configuration-interference-{job}.pdf", bbox_inches="tight")
+    plt.savefig(f"{file_path}/figures/configuration-interference-{job}.png", bbox_inches="tight")
+    plt.clf()
+    plt.close()
+
 if __name__ == "__main__":
     file_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])
 
@@ -125,7 +260,9 @@ if __name__ == "__main__":
     write_baseline_lat = [None] * len(queue_depths)
     config_reset_limit = []
     config_write_ratio = []
-    config_interference = []
+    config_interference = np.zeros(shape=(6, 5))
+    config_interference_write = np.zeros(shape=(6, 5))
+    config_interference_reset = np.zeros(shape=(6, 5))
 
     parse_write_baseline(write_baseline_iops, write_baseline_lat)
     parse_reset_baseline(reset_baseline_iops, reset_baseline_lat)
@@ -163,9 +300,11 @@ if __name__ == "__main__":
             print(f"Config {conf_key : >40} Interference RMS {interference : >26.15f}")
             print("-------------------------------------------------------------------------------------")
 
-            config_reset_limit.append(int(conf_value["reset_limit_val"]))
-            config_write_ratio.append(int(conf_value["write_ratio_val"]))
-            config_interference.append(int(interference))
+            # config_reset_limit.append(int(conf_value["reset_limit_val"]))
+            # config_write_ratio.append(int(conf_value["write_ratio_val"]))
+            config_interference[get_matrix_col(int(conf_value["reset_limit_val"]))][get_matrix_row(int(conf_value["write_ratio_val"]))] = interference
+            config_interference_write[get_matrix_col(int(conf_value["reset_limit_val"]))][get_matrix_row(int(conf_value["write_ratio_val"]))] = write_interference
+            config_interference_reset[get_matrix_col(int(conf_value["reset_limit_val"]))][get_matrix_row(int(conf_value["write_ratio_val"]))] = reset_interference
 
             inter = lowest_interference[1]
             if inter == None:
@@ -196,24 +335,6 @@ if __name__ == "__main__":
     print(f"{Fore.GREEN}Lowest{Style.RESET_ALL} {lowest_interference[0] : >40} Interference RMS {lowest_interference[1]:>26.15f}")
 
 
-
-    # TODO: THIS IS TEMP FOR DEBUG
-    # config_reset_limit=config_reset_limit[1:]
-    # config_write_ratio=config_write_ratio[1:]
-    # config_interference=config_interference[1:]
-    # x = np.reshape(config_reset_limit, (2, 2))
-    # y = np.reshape(config_write_ratio, (2, 2))
-    # z = np.reshape(config_interference, (2, 2))
-
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-
-    # ax.plot_surface(x, y, z)
-
-    # ax.set_xlabel('Reset Latency (ms)')
-    # ax.set_ylabel('Write Ratio')
-    # ax.set_zlabel('Interference RMS')
-    
-    # plt.savefig(f"{file_path}/figures/configuration-space.png", bbox_inches="tight")
-    # plt.savefig(f"{file_path}/figures/configuration-space.pdf", bbox_inches="tight")
-
+    generate_heatmap(config_interference_write, "write", 0.5)
+    generate_heatmap(config_interference_reset, "reset", 25)
+    generate_heatmap(config_interference, "combined", 15)
