@@ -23,6 +23,10 @@ from interference_model.quantification import get_interference_rms
 WRITE_INTERFERENCE_GAMMA = 0.5
 RESET_INTERFERENCE_DELTA = 0.5
 
+RESET_ON_WRITE_RMS = 0.241 # From our benchmark reset-on-write-interference, the retrieved RMS value
+WRITE_ON_RESET_RMS = 0.072 # From our benchmark write-on-reset-interference, the retrieved RMS value
+
+
 plt.rc('font', size=12)          # controls default text sizes
 plt.rc('axes', titlesize=12)     # fontsize of the axes title
 plt.rc('axes', labelsize=12)    # fontsize of the x and y labels
@@ -136,36 +140,30 @@ def parse_reset_baseline(reset_baseline_iops, reset_baseline_write):
 def get_matrix_col(val):
     """Get the config index for the col which represents the reset latency"""
     match(val):
-        case 4:
-            return 5
-        case 20:
-            return 4
-        case 40:
+        case 16:
             return 3
-        case 100:
+        case 32:
             return 2
-        case 200:
+        case 64:
             return 1
-        case 500:
+        case 128:
             return 0
 
 def get_matrix_row(val):
     """Get the config index for the row which represents the write ratio"""
     match(val):
-        case 1000:
+        case 200:
             return 0
-        case 5000:
+        case 2000:
             return 1
-        case 10000:
+        case 20000:
             return 2
-        case 25000:
+        case 200000:
             return 3
-        case 50000:
-            return 4
         
 def generate_heatmap(config_interference, job, max):
-    reset_latency = [4, 20, 40, 100, 200, 500]
-    write_ratio    = [1000, 5000, 10000, 25000, 50000]
+    reset_latency = [16, 32, 64, 128]
+    write_ratio    = [200, 2000, 20000, 200000]
 
     cmap = sns.color_palette('rocket_r', as_cmap=True).copy()
     cmap.set_under('#88CCEE')
@@ -260,9 +258,9 @@ if __name__ == "__main__":
     write_baseline_lat = [None] * len(queue_depths)
     config_reset_limit = []
     config_write_ratio = []
-    config_interference = np.zeros(shape=(6, 5))
-    config_interference_write = np.zeros(shape=(6, 5))
-    config_interference_reset = np.zeros(shape=(6, 5))
+    config_interference = np.zeros(shape=(4, 4))
+    config_interference_write = np.zeros(shape=(4, 4))
+    config_interference_reset = np.zeros(shape=(4, 4))
 
     parse_write_baseline(write_baseline_iops, write_baseline_lat)
     parse_reset_baseline(reset_baseline_iops, reset_baseline_lat)
@@ -303,8 +301,18 @@ if __name__ == "__main__":
             # config_reset_limit.append(int(conf_value["reset_limit_val"]))
             # config_write_ratio.append(int(conf_value["write_ratio_val"]))
             config_interference[get_matrix_col(int(conf_value["reset_limit_val"]))][get_matrix_row(int(conf_value["write_ratio_val"]))] = interference
+            
             config_interference_write[get_matrix_col(int(conf_value["reset_limit_val"]))][get_matrix_row(int(conf_value["write_ratio_val"]))] = write_interference
             config_interference_reset[get_matrix_col(int(conf_value["reset_limit_val"]))][get_matrix_row(int(conf_value["write_ratio_val"]))] = reset_interference
+            
+            # This one is to calculate relative gains respective to the benchmarked reset-on-write-interference RMS
+            # rms_repesctive_change = float(RESET_ON_WRITE_RMS) / write_interference
+            # config_interference_write[get_matrix_col(int(conf_value["reset_limit_val"]))][get_matrix_row(int(conf_value["write_ratio_val"]))] = rms_repesctive_change
+           
+            # This one is to calculate relative gains respective to the benchmarked write-on-reset-interference RMS
+            # rms_repesctive_change = float(WRITE_ON_RESET_RMS) / reset_interference
+            # config_interference_reset[get_matrix_col(int(conf_value["reset_limit_val"]))][get_matrix_row(int(conf_value["write_ratio_val"]))] = rms_repesctive_change
+
 
             inter = lowest_interference[1]
             if inter == None:
@@ -335,6 +343,6 @@ if __name__ == "__main__":
     print(f"{Fore.GREEN}Lowest{Style.RESET_ALL} {lowest_interference[0] : >40} Interference RMS {lowest_interference[1]:>26.15f}")
 
 
-    generate_heatmap(config_interference_write, "write", 0.5)
+    generate_heatmap(config_interference_write, "write", 2)
     generate_heatmap(config_interference_reset, "reset", 25)
     generate_heatmap(config_interference, "combined", 15)

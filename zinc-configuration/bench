@@ -1,7 +1,6 @@
 #! /bin/bash
 
 set -e
-set -x
 
 ###### TODO: UNCOMMENT THE SKIPPED RUNS ONCE ALL DONE, ALL MARKED WITH TODO
 
@@ -76,7 +75,7 @@ mkdir -p data
 
 echo -e ""${GREEN}"Benchmarking ZNS Device Reset Rate Limit"${CLOSE}""
 sudo nvme zns reset-zone /dev/$1 -a
-sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../fio/fio --output-format=json --output=data/bw.json job-trim.fio
+# sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../fio/fio --output-format=json --output=data/bw.json job-trim.fio
 
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
 echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
@@ -91,7 +90,7 @@ trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc)
 sudo nvme zns reset-zone /dev/$1 -a
 # Not using ZINC for the baseline as it would hold resets and we want the best case reset performance, hence none scheduler is used
 echo none | sudo tee /sys/block/$1/queue/scheduler >> /dev/null
-sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ../fio/fio --output-format=json --output=data/data-reset_baseline-rflow-50.json job-reset-baseline.fio
+# sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ../fio/fio --output-format=json --output=data/data-reset_baseline-rflow-50.json job-reset-baseline.fio
 
 ####################################################################
 ## Identify Baseline Write Performance with 0% Reset Interference ##
@@ -105,17 +104,17 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
     sudo nvme zns reset-zone /dev/$1 -a
     echo zinc | sudo tee /sys/block/$1/queue/scheduler >> /dev/null # use default zinc options for baseline (no resets in the baseline)
 
-    sudo env "DEV=${DEV}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" ../fio/fio --output-format=json --output=data/data-write_iod_${write_iodepth}-wflow_100.json job-bw.fio
+    # sudo env "DEV=${DEV}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" ../fio/fio --output-format=json --output=data/data-write_iod_${write_iodepth}-wflow_100.json job-bw.fio
 done
 
 ##########################################
 ## Run the zinc configuration workloads ##
 ##########################################
-WRITE_THRESHOLD=4 # the knee point of write performance at which the device becomes saturated
+WRITE_THRESHOLD=3 # the knee point of write performance at which the device becomes saturated
 # jiffies is based on 250HZ by default so 1s/250HZ=4ms lowest precision, therefore we need timers to be multiples of four
 # Otherwise any value not a multiple of 4 will be automatically changed to the nearest one in the scheduler
-RESET_TIME_CONFS=(4 20 40 100 200 500) 
-RESET_WRITE_RATIO_CONFS=(1000 5000 10000 25000 50000)
+RESET_TIME_CONFS=(16 32 64 128) 
+RESET_WRITE_RATIO_CONFS=(200 2000 20000 200000)
 TOTAL_WORKLOADS=$((${#RESET_TIME_CONFS[@]} * ${#RESET_WRITE_RATIO_CONFS[@]} * ${#WRITE_IODEPTH[@]}))
 
 echo ""
@@ -141,9 +140,9 @@ for reset_time_conf in ${RESET_TIME_CONFS[@]}; do
             sudo nvme zns reset-zone /dev/$1 -a
 
             echo zinc | sudo tee /sys/block/$1/queue/scheduler >> /dev/null
-            echo ${reset_time_conf} | sudo tee /sys/block/$1/queue/iosched/reset_timer_interval >> /dev/null
-            echo ${write_ratio_conf} | sudo tee /sys/block/$1/queue/iosched/write_ratio >> /dev/null
-            echo ${WRITE_THRESHOLD} | sudo tee /sys/block/$1/queue/iosched/pending_requests_threshold >> /dev/null
+            echo ${reset_time_conf} | sudo tee /sys/block/$1/queue/iosched/reset_timer_interval >> /dev/null #epoch_interval
+            echo ${write_ratio_conf} | sudo tee /sys/block/$1/queue/iosched/write_ratio >> /dev/null #rst_wrt_tokens
+            echo ${WRITE_THRESHOLD} | sudo tee /sys/block/$1/queue/iosched/pending_requests_threshold >> /dev/null #min_concurrency_threshold   max_epoch_hold
             
 
             trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc)
