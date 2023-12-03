@@ -20,3 +20,7 @@ make -j
  - [ ] TODO: UNCOMMENT THE SKIPPED RUNS ONCE ALL DONE in zinc-configuration bench, ALL MARKED WITH TODO (do global TODO search as well)
  - [ ] Update the gamma and delta in zinc config parsing from ZenFS
  - [ ] Update parsing to use clat_ns once the reset 50% baseline is rerun with io_uring
+
+ ## ZINC TODO
+  - [ ] Add zinc to this repo, will require to restructure this repo to have cleaner folders like the paper
+  - [ ] cleanup the zinc code, there's still copyrights from mq-deadline, we can remove these and state it uses mq-deadline code as base

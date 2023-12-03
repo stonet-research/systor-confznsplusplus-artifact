@@ -17,7 +17,7 @@ import matplotlib.patches as mpatches
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from interference_model.quantification import get_interference_rms
+from interference_model.quantification import get_interference_gpt
 
 # TODO: retrieve these values from ZenFS tracing for final calculation
 WRITE_INTERFERENCE_GAMMA = 0.5
@@ -102,7 +102,8 @@ def init_baseline(baseline):
         baseline[i] = val
         i += 1
 
-def parse_write_baseline(write_baseline_iops, write_baseline_lat):
+def parse_write_baseline(write_baseline_iops, write_baseline_lat, mqddl_iops, mqddl_lat, mqddl50_iops, mqddl50_lat,
+                          mqddl_reset_iops, mqddl_reset_lat, zinc_baseline_iops, zinc_baseline_lat):
      for conf_key, conf_value in data.items():
 
         for key, value in conf_value.items():
@@ -111,6 +112,23 @@ def parse_write_baseline(write_baseline_iops, write_baseline_lat):
                     continue
                 elif "bw" in key:
                     continue
+                elif "50-mq_deadline" in key:
+                    head, tail = os.path.split(key)
+                    numjobs = int(re.search(r'\d+', tail).group())
+                    mqddl50_iops[numjobs - 1] =  value["jobs"][2]["finish"]["iops_mean"]/1000
+                    mqddl50_lat[numjobs - 1] = value["jobs"][2]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
+                    mqddl_reset_iops[numjobs - 1] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
+                    mqddl_reset_lat[numjobs - 1] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000
+                elif "100-mq_deadline" in key:
+                    head, tail = os.path.split(key)
+                    numjobs = int(re.search(r'\d+', tail).group())
+                    mqddl_iops[numjobs - 1] =  value["jobs"][0]["finish"]["iops_mean"]/1000
+                    mqddl_lat[numjobs - 1] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
+                elif "100-zinc" in key:
+                    head, tail = os.path.split(key)
+                    numjobs = int(re.search(r'\d+', tail).group())
+                    zinc_baseline_iops[numjobs - 1] =  value["jobs"][0]["finish"]["iops_mean"]/1000
+                    zinc_baseline_lat[numjobs - 1] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
                 else:
                     head, tail = os.path.split(key)
                     numjobs = int(re.search(r'\d+', tail).group())
@@ -126,7 +144,7 @@ def parse_reset_baseline(reset_baseline_iops, reset_baseline_write):
             if conf_key == "baseline":
                 if "reset_baseline" in key:
                     reset_baseline_iops[0] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
-                    reset_baseline_lat[0] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000 # TODO: change this to clat after rerunning
+                    reset_baseline_lat[0] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000
                     init_baseline(reset_baseline_iops)
                     init_baseline(reset_baseline_lat)
 
@@ -254,16 +272,33 @@ if __name__ == "__main__":
 
     reset_baseline_iops = [None] * len(queue_depths)
     reset_baseline_lat = [None] * len(queue_depths)
-    write_baseline_iops = [None] * len(queue_depths)
-    write_baseline_lat = [None] * len(queue_depths)
+    write_baseline_iops = [None] * len(queue_depths) # NOTE: This is the old setup, now instead use mqddl_iops
+    write_baseline_lat = [None] * len(queue_depths) # NOTE: This is the old setup, now instead use mqddl_lat
     config_reset_limit = []
     config_write_ratio = []
     config_interference = np.zeros(shape=(4, 4))
     config_interference_write = np.zeros(shape=(4, 4))
     config_interference_reset = np.zeros(shape=(4, 4))
+    mqddl_iops = [None] * len(queue_depths)
+    mqddl50_iops = [None] * len(queue_depths)
+    mqddl_lat = [None] * len(queue_depths)
+    mqddl50_lat = [None] * len(queue_depths)
+    zinc_baseline_iops = [None] * len(queue_depths)
+    zinc_baseline_lat = [None] * len(queue_depths)
+    mqddl_reset_iops = [None] * len(queue_depths)
+    mqddl_reset_lat = [None] * len(queue_depths)
 
-    parse_write_baseline(write_baseline_iops, write_baseline_lat)
+    parse_write_baseline(write_baseline_iops, write_baseline_lat, mqddl_iops, mqddl_lat, mqddl50_iops, mqddl50_lat,
+                         mqddl_reset_iops, mqddl_reset_lat, zinc_baseline_iops, zinc_baseline_lat)
     parse_reset_baseline(reset_baseline_iops, reset_baseline_lat)
+
+    mqddl_write_interference = get_interference_gpt(mqddl_iops, mqddl50_iops, mqddl_lat, mqddl50_lat)
+    mqddl_reset_interference = get_interference_gpt(reset_baseline_iops, mqddl_reset_iops, reset_baseline_lat, mqddl_reset_lat)
+
+    print("-------------------------------------------------------------------------------------")
+    print(f"mq-deadline WRITE Interference RMS {mqddl_write_interference: >20.15f}")
+    print(f"mq-deadline RESET Interference RMS {mqddl_reset_interference: >20.15f}")
+    print("-------------------------------------------------------------------------------------")
 
     for conf_key, conf_value in data.items():
         write_iops = [None] * len(queue_depths)
@@ -287,8 +322,10 @@ if __name__ == "__main__":
 
         # While debugging skip all that are ongoing and don't have all data
         if not None in write_iops:
-            write_interference = get_interference_rms(write_baseline_iops, write_iops, write_baseline_lat, write_lat)
-            reset_interference = get_interference_rms(reset_baseline_iops, reset_iops, reset_baseline_lat, reset_lat)
+             # NOTE: we calculate the RMS usig mq-deadline at 0% resets and then then the different zinc configs for the 50% reset 
+             # (@KD: we also have data for zinc 0% in zinc_baseline_{iops,lat})
+            write_interference = get_interference_gpt(mqddl_iops, write_iops, mqddl_lat, write_lat)
+            reset_interference = get_interference_gpt(reset_baseline_iops, reset_iops, reset_baseline_lat, reset_lat)
 
             print("-------------------------------------------------------------------------------------")
             print(f"Config {conf_key: >40} WRITE Interference RMS {write_interference: >20.15f}")
@@ -322,8 +359,10 @@ if __name__ == "__main__":
 
             fig, ax = plt.subplots()
 
-            ax.plot(write_baseline_iops, write_baseline_lat, markersize = 4, marker = '>', label="   0% reset")
-            ax.plot(write_iops, write_lat, markersize = 4, marker = '*', label=" 50% reset")
+            ax.plot(mqddl_iops, mqddl_lat, markersize = 4, marker = '>', label="   0% reset - mqddl")
+            ax.plot(mqddl50_iops, mqddl50_lat, markersize = 4, marker = '>', label="  50% reset - mqddl")
+            ax.plot(zinc_baseline_iops, zinc_baseline_lat, markersize = 4, marker = '>', label="   0% reset - zinc")
+            ax.plot(write_iops, write_lat, markersize = 4, marker = '*', label=" 50% reset - zinc")
 
             fig.tight_layout()
             ax.grid(which='major', linestyle='dashed', linewidth='1')

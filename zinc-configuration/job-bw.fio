@@ -1,8 +1,9 @@
 [global]
 name=bw
 filename=/dev/${DEV}
-ioengine=io_uring_cmd
+ioengine=io_uring
 sqthread_poll=1
+direct=1
 size=${FILL_SIZE}z
 bs=8K
 group_reporting
