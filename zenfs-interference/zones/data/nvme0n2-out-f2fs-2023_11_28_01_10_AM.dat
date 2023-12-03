@@ -1,0 +1,42 @@
+Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+Keys:       16 bytes each (+ 0 bytes user-defined timestamp)
+Values:     4000 bytes each (2000 bytes after compression)
+Entries:    1000000
+Prefix:    0 bytes
+Keys per prefix:    0
+RawSize:    3830.0 MB (estimated)
+FileSize:   1922.6 MB (estimated)
+Write rate: 0 bytes/second
+Read rate: 0 ops/second
+Compression: NoCompression
+Compression sampling rate: 0
+Memtablerep: SkipListFactory
+Perf Level: 1
+------------------------------------------------
+Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+DB path: [/mnt/bench-f2fs/db0]
+fillrandom   :     155.864 micros/op 6415 ops/sec;   24.6 MB/s
+Microseconds per write:
+Count: 192999 Average: 155.8640  StdDev: 711.43
+Min: 56  Median: 94.4727  Max: 24587
+Percentiles: P50: 94.47 P75: 121.32 P90: 164.31 P95: 219.87 P99: 714.09 P99.9: 12861.12 P99.99: 13991.54
+------------------------------------------------------
+(      51,      76 ]    48162  24.955%  24.955% #####
+(      76,     110 ]    88968  46.098%  71.052% #########
+(     110,     170 ]    40400  20.933%  91.985% ####
+(     170,     250 ]     9335   4.837%  96.822% #
+(     250,     380 ]     2641   1.368%  98.190% 
+(     380,     580 ]     1262   0.654%  98.844% 
+(     580,     870 ]      651   0.337%  99.181% 
+(     870,    1300 ]      432   0.224%  99.405% 
+(    1300,    1900 ]      357   0.185%  99.590% 
+(    1900,    2900 ]       79   0.041%  99.631% 
+(    2900,    4400 ]        8   0.004%  99.635% 
+(    4400,    6600 ]        4   0.002%  99.637% 
+(    6600,    9900 ]       52   0.027%  99.664% 
+(    9900,   14000 ]      630   0.326%  99.991% 
+(   14000,   22000 ]       17   0.009%  99.999% 
+(   22000,   33000 ]        1   0.001% 100.000% 
+

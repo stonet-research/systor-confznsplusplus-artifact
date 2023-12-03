@@ -1,0 +1,97 @@
+Reset metadata zone (allocate)
+Reset metadata zone (roll metadata)
+ResetIOZones Mount
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones DeleteFile
+Keys:       16 bytes each (+ 0 bytes user-defined timestamp)
+Values:     4000 bytes each (2000 bytes after compression)
+Entries:    1000000
+Prefix:    0 bytes
+Keys per prefix:    0
+RawSize:    3830.0 MB (estimated)
+FileSize:   1922.6 MB (estimated)
+Write rate: 0 bytes/second
+Read rate: 0 ops/second
+Compression: NoCompression
+Compression sampling rate: 0
+Memtablerep: SkipListFactory
+Perf Level: 1
+------------------------------------------------
+ResetIOZones RenameFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Physical reset zone (unused zones)
+ResetIOZones DeleteFile
+Physical reset zone (unused zones)
+ResetIOZones DeleteFile
+Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones DeleteFile
+DB path: [rocksdbtest/dbbench]
+ZENFS 2023/12/02-18:13:40  96 free percent, free 105013809152, non_free 4105167698
+ResetIOZones DeleteFile
+Physical reset zone (unused zones)
+Physical reset zone (unused zones)
+ResetIOZones DeleteFile
+Physical reset zone (unused zones)
+Physical reset zone (unused zones)
+ZENFS 2023/12/02-18:13:50  94 free percent, free 102564823040, non_free 6159866233
+ResetIOZones DeleteFile
+Physical reset zone (unused zones)
+Physical reset zone (unused zones)
+ZENFS 2023/12/02-18:14:00  88 free percent, free 96238604288, non_free 12291751524
+fillrandom   :      12.512 micros/op 79926 ops/sec;  306.1 MB/s
+Microseconds per write:
+Count: 2398999 Average: 12.5115  StdDev: 92.76
+Min: 3  Median: 6.7536  Max: 14124
+Percentiles: P50: 6.75 P75: 8.71 P90: 9.88 P95: 12.40 P99: 17.35 P99.9: 1694.31 P99.99: 2894.58
+------------------------------------------------------
+(       2,       3 ]     4220   0.176%   0.176% 
+(       3,       4 ]    88783   3.701%   3.877% #
+(       4,       6 ]   875330  36.487%  40.364% #######
+(       6,      10 ]  1227011  51.147%  91.511% ##########
+(      10,      15 ]   174687   7.282%  98.792% #
+(      15,      22 ]    14817   0.618%  99.410% 
+(      22,      34 ]     4390   0.183%  99.593% 
+(      34,      51 ]      245   0.010%  99.603% 
+(      51,      76 ]       28   0.001%  99.605% 
+(      76,     110 ]       12   0.001%  99.605% 
+(     110,     170 ]        5   0.000%  99.605% 
+(     170,     250 ]        5   0.000%  99.605% 
+(     250,     380 ]        3   0.000%  99.606% 
+(     380,     580 ]      310   0.013%  99.618% 
+(     580,     870 ]     2619   0.109%  99.728% 
+(     870,    1300 ]     2425   0.101%  99.829% 
+(    1300,    1900 ]     2602   0.108%  99.937% 
+(    1900,    2900 ]     1274   0.053%  99.990% 
+(    2900,    4400 ]      200   0.008%  99.999% 
+(    4400,    6600 ]       28   0.001% 100.000% 
+(    6600,    9900 ]        1   0.000% 100.000% 
+(    9900,   14000 ]        3   0.000% 100.000% 
+(   14000,   22000 ]        1   0.000% 100.000% 
+
+ResetIOZones DeleteFile
+Physical reset zone (unused zones)
+ResetIOZones DeleteFile
+Physical reset zone (unused zones)
+Physical reset zone (unused zones)
+ResetIOZones DeleteFile
+Physical reset zone (unused zones)
+ResetIOZones DeleteFile
+Physical reset zone (unused zones)
+ZENFS 2023/12/02-18:14:10  91 free percent, free 100619161600, non_free 8924444093

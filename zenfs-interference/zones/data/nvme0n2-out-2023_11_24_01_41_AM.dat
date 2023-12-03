@@ -1,0 +1,79 @@
+Reset metadata zone (allocate)
+Reset metadata zone (roll metadata)
+ResetIOZones Mount
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones DeleteFile
+Keys:       16 bytes each (+ 0 bytes user-defined timestamp)
+Values:     4000 bytes each (2000 bytes after compression)
+Entries:    1000000
+Prefix:    0 bytes
+Keys per prefix:    0
+RawSize:    3830.0 MB (estimated)
+FileSize:   1922.6 MB (estimated)
+Write rate: 0 bytes/second
+Read rate: 0 ops/second
+Compression: NoCompression
+Compression sampling rate: 0
+Memtablerep: SkipListFactory
+Perf Level: 1
+------------------------------------------------
+ResetIOZones RenameFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Physical reset zone (unused zones)
+ResetIOZones DeleteFile
+Physical reset zone (unused zones)
+ResetIOZones DeleteFile
+Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones DeleteFile
+DB path: [rocksdbtest/dbbench]
+ZENFS 2023/11/24-01:52:26  99 free percent, free 109113217024, non_free 429606490
+ZENFS 2023/11/24-01:52:36  99 free percent, free 108697169920, non_free 844841002
+ZENFS 2023/11/24-01:52:46  98 free percent, free 107607740416, non_free 1934348410
+fillrandom   :      62.375 micros/op 16032 ops/sec;   61.4 MB/s
+Microseconds per write:
+Count: 480999 Average: 62.3748  StdDev: 462.91
+Min: 4  Median: 43.4489  Max: 60039
+Percentiles: P50: 43.45 P75: 52.77 P90: 67.84 P95: 72.86 P99: 131.31 P99.9: 10951.11 P99.99: 13964.50
+------------------------------------------------------
+(       3,       4 ]        2   0.000%   0.000% 
+(       4,       6 ]       31   0.006%   0.007% 
+(       6,      10 ]     3007   0.625%   0.632% 
+(      10,      15 ]     2380   0.495%   1.127% 
+(      15,      22 ]      221   0.046%   1.173% 
+(      22,      34 ]    95015  19.754%  20.926% ####
+(      34,      51 ]   251600  52.308%  73.234% ##########
+(      51,      76 ]   119752  24.897%  98.131% #####
+(      76,     110 ]     3496   0.727%  98.858% 
+(     110,     170 ]     1929   0.401%  99.259% 
+(     170,     250 ]      862   0.179%  99.438% 
+(     250,     380 ]      696   0.145%  99.583% 
+(     380,     580 ]      527   0.110%  99.692% 
+(     580,     870 ]      367   0.076%  99.768% 
+(     870,    1300 ]      232   0.048%  99.817% 
+(    1300,    1900 ]      169   0.035%  99.852% 
+(    1900,    2900 ]       46   0.010%  99.861% 
+(    2900,    4400 ]        6   0.001%  99.863% 
+(    4400,    6600 ]        3   0.001%  99.863% 
+(    6600,    9900 ]       26   0.005%  99.869% 
+(    9900,   14000 ]      589   0.122%  99.991% 
+(   14000,   22000 ]       42   0.009% 100.000% 
+(   50000,   75000 ]        1   0.000% 100.000% 
+
+ZENFS 2023/11/24-01:52:56  98 free percent, free 107596681216, non_free 1945382300

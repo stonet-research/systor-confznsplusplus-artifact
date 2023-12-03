@@ -1,0 +1,87 @@
+Reset metadata zone (allocate)
+Reset metadata zone (roll metadata)
+ResetIOZones Mount
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones DeleteFile
+Keys:       16 bytes each (+ 0 bytes user-defined timestamp)
+Values:     4000 bytes each (2000 bytes after compression)
+Entries:    1000000
+Prefix:    0 bytes
+Keys per prefix:    0
+RawSize:    3830.0 MB (estimated)
+FileSize:   1922.6 MB (estimated)
+Write rate: 0 bytes/second
+Read rate: 0 ops/second
+Compression: NoCompression
+Compression sampling rate: 0
+Memtablerep: SkipListFactory
+Perf Level: 1
+------------------------------------------------
+ResetIOZones RenameFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Physical reset zone (unused zones)
+ResetIOZones DeleteFile
+Physical reset zone (unused zones)
+ResetIOZones DeleteFile
+Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones DeleteFile
+DB path: [rocksdbtest/dbbench]
+ZENFS 2023/12/02-20:08:17  97 free percent, free 106317189120, non_free 2491412930
+ResetIOZones DeleteFile
+Physical reset zone (unused zones)
+Physical reset zone (unused zones)
+ZENFS 2023/12/02-20:08:27  94 free percent, free 103616770048, non_free 5813618034
+ResetIOZones DeleteFile
+Physical reset zone (unused zones)
+Physical reset zone (unused zones)
+ResetIOZones DeleteFile
+Physical reset zone (unused zones)
+Physical reset zone (unused zones)
+ZENFS 2023/12/02-20:08:37  90 free percent, free 97984409600, non_free 10177187939
+fillrandom   :      13.528 micros/op 73918 ops/sec;  283.1 MB/s
+Microseconds per write:
+Count: 2217999 Average: 13.5284  StdDev: 183.41
+Min: 3  Median: 7.0648  Max: 14993
+Percentiles: P50: 7.06 P75: 8.97 P90: 10.75 P95: 13.28 P99: 19.80 P99.9: 1142.87 P99.99: 11277.50
+------------------------------------------------------
+(       2,       3 ]     4091   0.184%   0.184% 
+(       3,       4 ]    74926   3.378%   3.563% #
+(       4,       6 ]   720015  32.462%  36.025% ######
+(       6,      10 ]  1164434  52.499%  88.524% ##########
+(      10,      15 ]   218980   9.873%  98.397% ##
+(      15,      22 ]    19513   0.880%  99.277% 
+(      22,      34 ]     6469   0.292%  99.568% 
+(      34,      51 ]      501   0.023%  99.591% 
+(      51,      76 ]      128   0.006%  99.597% 
+(      76,     110 ]       15   0.001%  99.598% 
+(     110,     170 ]      263   0.012%  99.609% 
+(     170,     250 ]       55   0.002%  99.612% 
+(     250,     380 ]       17   0.001%  99.613% 
+(     380,     580 ]     3892   0.175%  99.788% 
+(     580,     870 ]     1902   0.086%  99.874% 
+(     870,    1300 ]      914   0.041%  99.915% 
+(    1300,    1900 ]      905   0.041%  99.956% 
+(    1900,    2900 ]      283   0.013%  99.969% 
+(    2900,    4400 ]       32   0.001%  99.970% 
+(    4400,    6600 ]       29   0.001%  99.971% 
+(    6600,    9900 ]      303   0.014%  99.985% 
+(    9900,   14000 ]      328   0.015% 100.000% 
+(   14000,   22000 ]        4   0.000% 100.000% 
+

@@ -1,0 +1,49 @@
+Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+Keys:       16 bytes each (+ 0 bytes user-defined timestamp)
+Values:     4000 bytes each (2000 bytes after compression)
+Entries:    1000000
+Prefix:    0 bytes
+Keys per prefix:    0
+RawSize:    3830.0 MB (estimated)
+FileSize:   1922.6 MB (estimated)
+Write rate: 0 bytes/second
+Read rate: 0 ops/second
+Compression: NoCompression
+Compression sampling rate: 0
+Memtablerep: SkipListFactory
+Perf Level: 1
+------------------------------------------------
+Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+DB path: [/mnt/bench-f2fs/db0]
+fillrandom   :      10.907 micros/op 91686 ops/sec;  351.2 MB/s
+Microseconds per write:
+Count: 2750999 Average: 10.9067  StdDev: 22.91
+Min: 3  Median: 9.7771  Max: 19478
+Percentiles: P50: 9.78 P75: 12.53 P90: 14.24 P95: 14.81 P99: 21.49 P99.9: 44.77 P99.99: 372.58
+------------------------------------------------------
+(       2,       3 ]        7   0.000%   0.000% 
+(       3,       4 ]      232   0.008%   0.009% 
+(       4,       6 ]    17009   0.618%   0.627% 
+(       6,      10 ]  1438393  52.286%  52.913% ##########
+(      10,      15 ]  1202419  43.708%  96.622% #########
+(      15,      22 ]    70614   2.567%  99.188% #
+(      22,      34 ]    17396   0.632%  99.821% 
+(      34,      51 ]     3439   0.125%  99.946% 
+(      51,      76 ]      492   0.018%  99.964% 
+(      76,     110 ]       85   0.003%  99.967% 
+(     110,     170 ]      190   0.007%  99.974% 
+(     170,     250 ]      248   0.009%  99.983% 
+(     250,     380 ]      212   0.008%  99.990% 
+(     380,     580 ]      201   0.007%  99.998% 
+(     580,     870 ]       23   0.001%  99.999% 
+(     870,    1300 ]       10   0.000%  99.999% 
+(    1300,    1900 ]        4   0.000%  99.999% 
+(    1900,    2900 ]        2   0.000%  99.999% 
+(    2900,    4400 ]        6   0.000%  99.999% 
+(    4400,    6600 ]        7   0.000% 100.000% 
+(    6600,    9900 ]        8   0.000% 100.000% 
+(    9900,   14000 ]        1   0.000% 100.000% 
+(   14000,   22000 ]        1   0.000% 100.000% 
+
