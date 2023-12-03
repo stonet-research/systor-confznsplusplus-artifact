@@ -1,0 +1,114 @@
+#! /bin/bash
+
+set -e
+
+if [ $# != 1 ]; then
+    echo "Usage: $0 <ZNS device (e.g., nvme0n2)>"
+    exit 1
+fi
+
+DEV=$(echo $1 | sed 's/vme/g/g')
+DEV_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
+DEV_ZONE_SIZE_BLOCKS=$(cat /sys/block/$1/queue/chunk_sectors)
+DEV_ZONE_SIZE=$(echo "${DEV_ZONE_SIZE_BLOCKS} * 512" | bc)
+DEV_ZONES=$(cat /sys/block/$1/queue/nr_zones)
+
+echo "#########################################################"
+echo "####################### ZNS  SETUP ######################"
+echo "#########################################################"
+echo "---------------------------------------------------------"
+printf 'DEV: %52s\n' "/dev/${DEV}"
+echo "---------------------------------------------------------"
+printf 'SECTOR_SIZE: %44s\n' "${DEV_SECT_SIZE}"
+echo "---------------------------------------------------------"
+printf 'ZONE_SIZE_BLOCKS: %39s\n' "${DEV_ZONE_SIZE_BLOCKS}"
+echo "---------------------------------------------------------"
+printf 'ZONE_SIZE_BYTES: %40s\n' "${DEV_ZONE_SIZE}"
+echo "---------------------------------------------------------"
+printf 'DEV_ZONES: %46s\n' "${DEV_ZONES}"
+echo "---------------------------------------------------------"
+echo ""
+
+mkdir -p data
+
+CAP_SECTORS=$(sudo blkzone report -c 5 /dev/$1 | grep -oP '(?<=cap )[0-9xa-f]+' | head -1)
+ZONE_CAP=$((${CAP_SECTORS} * 512))
+WB_SIZE=$((2 * 1024 * 1024 * 1024))
+
+echo mq-deadline | sudo tee /sys/block/$1/queue/scheduler
+# echo mq-deadline | sudo tee /sys/block/$2/queue/scheduler
+sudo nvme zns reset-zone /dev/$1 -a
+# sudo nvme zns reset-zone /dev/$2 -a
+
+
+## Start the ZenFS benchmark
+# TODO: REMOVE STATIC LINK AND HAVE MODULE FOR ROCKSDB AND ZENFS
+sudo rm -rf /tmp/aux
+# sudo rm -rf /tmp/aux2
+sudo rm -rf data/zenfs_data.log
+sudo /home/user/src/rocksdb/plugin/zenfs/util/zenfs mkfs --zbd=$1 --aux_path=/tmp/aux --force --enable_gc
+# sudo /home/user/src/rocksdb/plugin/zenfs/util/zenfs mkfs --zbd=$2 --aux_path=/tmp/aux2 --force
+
+DATA_FILE=${DEV}-$(date +"%Y_%m_%d_%I_%M_%p").dat
+
+DATA_FILE_OUT=${DEV}-out-$(date +"%Y_%m_%d_%I_%M_%p").dat
+
+# (sudo ~/src/bpftrace/build/src/bpftrace ./trace.bt $1 -o data/${DATA_FILE}) &
+sudo ~/src/bpftrace/build/src/bpftrace ./blk_write_io_size_final.bt $1 -o data/${DATA_FILE}-zenfs-fill &
+bpfpid=$!
+# Sleep to ensure bpftrace has started
+sleep 10
+
+# num was 10000000, now it i 1000000000
+
+# Fill the 1st namespace with data
+sudo /home/user/src/rocksdb/db_bench \
+    --fs_uri=zenfs://dev:$1 \
+    --benchmarks=fillrandom \
+    --use_existing_db=0 \
+    --num=10000000 \
+    --compression_type=none \
+    --value_size=4000 \
+    --key_size=16 \
+    --target_file_size_base=$(($ZONE_CAP * 2 * 65 / 100)) \
+    --use_direct_io_for_flush_and_compaction \
+    --max_bytes_for_level_multiplier=4 \
+    --max_background_jobs=8 \
+    --use_direct_reads \
+    --write_buffer_size=${WB_SIZE} \
+    --seed=42 \
+    --histogram=1 > data/${DATA_FILE_OUT}
+sudo kill $bpfpid
+
+workload_switch_time=$(date +"%H:%M:%S")
+
+sudo ~/src/bpftrace/build/src/bpftrace ./blk_write_io_size_final.bt $1 -o data/${DATA_FILE}-zenfs-overwrite &
+bpfpid=$!
+
+# Start overwriting and generating some active GC
+sudo /home/user/src/rocksdb/db_bench \
+    --fs_uri=zenfs://dev:$1 \
+    --benchmarks=overwrite \
+    --use_existing_db=1 \
+    --num=$((10000000/8)) \
+    --compression_type=none \
+    --value_size=4000 \
+    --key_size=16 \
+    --target_file_size_base=$(($ZONE_CAP * 2 * 65 / 100)) \
+    --use_direct_io_for_flush_and_compaction \
+    --max_bytes_for_level_multiplier=4 \
+    --max_background_jobs=8 \
+    --use_direct_reads \
+    --write_buffer_size=${WB_SIZE} \
+    --seed=42 \
+    --histogram=1 >> data/${DATA_FILE_OUT}
+sudo kill $bpfpid
+
+# (sudo /home/user/src/rocksdb/db_bench --fs_uri=zenfs://dev:$1 --benchmarks=overwrite --num=75000000 --compression_type=none --value_size=4000 --key_size=16 --target_file_size_base=$(($ZONE_CAP * 2 * 65 / 100)) --use_direct_io_for_flush_and_compaction --max_bytes_for_level_multiplier=4 --max_background_jobs=8 --use_direct_reads --write_buffer_size=${WB_SIZE} --seed=42 --use_existing_db=1 --statistics=1 --stats_per_interval=0 --stats_interval_seconds=10 --histogram=1 &> data/zenfs_data_gc.log) &
+
+# # Start the 2nd namespace workload
+# sudo /home/user/src/rocksdb/db_bench --fs_uri=zenfs://dev:$2 --benchmarks=fillrandom --num=75000000 --compression_type=none --value_size=4000 --key_size=16 --target_file_size_base=$(($ZONE_CAP * 2 * 95 / 100)) --use_direct_io_for_flush_and_compaction --max_bytes_for_level_multiplier=4 --max_background_jobs=8 --use_direct_reads --write_buffer_size=${WB_SIZE} --seed=42 --use_existing_db=0 --statistics=1 --stats_per_interval=0 --stats_interval_seconds=10 --histogram=1 &> data/zenfs_data.log
+
+wait $!
+
+echo "(${workload_switch_time}, 4)" >> data/${DATA_FILE}

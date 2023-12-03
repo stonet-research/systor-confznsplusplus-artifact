@@ -1,0 +1,150 @@
+Reset zone at 0Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+Keys:       16 bytes each (+ 0 bytes user-defined timestamp)
+Values:     4000 bytes each (2000 bytes after compression)
+Entries:    10000000
+Prefix:    0 bytes
+Keys per prefix:    0
+RawSize:    38299.6 MB (estimated)
+FileSize:   19226.1 MB (estimated)
+Write rate: 0 bytes/second
+Read rate: 0 ops/second
+Compression: NoCompression
+Compression sampling rate: 0
+Memtablerep: SkipListFactory
+Perf Level: 1
+------------------------------------------------
+Reset zone at 6442450944Reset zone at 8589934592Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+DB path: [rocksdbtest/dbbench]
+Reset zone at 10737418240Reset zone at 12884901888ZENFS 2023/11/21-21:33:08  99 free percent, free 1014138605568, 3375386458
+Reset zone at 10737418240Reset zone at 17179869184ZENFS 2023/11/21-21:33:18  99 free percent, free 1007172100096, 10070282854
+Reset zone at 12884901888Reset zone at 25769803776Reset zone at 17179869184Reset zone at 21474836480Reset zone at 23622320128Reset zone at 15032385536Reset zone at 19327352832ZENFS 2023/11/21-21:33:28  98 free percent, free 1005134622720, 11492807555
+Reset zone at 25769803776Reset zone at 40802189312Reset zone at 21474836480ZENFS 2023/11/21-21:33:38  98 free percent, free 998102454272, 19086436997
+Reset zone at 47244640256Reset zone at 12884901888Reset zone at 42949672960Reset zone at 10737418240Reset zone at 32212254720ZENFS 2023/11/21-21:33:48  97 free percent, free 993445314560, 22946645415
+Reset zone at 53687091200Reset zone at 60129542144Reset zone at 47244640256ZENFS 2023/11/21-21:33:58  96 free percent, free 985645957120, 30495392054
+Reset zone at 62277025792Reset zone at 68719476736Reset zone at 70866960384Reset zone at 79456894976ZENFS 2023/11/21-21:34:08  96 free percent, free 977369190400, 39236671134
+Reset zone at 81604378624ZENFS 2023/11/21-21:34:18  95 free percent, free 967807664128, 48743943780
+Reset zone at 92341796864ZENFS 2023/11/21-21:34:28  94 free percent, free 958076448768, 57891616724
+Reset zone at 12884901888Reset zone at 55834574848Reset zone at 111669149696Reset zone at 118111600640Reset zone at 68719476736Reset zone at 75161927680Reset zone at 21474836480Reset zone at 40802189312Reset zone at 45097156608Reset zone at 25769803776Reset zone at 49392123904Reset zone at 17179869184Reset zone at 19327352832Reset zone at 15032385536Reset zone at 23622320128Reset zone at 38654705664Reset zone at 34359738368Reset zone at 36507222016Reset zone at 27917287424Reset zone at 30064771072ZENFS 2023/11/21-21:34:38  95 free percent, free 971138691072, 44516386077
+ZENFS 2023/11/21-21:34:48  94 free percent, free 962903928832, 53495327605
+Reset zone at 25769803776Reset zone at 34359738368Reset zone at 15032385536Reset zone at 100931731456Reset zone at 79456894976Reset zone at 70866960384Reset zone at 85899345920Reset zone at 73014444032Reset zone at 77309411328Reset zone at 47244640256Reset zone at 64424509440Reset zone at 60129542144Reset zone at 66571993088ZENFS 2023/11/21-21:34:58  94 free percent, free 966321221632, 51012255373
+Reset zone at 10737418240Reset zone at 42949672960Reset zone at 51539607552Reset zone at 57982058496Reset zone at 34359738368Reset zone at 40802189312Reset zone at 126701535232Reset zone at 107374182400Reset zone at 109521666048Reset zone at 124554051584Reset zone at 94489280512Reset zone at 103079215104Reset zone at 83751862272Reset zone at 90194313216ZENFS 2023/11/21-21:35:08  95 free percent, free 976438910976, 40978448576
+ZENFS 2023/11/21-21:35:18  95 free percent, free 973038764032, 44013684891
+ZENFS 2023/11/21-21:35:28  95 free percent, free 969649102848, 47048921214
+ZENFS 2023/11/21-21:35:38  94 free percent, free 966169260032, 51213481665
+ZENFS 2023/11/21-21:35:48  94 free percent, free 962725789696, 54685316161
+Reset zone at 36507222016Reset zone at 45097156608Reset zone at 23622320128Reset zone at 30064771072Reset zone at 27917287424Reset zone at 38654705664Reset zone at 55834574848Reset zone at 92341796864Reset zone at 62277025792Reset zone at 75161927680Reset zone at 81604378624Reset zone at 88046829568Reset zone at 96636764160Reset zone at 128849018880ZENFS 2023/11/21-21:35:58  95 free percent, free 968152084480, 44623571473
+Reset zone at 25769803776Reset zone at 133143986176fillrandom   :      18.584 micros/op 53809 ops/sec;  206.1 MB/s
+Microseconds per write:
+Count: 10000000 Average: 18.5841  StdDev: 422.65
+Min: 3  Median: 7.0479  Max: 1237789
+Percentiles: P50: 7.05 P75: 8.95 P99: 28.95 P99.9: 2618.76 P99.99: 4386.13
+------------------------------------------------------
+(       2,       3 ]    16847   0.168%   0.168% 
+(       3,       4 ]   312868   3.129%   3.297% #
+(       4,       6 ]  3294623  32.946%  36.243% #######
+(       6,      10 ]  5250977  52.510%  88.753% ###########
+(      10,      15 ]   860030   8.600%  97.353% ##
+(      15,      22 ]   138945   1.389%  98.743% 
+(      22,      34 ]    44418   0.444%  99.187% 
+(      34,      51 ]     7235   0.072%  99.259% 
+(      51,      76 ]      949   0.009%  99.269% 
+(      76,     110 ]      158   0.002%  99.271% 
+(     110,     170 ]      247   0.002%  99.273% 
+(     170,     250 ]      229   0.002%  99.275% 
+(     250,     380 ]      199   0.002%  99.277% 
+(     380,     580 ]    11523   0.115%  99.392% 
+(     580,     870 ]    10371   0.104%  99.496% 
+(     870,    1300 ]    16685   0.167%  99.663% 
+(    1300,    1900 ]     5349   0.053%  99.717% 
+(    1900,    2900 ]    25526   0.255%  99.972% 
+(    2900,    4400 ]     1838   0.018%  99.990% 
+(    4400,    6600 ]      807   0.008%  99.998% 
+(    6600,    9900 ]      145   0.001% 100.000% 
+(    9900,   14000 ]       16   0.000% 100.000% 
+(   14000,   22000 ]       10   0.000% 100.000% 
+(   22000,   33000 ]        1   0.000% 100.000% 
+(   75000,  110000 ]        2   0.000% 100.000% 
+(  110000,  170000 ]        1   0.000% 100.000% 
+( 1200000, 1900000 ]        1   0.000% 100.000% 
+
+Reset zone at 25769803776Reset zone at 88046829568Reset zone at 38654705664Reset zone at 36507222016Reset zone at 81604378624Reset zone at 27917287424Reset zone at 55834574848Reset zone at 30064771072Reset zone at 75161927680Reset zone at 23622320128Reset zone at 62277025792ZENFS 2023/11/21-21:36:08  95 free percent, free 972821164032, 44195847208
+Reset zone at 2147483648Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+Keys:       16 bytes each (+ 0 bytes user-defined timestamp)
+Values:     4000 bytes each (2000 bytes after compression)
+Entries:    10000000
+Prefix:    0 bytes
+Keys per prefix:    0
+RawSize:    38299.6 MB (estimated)
+FileSize:   19226.1 MB (estimated)
+Write rate: 0 bytes/second
+Read rate: 0 ops/second
+Compression: NoCompression
+Compression sampling rate: 0
+Memtablerep: SkipListFactory
+Perf Level: 1
+------------------------------------------------
+DB path: [rocksdbtest/dbbench]
+ZENFS 2023/11/21-21:36:20  95 free percent, free 968148496384, 45746293232
+ZENFS 2023/11/21-21:36:30  94 free percent, free 958361522176, 56485421848
+ZENFS 2023/11/21-21:36:40  93 free percent, free 948807168000, 66367232889
+ZENFS 2023/11/21-21:36:50  92 free percent, free 938418438144, 75404483477
+Reset zone at 90194313216Reset zone at 94489280512Reset zone at 77309411328Reset zone at 15032385536Reset zone at 34359738368Reset zone at 17179869184Reset zone at 111669149696Reset zone at 12884901888Reset zone at 118111600640Reset zone at 98784247808Reset zone at 105226698752Reset zone at 83751862272Reset zone at 85899345920Reset zone at 64424509440Reset zone at 66571993088Reset zone at 57982058496Reset zone at 60129542144Reset zone at 47244640256Reset zone at 51539607552Reset zone at 115964116992Reset zone at 122406567936Reset zone at 32212254720Reset zone at 53687091200ZENFS 2023/11/21-21:37:00  94 free percent, free 953589628928, 60558221874
+Reset zone at 68719476736Reset zone at 130996502528Reset zone at 15032385536Reset zone at 163208757248ZENFS 2023/11/21-21:37:10  93 free percent, free 946436202496, 69029222698
+Reset zone at 32212254720Reset zone at 169651208192Reset zone at 146028888064Reset zone at 165356240896Reset zone at 173946175488Reset zone at 156766306304Reset zone at 148176371712Reset zone at 27917287424Reset zone at 23622320128Reset zone at 25769803776Reset zone at 45097156608Reset zone at 107374182400Reset zone at 100931731456ZENFS 2023/11/21-21:37:20  93 free percent, free 949345378304, 65173379245
+Reset zone at 103079215104Reset zone at 40802189312Reset zone at 42949672960Reset zone at 10737418240Reset zone at 49392123904Reset zone at 113816633344Reset zone at 120259084288Reset zone at 77309411328ZENFS 2023/11/21-21:37:30  93 free percent, free 948831879168, 65869180235
+Reset zone at 122406567936ZENFS 2023/11/21-21:37:40  92 free percent, free 939803295744, 74684712150
+Reset zone at 55834574848Reset zone at 81604378624Reset zone at 30064771072Reset zone at 75161927680ZENFS 2023/11/21-21:37:50  92 free percent, free 935258402816, 79914310067
+Reset zone at 94489280512Reset zone at 12884901888Reset zone at 53687091200Reset zone at 158913789952Reset zone at 154618822656Reset zone at 133143986176Reset zone at 62277025792Reset zone at 126701535232Reset zone at 38654705664Reset zone at 88046829568Reset zone at 36507222016Reset zone at 96636764160Reset zone at 70866960384Reset zone at 73014444032Reset zone at 42949672960Reset zone at 103079215104ZENFS 2023/11/21-21:38:00  93 free percent, free 943529033728, 69887641260
+Reset zone at 85899345920Reset zone at 64424509440Reset zone at 83751862272Reset zone at 34359738368Reset zone at 66571993088Reset zone at 47244640256Reset zone at 152471339008Reset zone at 171798691840ZENFS 2023/11/21-21:38:10  93 free percent, free 944554147840, 70308440469
+Reset zone at 77309411328Reset zone at 111669149696Reset zone at 60129542144Reset zone at 51539607552Reset zone at 167503724544Reset zone at 178241142784Reset zone at 141733920768Reset zone at 150323855360Reset zone at 143881404416Reset zone at 124554051584Reset zone at 137438953472Reset zone at 109521666048Reset zone at 135291469824Reset zone at 19327352832Reset zone at 21474836480ZENFS 2023/11/21-21:38:20  93 free percent, free 952595107840, 62091996906
+Reset zone at 148176371712Reset zone at 169651208192Reset zone at 45097156608Reset zone at 98784247808Reset zone at 25769803776Reset zone at 120259084288ZENFS 2023/11/21-21:38:30  93 free percent, free 948711661568, 66240246038
+Reset zone at 45097156608Reset zone at 70866960384Reset zone at 75161927680Reset zone at 55834574848Reset zone at 173946175488Reset zone at 115964116992Reset zone at 17179869184Reset zone at 161061273600Reset zone at 176093659136Reset zone at 128849018880Reset zone at 139586437120ZENFS 2023/11/21-21:38:40  93 free percent, free 950615769088, 63387718289
+Reset zone at 120259084288Reset zone at 62277025792Reset zone at 30064771072Reset zone at 53687091200Reset zone at 165356240896Reset zone at 10737418240ZENFS 2023/11/21-21:38:50  93 free percent, free 947431247872, 67545117681
+Reset zone at 17179869184ZENFS 2023/11/21-21:39:00  92 free percent, free 938634280960, 76539885967
+Reset zone at 109521666048Reset zone at 42949672960Reset zone at 182536110080Reset zone at 130996502528Reset zone at 156766306304Reset zone at 15032385536Reset zone at 105226698752Reset zone at 135291469824Reset zone at 81604378624Reset zone at 49392123904Reset zone at 152471339008ZENFS 2023/11/21-21:39:10  92 free percent, free 941323771904, 74009423007
+Reset zone at 103079215104Reset zone at 111669149696Reset zone at 126701535232Reset zone at 60129542144Reset zone at 77309411328Reset zone at 98784247808Reset zone at 12884901888Reset zone at 38654705664Reset zone at 113816633344ZENFS 2023/11/21-21:39:20  93 free percent, free 945304555520, 70321179438
+Reset zone at 25769803776Reset zone at 96636764160Reset zone at 122406567936Reset zone at 27917287424Reset zone at 100931731456Reset zone at 53687091200Reset zone at 30064771072Reset zone at 55834574848Reset zone at 124554051584ZENFS 2023/11/21-21:39:30  93 free percent, free 947039191040, 68538575922
+Reset zone at 62277025792Reset zone at 81604378624Reset zone at 141733920768Reset zone at 150323855360ZENFS 2023/11/21-21:39:40  92 free percent, free 941348769792, 74037262329
+ZENFS 2023/11/21-21:39:50  91 free percent, free 930921975808, 83735638384
+Reset zone at 38654705664Reset zone at 128849018880Reset zone at 148176371712Reset zone at 143881404416Reset zone at 120259084288Reset zone at 115964116992Reset zone at 137438953472ZENFS 2023/11/21-21:40:00  91 free percent, free 929360576512, 86005243775
+Reset zone at 103079215104Reset zone at 109521666048Reset zone at 105226698752Reset zone at 49392123904Reset zone at 42949672960Reset zone at 165356240896Reset zone at 70866960384Reset zone at 133143986176Reset zone at 36507222016Reset zone at 73014444032Reset zone at 83751862272ZENFS 2023/11/21-21:40:10  91 free percent, free 931311194112, 83749384702
+Reset zone at 173946175488Reset zone at 42949672960Reset zone at 103079215104ZENFS 2023/11/21-21:40:20  90 free percent, free 924256038912, 92631144930
+Reset zone at 113816633344Reset zone at 77309411328Reset zone at 12884901888Reset zone at 130996502528Reset zone at 10737418240Reset zone at 139586437120Reset zone at 154618822656Reset zone at 21474836480Reset zone at 51539607552Reset zone at 85899345920Reset zone at 47244640256Reset zone at 66571993088Reset zone at 88046829568Reset zone at 34359738368Reset zone at 64424509440Reset zone at 23622320128ZENFS 2023/11/21-21:40:30  92 free percent, free 934810214400, 80304862126
+Reset zone at 176093659136Reset zone at 62277025792Reset zone at 150323855360Reset zone at 55834574848Reset zone at 27917287424Reset zone at 25769803776Reset zone at 96636764160Reset zone at 53687091200Reset zone at 98784247808ZENFS 2023/11/21-21:40:40  92 free percent, free 935200215040, 80708509648
+ZENFS 2023/11/21-21:40:50  91 free percent, free 924805513216, 90549654118
+Reset zone at 120259084288Reset zone at 156766306304Reset zone at 126701535232Reset zone at 171798691840Reset zone at 60129542144Reset zone at 152471339008Reset zone at 19327352832Reset zone at 94489280512Reset zone at 27917287424Reset zone at 88046829568Reset zone at 34359738368ZENFS 2023/11/21-21:41:00  91 free percent, free 926134829056, 88281395275
+Reset zone at 98784247808Reset zone at 51539607552ZENFS 2023/11/21-21:41:10  90 free percent, free 917922033664, 97630963943
+Reset zone at 42949672960Reset zone at 173946175488Reset zone at 191126044672Reset zone at 165356240896Reset zone at 193273528320Reset zone at 83751862272Reset zone at 73014444032Reset zone at 148176371712Reset zone at 70866960384Reset zone at 105226698752Reset zone at 186831077376Reset zone at 38654705664Reset zone at 178241142784Reset zone at 100931731456overwrite    :      29.803 micros/op 33553 ops/sec;  128.5 MB/s
+Microseconds per write:
+Count: 10000000 Average: 29.8034  StdDev: 236.71
+Min: 3  Median: 7.5402  Max: 19029
+Percentiles: P50: 7.54 P75: 9.34 P99: 737.38 P99.9: 3347.68 P99.99: 6262.30
+------------------------------------------------------
+(       2,       3 ]    12898   0.129%   0.129% 
+(       3,       4 ]   237730   2.377%   2.506% 
+(       4,       6 ]  2610791  26.108%  28.614% #####
+(       6,      10 ]  5554123  55.541%  84.155% ###########
+(      10,      15 ]  1239909  12.399%  96.555% ##
+(      15,      22 ]   176180   1.762%  98.316% 
+(      22,      34 ]    53319   0.533%  98.850% 
+(      34,      51 ]     8108   0.081%  98.931% 
+(      51,      76 ]     1070   0.011%  98.941% 
+(      76,     110 ]      182   0.002%  98.943% 
+(     110,     170 ]      395   0.004%  98.947% 
+(     170,     250 ]      250   0.003%  98.950% 
+(     250,     380 ]      385   0.004%  98.953% 
+(     380,     580 ]     2232   0.022%  98.976% 
+(     580,     870 ]     4474   0.045%  99.020% 
+(     870,    1300 ]    21833   0.218%  99.239% 
+(    1300,    1900 ]     6484   0.065%  99.304% 
+(    1900,    2900 ]    57007   0.570%  99.874% 
+(    2900,    4400 ]     8812   0.088%  99.962% 
+(    4400,    6600 ]     3329   0.033%  99.995% 
+(    6600,    9900 ]      358   0.004%  99.999% 
+(    9900,   14000 ]       84   0.001% 100.000% 
+(   14000,   22000 ]       47   0.000% 100.000% 
+
+Reset zone at 139586437120Reset zone at 197568495616Reset zone at 62277025792Reset zone at 49392123904Reset zone at 109521666048Reset zone at 36507222016Reset zone at 143881404416Reset zone at 137438953472Reset zone at 184683593728Reset zone at 53687091200Reset zone at 23622320128Reset zone at 214748364800Reset zone at 208305913856Reset zone at 212600881152Reset zone at 98784247808ZENFS 2023/11/21-21:41:20  92 free percent, free 943741730816, 73321800184

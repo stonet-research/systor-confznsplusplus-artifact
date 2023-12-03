@@ -1,0 +1,52 @@
+/*
+ *
+ * Get the average size of write I/O calls at block layer level.
+ *
+ * Arguments:
+ * device name - e.g. nvme0n2
+ *
+ * Output format:
+ * @size: average size of write I/Os
+ */
+
+#include <linux/blkdev.h>
+#include <linux/blk-mq.h>
+#include <linux/nvme.h>
+
+#define SECTOR_SHIFT 9
+
+BEGIN {
+    @REQ_OP_BITS = 8;
+    @REQ_OP_MASK = ((1 << @REQ_OP_BITS) - 1);
+}
+
+k:submit_bio / ((struct bio *)arg1)->bi_bdev->bd_disk->disk_name == str($1) / {
+    $cmd = (((struct bio *)arg1)->bi_opf & @REQ_OP_MASK);
+
+    if($cmd == REQ_OP_WRITE) {
+        $data_len = (((struct bio *)arg1)->bi_iter.bi_size >> SECTOR_SHIFT);
+        @size = avg($data_len);
+        @cc   = count();
+    }
+}
+
+k:submit_bio_noacct / ((struct bio *)arg1)->bi_bdev->bd_disk->disk_name == str($1) / {
+    $cmd = (((struct bio *)arg1)->bi_opf & @REQ_OP_MASK);
+
+    if($cmd == REQ_OP_WRITE) {
+        $data_len = (((struct bio *)arg1)->bi_iter.bi_size >> SECTOR_SHIFT);
+        @size = avg($data_len);
+        @cc   = count();
+    }
+}
+
+interval:s:1 { 
+    print(@size);
+    clear(@size); 
+}
+
+END {
+    clear(@size); 
+    clear(@REQ_OP_BITS);
+    clear(@REQ_OP_MASK);
+}

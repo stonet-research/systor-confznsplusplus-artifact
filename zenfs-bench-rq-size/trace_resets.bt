@@ -1,0 +1,44 @@
+#include <linux/nvme.h>
+#include <linux/blkdev.h>
+#include <linux/blk-mq.h>
+
+/* NOTE, the values are defined as 512B sector size
+ * Change the below define to 12 for 4K sector size
+ */
+
+#define SECTOR_SHIFT 9
+
+BEGIN {
+    @REQ_OP_BITS = 8;
+    @REQ_OP_MASK = ((1 << @REQ_OP_BITS) - 1);
+}
+
+k:nvme_setup_cmd / ((struct request *)arg1)->q->disk->disk_name == str($1) / {
+    $nvme_cmd = (struct nvme_command *)*(arg1+sizeof(struct request));
+    $cmd = (((struct request *)arg1)->cmd_flags & @REQ_OP_MASK);
+    $opcode = (uint8)$nvme_cmd->rw.opcode;
+
+    // Trace Write and Append command counters and I/O sizes
+    if($cmd == REQ_OP_WRITE) {
+        @z_data[nsecs] = (strftime("%H:%M:%S", nsecs), 0);
+    }
+
+    // If nvme device is in passthrough (e.g., qemu passthrough) Zone reset has flag REQ_OP_DRV_OUT
+    // therefore include more checks on nvme_zone_mgnt_action
+    if($cmd == REQ_OP_ZONE_RESET || (($cmd == REQ_OP_DRV_OUT && $opcode == nvme_cmd_zone_mgmt_send) && $nvme_cmd->zms.zsa == NVME_ZONE_RESET)) {
+        @z_data[nsecs] = (strftime("%H:%M:%S", nsecs), 1);
+    }
+}
+
+interval:s:350 { exit(); }
+
+interval:ms:1
+{
+    print(@z_data);
+    clear(@z_data);
+}
+
+END {
+    clear(@REQ_OP_BITS);
+    clear(@REQ_OP_MASK);
+}

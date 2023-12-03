@@ -1,0 +1,100 @@
+Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+Keys:       16 bytes each (+ 0 bytes user-defined timestamp)
+Values:     4000 bytes each (2000 bytes after compression)
+Entries:    10000000
+Prefix:    0 bytes
+Keys per prefix:    0
+RawSize:    38299.6 MB (estimated)
+FileSize:   19226.1 MB (estimated)
+Write rate: 0 bytes/second
+Read rate: 0 ops/second
+Compression: NoCompression
+Compression sampling rate: 0
+Memtablerep: SkipListFactory
+Perf Level: 1
+------------------------------------------------
+Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+DB path: [/mnt/bench-f2fs/db0]
+fillrandom   :      19.453 micros/op 51405 ops/sec;  196.9 MB/s
+Microseconds per write:
+Count: 10000000 Average: 19.4532  StdDev: 148.13
+Min: 3  Median: 11.0271  Max: 233943
+Percentiles: P50: 11.03 P75: 13.45 P90: 14.90 P95: 19.34 P99: 34.60 P99.9: 2477.64 P99.99: 2871.84
+------------------------------------------------------
+(       2,       3 ]       11   0.000%   0.000% 
+(       3,       4 ]      764   0.008%   0.008% 
+(       4,       6 ]    39188   0.392%   0.400% 
+(       6,      10 ]  3898294  38.983%  39.383% ########
+(      10,      15 ]  5168576  51.686%  91.068% ##########
+(      15,      22 ]   634151   6.342%  97.410% #
+(      22,      34 ]   157267   1.573%  98.983% 
+(      34,      51 ]    49672   0.497%  99.479% 
+(      51,      76 ]     9194   0.092%  99.571% 
+(      76,     110 ]     1805   0.018%  99.589% 
+(     110,     170 ]      500   0.005%  99.594% 
+(     170,     250 ]      125   0.001%  99.595% 
+(     250,     380 ]       71   0.001%  99.596% 
+(     380,     580 ]       93   0.001%  99.597% 
+(     580,     870 ]       35   0.000%  99.597% 
+(     870,    1300 ]    16518   0.165%  99.763% 
+(    1300,    1900 ]      548   0.005%  99.768% 
+(    1900,    2900 ]    22831   0.228%  99.996% 
+(    2900,    4400 ]      181   0.002%  99.998% 
+(    4400,    6600 ]       76   0.001%  99.999% 
+(    6600,    9900 ]       62   0.001% 100.000% 
+(    9900,   14000 ]       21   0.000% 100.000% 
+(   14000,   22000 ]       13   0.000% 100.000% 
+(   22000,   33000 ]        3   0.000% 100.000% 
+(  170000,  250000 ]        1   0.000% 100.000% 
+
+Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+Keys:       16 bytes each (+ 0 bytes user-defined timestamp)
+Values:     4000 bytes each (2000 bytes after compression)
+Entries:    1250000
+Prefix:    0 bytes
+Keys per prefix:    0
+RawSize:    4787.4 MB (estimated)
+FileSize:   2403.3 MB (estimated)
+Write rate: 0 bytes/second
+Read rate: 0 ops/second
+Compression: NoCompression
+Compression sampling rate: 0
+Memtablerep: SkipListFactory
+Perf Level: 1
+------------------------------------------------
+DB path: [/mnt/bench-f2fs/db0]
+overwrite    :      26.505 micros/op 37728 ops/sec;  144.5 MB/s
+Microseconds per write:
+Count: 1250000 Average: 26.5050  StdDev: 406.26
+Min: 4  Median: 12.9831  Max: 412438
+Percentiles: P50: 12.98 P75: 15.69 P90: 20.64 P95: 24.54 P99: 47.93 P99.9: 2662.13 P99.99: 2896.46
+------------------------------------------------------
+(       3,       4 ]       17   0.001%   0.001% 
+(       4,       6 ]     1407   0.113%   0.114% 
+(       6,      10 ]   200277  16.022%  16.136% ###
+(      10,      15 ]   709495  56.760%  72.896% ###########
+(      15,      22 ]   265184  21.215%  94.110% ####
+(      22,      34 ]    52635   4.211%  98.321% #
+(      34,      51 ]    10357   0.829%  99.150% 
+(      51,      76 ]     2297   0.184%  99.334% 
+(      76,     110 ]      507   0.041%  99.374% 
+(     110,     170 ]      125   0.010%  99.384% 
+(     170,     250 ]       49   0.004%  99.388% 
+(     250,     380 ]       31   0.002%  99.390% 
+(     380,     580 ]       40   0.003%  99.394% 
+(     580,     870 ]       29   0.002%  99.396% 
+(     870,    1300 ]     2475   0.198%  99.594% 
+(    1300,    1900 ]      166   0.013%  99.607% 
+(    1900,    2900 ]     4801   0.384%  99.991% 
+(    2900,    4400 ]       61   0.005%  99.996% 
+(    4400,    6600 ]       23   0.002%  99.998% 
+(    6600,    9900 ]       17   0.001%  99.999% 
+(    9900,   14000 ]        2   0.000% 100.000% 
+(   14000,   22000 ]        1   0.000% 100.000% 
+(   22000,   33000 ]        2   0.000% 100.000% 
+(   50000,   75000 ]        1   0.000% 100.000% 
+(  380000,  570000 ]        1   0.000% 100.000% 
+

@@ -1,0 +1,733 @@
+Reset metadata zone (allocate)
+Reset metadata zone (roll metadata)
+ResetIOZones Mount
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones DeleteFile
+Keys:       16 bytes each (+ 0 bytes user-defined timestamp)
+Values:     4000 bytes each (2000 bytes after compression)
+Entries:    10000000
+Prefix:    0 bytes
+Keys per prefix:    0
+RawSize:    38299.6 MB (estimated)
+FileSize:   19226.1 MB (estimated)
+Write rate: 0 bytes/second
+Read rate: 0 ops/second
+Compression: NoCompression
+Compression sampling rate: 0
+Memtablerep: SkipListFactory
+Perf Level: 1
+------------------------------------------------
+ResetIOZones RenameFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones DeleteFile
+DB path: [rocksdbtest/dbbench]
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:55:41  99 free percent, free 1014078787584, non_free 3435203242
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:55:51  98 free percent, free 1006731735040, non_free 10197122718
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:56:01  98 free percent, free 1004815740928, non_free 11616660439
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:56:11  98 free percent, free 997948289024, non_free 19232212117
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:56:21  97 free percent, free 993242853376, non_free 23032714007
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:56:31  96 free percent, free 985687875584, non_free 30495416631
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:56:41  96 free percent, free 977457246208, non_free 39159105536
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:56:51  95 free percent, free 967936626688, non_free 48342066706
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:57:01  94 free percent, free 961965674496, non_free 52897096292
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:57:11  95 free percent, free 968055283712, non_free 45805360671
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:57:21  94 free percent, free 959844196352, non_free 57003432138
+ZENFS 2023/11/21-21:57:31  93 free percent, free 952824606720, non_free 63531401060
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:57:41  96 free percent, free 978076327936, non_free 39295951278
+ZENFS 2023/11/21-21:57:51  95 free percent, free 974471372800, non_free 42677563162
+ZENFS 2023/11/21-21:58:01  95 free percent, free 970838441984, non_free 45713848047
+ZENFS 2023/11/21-21:58:11  95 free percent, free 967245025280, non_free 50224759802
+ZENFS 2023/11/21-21:58:21  94 free percent, free 963572248576, non_free 53696594298
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:58:31  95 free percent, free 971825229824, non_free 43316101012
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+fillrandom   :      18.946 micros/op 52781 ops/sec;  202.2 MB/s
+Microseconds per write:
+Count: 10000000 Average: 18.9459  StdDev: 215.12
+Min: 2  Median: 6.9292  Max: 322395
+Percentiles: P50: 6.93 P75: 8.89 P99: 27.50 P99.9: 2681.24 P99.99: 5371.13
+------------------------------------------------------
+(       1,       2 ]        1   0.000%   0.000% 
+(       2,       3 ]    25778   0.258%   0.258% 
+(       3,       4 ]   375231   3.752%   4.010% #
+(       4,       6 ]  3412924  34.129%  38.139% #######
+(       6,      10 ]  5105616  51.056%  89.196% ##########
+(      10,      15 ]   829693   8.297%  97.492% ##
+(      15,      22 ]   131486   1.315%  98.807% 
+(      22,      34 ]    42015   0.420%  99.227% 
+(      34,      51 ]     5814   0.058%  99.286% 
+(      51,      76 ]      660   0.007%  99.292% 
+(      76,     110 ]      138   0.001%  99.294% 
+(     110,     170 ]      111   0.001%  99.295% 
+(     170,     250 ]       90   0.001%  99.296% 
+(     250,     380 ]       81   0.001%  99.296% 
+(     380,     580 ]    10304   0.103%  99.399% 
+(     580,     870 ]     8844   0.088%  99.488% 
+(     870,    1300 ]    15399   0.154%  99.642% 
+(    1300,    1900 ]     5655   0.057%  99.698% 
+(    1900,    2900 ]    25805   0.258%  99.956% 
+(    2900,    4400 ]     2884   0.029%  99.985% 
+(    4400,    6600 ]     1067   0.011%  99.996% 
+(    6600,    9900 ]      323   0.003%  99.999% 
+(    9900,   14000 ]       51   0.001% 100.000% 
+(   14000,   22000 ]       23   0.000% 100.000% 
+(   22000,   33000 ]        4   0.000% 100.000% 
+(   33000,   50000 ]        1   0.000% 100.000% 
+(  250000,  380000 ]        2   0.000% 100.000% 
+
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:58:41  95 free percent, free 972938805248, non_free 43849492892
+Reset metadata zone (allocate)
+Reset metadata zone (roll metadata)
+ResetIOZones Mount
+Initializing RocksDB Options from the specified file
+Initializing RocksDB Options from command-line flags
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones RenameFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Keys:       16 bytes each (+ 0 bytes user-defined timestamp)
+Values:     4000 bytes each (2000 bytes after compression)
+Entries:    10000000
+Prefix:    0 bytes
+Keys per prefix:    0
+RawSize:    38299.6 MB (estimated)
+FileSize:   19226.1 MB (estimated)
+Write rate: 0 bytes/second
+Read rate: 0 ops/second
+Compression: NoCompression
+Compression sampling rate: 0
+Memtablerep: SkipListFactory
+Perf Level: 1
+------------------------------------------------
+DB path: [rocksdbtest/dbbench]
+ZENFS 2023/11/21-21:58:52  95 free percent, free 968053280768, non_free 45850830337
+ZENFS 2023/11/21-21:59:02  94 free percent, free 957651517440, non_free 56316539502
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:59:12  93 free percent, free 948723433472, non_free 66034079706
+ZENFS 2023/11/21-21:59:22  92 free percent, free 937979629568, non_free 76652605368
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:59:32  91 free percent, free 929503490048, non_free 86618958239
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-21:59:42  94 free percent, free 963782639616, non_free 52281539430
+ZENFS 2023/11/21-21:59:52  94 free percent, free 956002951168, non_free 60242160328
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:00:02  93 free percent, free 952637485056, non_free 63666346622
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:00:12  94 free percent, free 964436398080, non_free 51617844006
+ZENFS 2023/11/21-22:00:22  94 free percent, free 955720192000, non_free 60337181850
+ResetIOZones DeleteFile
+ZENFS 2023/11/21-22:00:32  93 free percent, free 945589678080, non_free 69840191749
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:00:42  92 free percent, free 944257024000, non_free 71989872229
+ZENFS 2023/11/21-22:00:52  92 free percent, free 935185666048, non_free 79735490503
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:01:02  92 free percent, free 938272378880, non_free 77255514864
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:01:12  93 free percent, free 946074628096, non_free 70237875234
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:01:22  93 free percent, free 947134451712, non_free 68357645045
+ResetIOZones DeleteFile
+ZENFS 2023/11/21-22:01:32  92 free percent, free 936662290432, non_free 77975366981
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:01:42  92 free percent, free 939176427520, non_free 77084237857
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:01:52  91 free percent, free 933989122048, non_free 81375525420
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:02:02  94 free percent, free 955878711296, non_free 60687058741
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:02:12  93 free percent, free 949063495680, non_free 65393623952
+ZENFS 2023/11/21-22:02:22  92 free percent, free 941935841280, non_free 74261908968
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:02:32  92 free percent, free 941352357888, non_free 72013659637
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:02:42  91 free percent, free 932501024768, non_free 81743874606
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:02:52  91 free percent, free 924694409216, non_free 91105868067
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:03:02  90 free percent, free 923319676928, non_free 91590165076
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+ZENFS 2023/11/21-22:03:12  91 free percent, free 927507378176, non_free 87425257057
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:03:22  90 free percent, free 921942519808, non_free 94605921673
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:03:32  91 free percent, free 926933422080, non_free 89640909576
+overwrite    :      28.358 micros/op 35263 ops/sec;  135.1 MB/s
+Microseconds per write:
+Count: 10000000 Average: 28.3581  StdDev: 247.24
+Min: 2  Median: 7.3262  Max: 289627
+Percentiles: P50: 7.33 P75: 9.17 P99: 428.94 P99.9: 3208.66 P99.99: 6295.20
+------------------------------------------------------
+(       1,       2 ]        1   0.000%   0.000% 
+(       2,       3 ]    16918   0.169%   0.169% 
+(       3,       4 ]   266117   2.661%   2.830% #
+(       4,       6 ]  2916203  29.162%  31.992% ######
+(       6,      10 ]  5431392  54.314%  86.306% ###########
+(      10,      15 ]  1039926  10.399%  96.706% ##
+(      15,      22 ]   165691   1.657%  98.362% 
+(      22,      34 ]    53160   0.532%  98.894% 
+(      34,      51 ]     7952   0.080%  98.974% 
+(      51,      76 ]     1102   0.011%  98.985% 
+(      76,     110 ]      148   0.001%  98.986% 
+(     110,     170 ]      189   0.002%  98.988% 
+(     170,     250 ]      213   0.002%  98.990% 
+(     250,     380 ]      170   0.002%  98.992% 
+(     380,     580 ]     3343   0.033%  99.025% 
+(     580,     870 ]     4616   0.046%  99.071% 
+(     870,    1300 ]    22507   0.225%  99.296% 
+(    1300,    1900 ]     6242   0.062%  99.359% 
+(    1900,    2900 ]    52392   0.524%  99.883% 
+(    2900,    4400 ]     8349   0.083%  99.966% 
+(    4400,    6600 ]     2750   0.028%  99.994% 
+(    6600,    9900 ]      463   0.005%  99.998% 
+(    9900,   14000 ]      107   0.001% 100.000% 
+(   14000,   22000 ]       48   0.000% 100.000% 
+(  250000,  380000 ]        1   0.000% 100.000% 
+
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+ResetIOZones DeleteFile
+Reset zone (unused zones)
+Reset zone (unused zones)
+ZENFS 2023/11/21-22:03:42  92 free percent, free 941056090112, non_free 75654063854

@@ -1,0 +1,9 @@
+Attaching 3 probes...
+
+
+@reset_all_ctr: 0
+@resets: 10
+
+
+@writes: 15828
+@writesum: 36597424
