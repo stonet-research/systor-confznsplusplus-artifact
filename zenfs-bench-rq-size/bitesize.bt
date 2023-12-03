@@ -1,0 +1,20 @@
+#include <linux/blkdev.h>
+#include <linux/blk-mq.h>
+#include <linux/nvme.h>
+
+BEGIN {
+        printf("Tracing block device I/O... Hit Ctrl-C to end.\n");
+}
+
+tracepoint:block:block_rq_issue
+{
+        if (args->dev == 264241156) {
+                printf("disk: %d, com: %s, bytes; %d\n", args->dev , args->comm, args->bytes);
+                @[args->comm] = hist(args->bytes);
+        }
+}
+
+END
+{
+        printf("\nI/O size (bytes) histograms by process name:");
+}
