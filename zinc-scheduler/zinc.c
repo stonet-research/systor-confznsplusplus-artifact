@@ -47,8 +47,6 @@ static const int PENDING_REQUEST_THRESHOLD = 2;
 static const int ZINC_IO_SIZE_BIT_SHIFT = 13;	// We keep track of I/O sizes in 8KiB units 
 static const int ZINC_IO_SIZE_SECTOR_SHIFT = 4;	// We keep track of I/O sizes in 8KiB
 
-
-
 /*
  * See Documentation/block/deadline-iosched.rst
  */
