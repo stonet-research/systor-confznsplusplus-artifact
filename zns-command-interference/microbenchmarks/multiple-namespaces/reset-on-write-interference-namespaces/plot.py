@@ -43,7 +43,7 @@ def parse_fio_data(data_path, data):
     return 1
 
 if __name__ == "__main__":
-    file_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])
+    file_path = '/'.join(os.path.abspath(__file__).split('/')[:-1]) + '/../../../../'
 
     data = dict()
     parse_fio_data(f"{file_path}/data", data)

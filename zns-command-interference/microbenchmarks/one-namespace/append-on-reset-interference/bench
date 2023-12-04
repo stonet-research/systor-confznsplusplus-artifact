@@ -65,7 +65,10 @@ echo ""
 
 echo "Benchmarking ZNS Device Reset Rate Limit"
 sudo nvme zns reset-zone /dev/$1 -a
-sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../fio/fio --output-format=json --output=data/bw.json job-trim.fio
+sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../../../../tools/fio/fio \
+    --output-format=json \
+    --output=data/bw.json \
+        jobs/job-trim.fio
 
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
 echo "Found Sustainable BW for Reset: ${BW} B/sec"
@@ -76,5 +79,9 @@ for append_iodepth in ${APPEND_IODEPTH[@]}; do
     echo "Benchmarking APPEND_IODEPTH ${append_iodepth}"
     sudo nvme zns reset-zone /dev/$1 -a
 
-    sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "APPEND_IODEPTH=${append_iodepth}" "WRITE_SIZE=${WRITE_ZONES}" ../fio/fio --output-format=json --output=data/data-append_iod_${append_iodepth}.json job.fio
+    sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "APPEND_IODEPTH=${append_iodepth}" \
+        "WRITE_SIZE=${WRITE_ZONES}" ../../../../tools/fio/fio \
+            --output-format=json \
+            --output=data/data-append_iod_${append_iodepth}.json \
+                jobs/job.fio
 done

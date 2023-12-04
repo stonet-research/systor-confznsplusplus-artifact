@@ -58,7 +58,10 @@ echo ""
 
 echo "Benchmarking ZNS Device Finish Limit"
 sudo nvme zns reset-zone /dev/$1 -a
-sudo env "DEV=${DEV}" "FINISH_SIZE=${FINISH_SIZE}" ../fio/fio --output-format=json --output=data/bw.json job-finish.fio
+sudo env "DEV=${DEV}" "FINISH_SIZE=${FINISH_SIZE}" ../../../../tools/fio/fio \
+    --output-format=json \
+    --output=data/bw.json \
+        jobs/job-finish.fio
 
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
 echo "Found Sustainable BW for Finish: ${BW} B/sec"
@@ -69,7 +72,11 @@ for read_iodepth in ${READ_IODEPTH[@]}; do
     echo "Benchmarking with READ_IODEPTH: ${read_iodepth}"
     sudo nvme zns reset-zone /dev/$1 -a
 
-    sudo env "DEV=${DEV}" "READ_IODEPTH=${read_iodepth}" "FINISH_SIZE=${FINISH_SIZE}" "READ_SIZE=${READ_ZONES}" ../fio/fio --output-format=json --output=data/data-read_iod_${read_iodepth}.json job.fio
+    sudo env "DEV=${DEV}" "READ_IODEPTH=${read_iodepth}" "FINISH_SIZE=${FINISH_SIZE}" \
+        "READ_SIZE=${READ_ZONES}" ../../../../tools/fio/fio \
+            --output-format=json \
+            --output=data/data-read_iod_${read_iodepth}.json \
+                jobs/job.fio
 
 done
 

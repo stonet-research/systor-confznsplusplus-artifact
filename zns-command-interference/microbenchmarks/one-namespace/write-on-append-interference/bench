@@ -58,7 +58,10 @@ echo ""
 
 echo "Benchmarking ZNS Device Write Rate Limit"
 sudo nvme zns reset-zone /dev/$1 -a
-sudo env "DEV=${DEV}" "WRITE_ZONES=${WRITE_ZONES}" ../fio/fio --output-format=json --output=data/bw.json job-write.fio
+sudo env "DEV=${DEV}" "WRITE_ZONES=${WRITE_ZONES}" ../../../../tools/fio/fio \
+    --output-format=json \
+    --output=data/bw.json \
+        jobs/job-write.fio
 
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
 echo "Found Sustainable BW for Write Rate Limiting: ${BW} B/sec"
@@ -73,11 +76,20 @@ for append_iodepth in ${APPEND_IODEPTH[@]}; do
 
         if [[ ${write_flow} -eq 0 ]]; then
             # With 0 write flow we want to disable the concurrent write workload
-            sudo env "DEV=${DEV}" "APPEND_SIZE=${APPEND_SIZE}" "APPEND_IODEPTH=${append_iodepth}" ../fio/fio --output-format=json --output=data/data-append_iod_${append_iodepth}-aflow_${append_flow}.json job-append.fio
+            sudo env "DEV=${DEV}" "APPEND_SIZE=${APPEND_SIZE}" "APPEND_IODEPTH=${append_iodepth}" \
+                ../../../../tools/fio/fio \
+                    --output-format=json \
+                    --output=data/data-append_iod_${append_iodepth}-aflow_${append_flow}.json \
+                        jobs/job-append.fio
         else
             write_rate_limit=$(echo "scale=2; ${write_flow} / 100  * ${BW}" | bc)
 
-            sudo env "DEV=${DEV}" "WRITE_SIZE=${WRITE_ZONES}" "APPEND_SIZE=${APPEND_SIZE}" "APPEND_IODEPTH=${append_iodepth}" "WRITE_LIMIT=${write_rate_limit}" ../fio/fio --output-format=json --output=data/data-append_iod_${append_iodepth}-aflow_${append_flow}.json job.fio
+            sudo env "DEV=${DEV}" "WRITE_SIZE=${WRITE_ZONES}" "APPEND_SIZE=${APPEND_SIZE}" \
+                "APPEND_IODEPTH=${append_iodepth}" "WRITE_LIMIT=${write_rate_limit}" \
+                    ../../../../tools/fio/fio \
+                        --output-format=json \
+                        --output=data/data-append_iod_${append_iodepth}-aflow_${append_flow}.json \
+                            jobs/job.fio
         fi
     done
 done

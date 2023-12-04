@@ -72,7 +72,12 @@ echo ""
 
 echo "Benchmarking ZNS Device Reset Rate Limit"
 sudo nvme zns reset-zone /dev/$1 -a
-sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../fio/fio --output-format=json --output=data/bw.json job-trim.fio
+sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" \
+    "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" \
+    ../../../../tools/fio/fio \
+        --output-format=json \
+        --output=data/bw.json \
+            jobs/job-trim.fio
 
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
 echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
@@ -89,11 +94,22 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
         if [[ ${trim_flow} -eq 0 ]]; then
             # With 0 write flow we want to disable the concurrent write workload
             CONCUR_FILL_SIZE=$(echo "scale=0; ${FILL_SIZE} / ${write_iodepth}" | bc)
-            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" ../fio/fio --output-format=json --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json job-bw.fio
+            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" \
+                "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
+                ../../../../tools/fio/fio \
+                    --output-format=json \
+                    --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
+                        jobs/job-bw.fio
         else
             CONCUR_FILL_SIZE=$(echo "scale=0; ${FILL_SIZE} / ${CONCUR_FILL}" | bc)
             trim_rate_limit=$(echo "scale=2; ${trim_flow} / 100  * ${BW}" | bc)
-            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" "WRITE_SIZE=${WRITE_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ../fio/fio --output-format=json --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json job.fio
+            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" \
+                "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
+                "WRITE_SIZE=${WRITE_SIZE}" "RESET_LIMIT=${trim_rate_limit}" \
+                ../../../../tools/fio/fio \
+                    --output-format=json \
+                    --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
+                        jobs/job.fio
         fi
     done
 done

@@ -61,7 +61,10 @@ echo ""
 
 echo "Benchmarking ZNS Device Finish Limit"
 sudo nvme zns reset-zone /dev/$1 -a
-sudo env "DEV=${DEV}" "FINISH_SIZE=${FINISH_SIZE}" ../fio/fio --output-format=json --output=data/bw.json job-finish.fio
+sudo env "DEV=${DEV}" "FINISH_SIZE=${FINISH_SIZE}"  ../../../../tools/fio/fio \
+    --output-format=json \
+    --output=data/bw.json \
+        jobs/job-finish.fio
 
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
 echo "Found Sustainable BW for Finish: ${BW} B/sec"
@@ -76,6 +79,10 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
     CONCUR_WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
 
     # Write job has a ramp time because fio will directly issue 2 finishs and then realize it needs to rate limit, therefore we don't want to account this period in the write performance
-    sudo env "DEV=${DEV}" "CONCUR_WRITE_SIZE=${CONCUR_WRITE_SIZE}" "WRITE_IODEPTH=${write_iodepth}" "FINISH_SIZE=${FINISH_SIZE}" ../fio/fio --output-format=json --output=data/data-write_iod_${write_iodepth}.json job.fio
+    sudo env "DEV=${DEV}" "CONCUR_WRITE_SIZE=${CONCUR_WRITE_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
+        "FINISH_SIZE=${FINISH_SIZE}" ../../../../tools/fio/fio \
+            --output-format=json \
+            --output=data/data-write_iod_${write_iodepth}.json \
+                jobs/job.fio
 done
 

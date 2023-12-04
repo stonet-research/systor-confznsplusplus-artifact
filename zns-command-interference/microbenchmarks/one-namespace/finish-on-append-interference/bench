@@ -64,7 +64,10 @@ echo ""
 
 echo "Benchmarking ZNS Device Finish Rate Limit"
 sudo nvme zns reset-zone /dev/$1 -a
-sudo env "DEV=${DEV}" "FINISH_SIZE=${FINISH_SIZE}" ../fio/fio --output-format=json --output=data/bw.json job-finish.fio
+sudo env "DEV=${DEV}" "FINISH_SIZE=${FINISH_SIZE}" ../../../../tools/fio/fio \
+    --output-format=json \
+    --output=data/bw.json \
+        jobs/job-finish.fio
 
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
 echo "Found Sustainable BW for Finish Rate Limiting: ${BW} B/sec"
@@ -79,11 +82,18 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
 
         if [[ ${finish_flow} -eq 0 ]]; then
             # With 0 finish flow we want to disable the concurrent finish workload
-            sudo env "DEV=${DEV}" "APPEND_SIZE=${WRITE_ZONES}" "APPEND_IODEPTH=${write_iodepth}" ../fio/fio --output-format=json --output=data/data-append_iod_${write_iodepth}-aflow_${write_flow}.json job-append.fio
+            sudo env "DEV=${DEV}" "APPEND_SIZE=${WRITE_ZONES}" "APPEND_IODEPTH=${write_iodepth}" \
+                ../../../../tools/fio/fio \
+                    --output-format=json \
+                    --output=data/data-append_iod_${write_iodepth}-aflow_${write_flow}.json \
+                        jobs/job-append.fio
         else
             finish_rate_limit=$(echo "scale=2; ${finish_flow} / 100  * ${BW}" | bc)
-
-            sudo env "DEV=${DEV}" "APPEND_SIZE=${WRITE_ZONES}" "APPEND_IODEPTH=${write_iodepth}" "FINISH_SIZE=${FINISH_SIZE}" "FINISH_LIMIT=${finish_rate_limit}" ../fio/fio --output-format=json --output=data/data-append_iod_${write_iodepth}-aflow_${write_flow}.json job.fio
+            sudo env "DEV=${DEV}" "APPEND_SIZE=${WRITE_ZONES}" "APPEND_IODEPTH=${write_iodepth}" \
+                "FINISH_SIZE=${FINISH_SIZE}" "FINISH_LIMIT=${finish_rate_limit}" ../../../../tools/fio/fio \
+                    --output-format=json \
+                    --output=data/data-append_iod_${write_iodepth}-aflow_${write_flow}.json \
+                        jobs/job.fio
         fi
     done
 done
