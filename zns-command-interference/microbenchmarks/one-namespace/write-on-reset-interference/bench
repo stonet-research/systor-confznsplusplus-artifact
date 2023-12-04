@@ -1,0 +1,95 @@
+#! /bin/bash
+
+set -e
+
+if [ $# != 1 ]; then
+    echo "Usage: $0 <ZNS device (e.g., nvme0n2)>"
+    exit 1
+fi
+
+DEV=$(echo $1 | sed 's/vme/g/g')
+DEV_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
+DEV_ZONE_SIZE_BLOCKS=$(cat /sys/block/$1/queue/chunk_sectors)
+DEV_ZONE_SIZE=$(echo "${DEV_ZONE_SIZE_BLOCKS} * 512" | bc)
+DEV_ZONES=$(cat /sys/block/$1/queue/nr_zones)
+
+echo "#########################################################"
+echo "####################### ZNS  SETUP ######################"
+echo "#########################################################"
+echo "---------------------------------------------------------"
+printf 'DEV: %52s\n' "/dev/${DEV}"
+echo "---------------------------------------------------------"
+printf 'SECTOR_SIZE: %44s\n' "${DEV_SECT_SIZE}"
+echo "---------------------------------------------------------"
+printf 'ZONE_SIZE_BLOCKS: %39s\n' "${DEV_ZONE_SIZE_BLOCKS}"
+echo "---------------------------------------------------------"
+printf 'ZONE_SIZE_BYTES: %40s\n' "${DEV_ZONE_SIZE}"
+echo "---------------------------------------------------------"
+printf 'DEV_ZONES: %46s\n' "${DEV_ZONES}"
+echo "---------------------------------------------------------"
+echo ""
+
+mkdir -p data
+
+##################################
+## fio options for specific ZNS ##
+##################################
+BS=$(echo "${DEV_SECT_SIZE} * ${DEV_ZONE_SIZE}" | bc)
+CONCUR_FILL=4 # concurrent fill jobs to speedup filling
+TRIM_IODEPTH=1 # concurrent trim jobs to find trim bw limit
+# Use 70% of the zones for resets and 30% for writes
+FILL_SIZE=$(echo "scale=0; ${DEV_ZONES} * 0.7" | bc | sed 's/\.[0-9]*//g')
+WRITE_ZONES=$(echo "${DEV_ZONES} - ${FILL_SIZE}" | bc) # All but the fill zones
+CONCUR_FILL_SIZE=$(echo "scale=0; ${FILL_SIZE} / ${CONCUR_FILL}" | bc)
+
+# our setup only has 20 cores and we have a polling thread for each job
+# therefore we max to 9 write jobs, as there is 1 concurrent trim job
+# issuing zone resets with also its own polling thread
+WRITE_IODEPTH=(1 2 3 4 5 6 7)
+
+echo "#########################################################"
+echo "###################### BENCH  SETUP #####################"
+echo "#########################################################"
+echo "---------------------------------------------------------"
+printf 'CONCUR_FILL_JOBS: %39s\n' "${CONCUR_FILL}"
+echo "---------------------------------------------------------"
+printf 'TRIM_SIZE: %46s\n' "${BS}"
+echo "---------------------------------------------------------"
+printf 'TRIM_JOBS: %46s\n' "${TRIM_IODEPTH}"
+echo "---------------------------------------------------------"
+printf 'FILL_ZONES (Zones filled for resets): %19s\n' "${FILL_SIZE}"
+echo "---------------------------------------------------------"
+printf 'FILL_ZONES_PER_JOB: %37s\n' "${CONCUR_FILL_SIZE}"
+echo "---------------------------------------------------------"
+printf 'WRITE_ZONES (Empty zones for writes): %19s\n' "${WRITE_ZONES}"
+echo "---------------------------------------------------------"
+printf 'WRITE_NUMJOBS: %42s\n' "${WRITE_IODEPTH[*]}"
+echo "---------------------------------------------------------"
+echo ""
+
+echo "Benchmarking ZNS Device Reset Rate Limit"
+sudo nvme zns reset-zone /dev/$1 -a
+sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" \
+    "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../../../../tools/fio/fio \
+        --output-format=json \
+        --output=data/bw.json \
+            jobs/job-trim.fio
+
+BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
+echo "Found Sustainable BW for Reset: ${BW} B/sec"
+
+for write_iodepth in ${WRITE_IODEPTH[@]}; do
+    WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
+
+    echo ""
+    echo "Benchmarking WRITE_IODEPTH ${write_iodepth}"
+    sudo nvme zns reset-zone /dev/$1 -a
+
+    CONCUR_FILL_SIZE=$(echo "scale=0; ${FILL_SIZE} / ${CONCUR_FILL}" | bc)
+    sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" \
+        "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
+        "WRITE_SIZE=${WRITE_SIZE}" ../../../../tools/fio/fio \
+            --output-format=json \
+            --output=data/data-write_iod_${write_iodepth}.json \
+                jobs/job.fio
+done

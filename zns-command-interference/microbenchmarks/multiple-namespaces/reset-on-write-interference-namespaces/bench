@@ -1,0 +1,130 @@
+#! /bin/bash
+
+set -e
+
+if [ $# != 2 ]; then
+    echo "Usage: $0 <ZNS device Namespace 1 (e.g., nvme0n2) for reset workload> <Namespace 2 for write workload>"
+    exit 1
+fi
+
+DEV1=$(echo $1 | sed 's/vme/g/g')
+DEV1_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
+DEV1_ZONE_SIZE_BLOCKS=$(cat /sys/block/$1/queue/chunk_sectors)
+DEV1_ZONE_SIZE=$(echo "${DEV1_ZONE_SIZE_BLOCKS} * 512" | bc)
+DEV1_ZONES=$(cat /sys/block/$1/queue/nr_zones)
+echo mq-deadline | sudo tee /sys/block/$1/queue/scheduler > /dev/null
+
+DEV2=$(echo $2 | sed 's/vme/g/g')
+DEV2_SECT_SIZE=$(cat /sys/block/$2/queue/hw_sector_size)
+DEV2_ZONE_SIZE_BLOCKS=$(cat /sys/block/$2/queue/chunk_sectors)
+DEV2_ZONE_SIZE=$(echo "${DEV2_ZONE_SIZE_BLOCKS} * 512" | bc)
+DEV2_ZONES=$(cat /sys/block/$2/queue/nr_zones)
+echo mq-deadline | sudo tee /sys/block/$2/queue/scheduler > /dev/null
+
+echo "#########################################################"
+echo "####################### ZNS  SETUP ######################"
+echo "#########################################################"
+echo "---------------------------------------------------------"
+printf 'DEV_1: %50s\n' "/dev/${DEV1}"
+echo "---------------------------------------------------------"
+printf 'DEV_1_SECTOR_SIZE: %38s\n' "${DEV1_SECT_SIZE}"
+echo "---------------------------------------------------------"
+printf 'DEV_1_ZONE_SIZE_BLOCKS: %33s\n' "${DEV1_ZONE_SIZE_BLOCKS}"
+echo "---------------------------------------------------------"
+printf 'DEV_1_ZONE_SIZE_BYTES: %34s\n' "${DEV1_ZONE_SIZE}"
+echo "---------------------------------------------------------"
+printf 'DEV_1_ZONES: %44s\n' "${DEV1_ZONES}"
+echo "---------------------------------------------------------"
+echo "---------------------------------------------------------"
+printf 'DEV_2: %50s\n' "/dev/${DEV1}"
+echo "---------------------------------------------------------"
+printf 'DEV_2_SECTOR_SIZE: %38s\n' "${DEV2_SECT_SIZE}"
+echo "---------------------------------------------------------"
+printf 'DEV_2_ZONE_SIZE_BLOCKS: %33s\n' "${DEV2_ZONE_SIZE_BLOCKS}"
+echo "---------------------------------------------------------"
+printf 'DEV_2_ZONE_SIZE_BYTES: %34s\n' "${DEV2_ZONE_SIZE}"
+echo "---------------------------------------------------------"
+printf 'DEV_2_ZONES: %44s\n' "${DEV2_ZONES}"
+echo "---------------------------------------------------------"
+echo ""
+
+mkdir -p data
+
+##################################
+## fio options for specific ZNS ##
+##################################
+BS1=$(echo "${DEV1_SECT_SIZE} * ${DEV1_ZONE_SIZE}" | bc)
+CONCUR_FILL=1
+TRIM_IODEPTH=1 # concurrent trim jobs to find trim bw limit
+
+# our setup only has 20 cores and we have a polling thread for each job
+# therefore we max to 9 write jobs, as there is 1 concurrent trim job
+# issuing zone resets with also its own polling thread
+# There are issues with more than 7 jobs and limiting the active zones
+WRITE_IODEPTH=(1 2 3 4 5 6 7) 
+WRITE_FLOW=(100 99 95 90 75 50)
+
+echo "#########################################################"
+echo "###################### BENCH  SETUP #####################"
+echo "#########################################################"
+echo "---------------------------------------------------------"
+printf 'CONCUR_FILL_JOBS: %39s\n' "${CONCUR_FILL}"
+echo "---------------------------------------------------------"
+printf 'TRIM_SIZE: %46s\n' "${BS1}"
+echo "---------------------------------------------------------"
+printf 'TRIM_JOBS: %46s\n' "${TRIM_IODEPTH}"
+echo "---------------------------------------------------------"
+printf 'FILL_ZONES (Zones filled for resets - /dev/%s): %4s\n' "$1" "${DEV1_ZONES}"
+echo "---------------------------------------------------------"
+printf 'FILL_ZONES_PER_JOB: %37s\n' "${DEV1_ZONES}"
+echo "---------------------------------------------------------"
+printf 'WRITE_ZONES (Empty zones for writes - /dev/%s): %4s\n' "$2" "${DEV2_ZONES}"
+echo "---------------------------------------------------------"
+printf 'WRITE_NUMJOBS: %42s\n' "${WRITE_IODEPTH[*]}"
+echo "---------------------------------------------------------"
+printf 'WRITE_RATE_FLOWS: %39s\n' "${WRITE_FLOW[*]}"
+echo "---------------------------------------------------------"
+echo ""
+
+echo "Benchmarking ZNS Device Reset Rate Limit"
+sudo nvme zns reset-zone /dev/$1 -a
+sudo env "DEV=${DEV1}" "BS=${DEV1_ZONE_SIZE}" "FILL_SIZE=${DEV1_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" \
+    ../../../../tools/fio/fio \
+        --output-format=json \
+        --output=data/bw.json \
+            jobs/job-trim.fio
+
+BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
+echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
+
+for write_iodepth in ${WRITE_IODEPTH[@]}; do
+    for write_flow in ${WRITE_FLOW[@]}; do
+        trim_flow=$((100 - ${write_flow}))
+        WRITE_SIZE=$(echo "scale=0; (${DEV2_ZONES} - ${write_iodepth}) / ${write_iodepth}" | bc)
+
+        echo ""
+        echo "Benchmarking WRITE_IODEPTH ${write_iodepth}: <WRITE_FLOW ${write_flow} - RESET_LIMIT ${trim_flow}>"
+        sudo nvme zns reset-zone /dev/$1 -a
+        sudo nvme zns reset-zone /dev/$2 -a
+
+        if [[ ${trim_flow} -eq 0 ]]; then
+            # With 0 trim flow we want to disable the concurrent write workload
+            CONCUR_FILL_SIZE=$(echo "scale=0; ${DEV2_ZONES} / ${write_iodepth}" | bc)
+            sudo env "DEV=${DEV2}" "BS=${DEV2_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" \
+                "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${DEV2_ZONES}" "WRITE_IODEPTH=${write_iodepth}" \
+                ../../../../tools/fio/fio \
+                    --output-format=json \
+                    --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
+                        jobs/job-bw.fio
+        else
+            CONCUR_FILL_SIZE=$(echo "scale=0; ${DEV2_ZONES} / ${CONCUR_FILL}" | bc)
+            trim_rate_limit=$(echo "scale=2; ${trim_flow} / 100  * ${BW}" | bc)
+            sudo env "DEV1=${DEV1}" "DEV2=${DEV2}" "BS=${DEV1_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" \
+                "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${DEV1_ZONES}" "WRITE_IODEPTH=${write_iodepth}" \
+                "WRITE_SIZE=${WRITE_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ../../../../tools/fio/fio \
+                    --output-format=json \
+                    --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
+                        jobs/job.fio
+        fi
+    done
+done
