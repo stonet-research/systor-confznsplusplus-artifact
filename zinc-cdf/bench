@@ -79,6 +79,8 @@ for prio_depth in ${PRIO_DEPTH[@]}; do
                 --showcmd \
                 --output-format=json \
                 --output="data/nrun-job-${try}_${prio_depth}" job.fio 
+    
+    sudo nvme zns reset-zone /dev/$1 -a
 
     # run bench
     sudo env "DEV=${DEV}" \
