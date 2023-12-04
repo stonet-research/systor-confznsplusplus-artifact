@@ -7,6 +7,11 @@ if [ $# != 1 ]; then
     exit 1
 fi
 
+# Output
+DATA_FILE=${DEV}-$(date +"%Y_%m_%d_%I_%M_%p").dat
+DATA_FILE_OUT=${DEV}-out-$(date +"%Y_%m_%d_%I_%M_%p").dat
+
+# ZNS vars
 DEV=$(echo $1 | sed 's/vme/g/g')
 DEV_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
 DEV_ZONE_SIZE_BLOCKS=$(cat /sys/block/$1/queue/chunk_sectors)
@@ -29,29 +34,23 @@ printf 'DEV_ZONES: %46s\n' "${DEV_ZONES}"
 echo "---------------------------------------------------------"
 echo ""
 
-mkdir -p data
-
+# RocksDB vars
 CAP_SECTORS=$(sudo blkzone report -c 5 /dev/$1 | grep -oP '(?<=cap )[0-9xa-f]+' | head -1)
 ZONE_CAP=$((${CAP_SECTORS} * 512))
 WB_SIZE=$((2 * 1024 * 1024 * 1024))
 
+mkdir -p data
+
+## Create ZenFS
 echo mq-deadline | sudo tee /sys/block/$1/queue/scheduler
-# echo mq-deadline | sudo tee /sys/block/$2/queue/scheduler
 sudo nvme zns reset-zone /dev/$1 -a
-# sudo nvme zns reset-zone /dev/$2 -a
-
-
-## Start the ZenFS benchmark
-# TODO: REMOVE STATIC LINK AND HAVE MODULE FOR ROCKSDB AND ZENFS
 sudo rm -rf /tmp/aux
-# sudo rm -rf /tmp/aux2
 sudo rm -rf data/zenfs_data.log
-sudo /home/user/src/rocksdb/plugin/zenfs/util/zenfs mkfs --zbd=$1 --aux_path=/tmp/aux --force --enable_gc
-# sudo /home/user/src/rocksdb/plugin/zenfs/util/zenfs mkfs --zbd=$2 --aux_path=/tmp/aux2 --force
-
-DATA_FILE=${DEV}-$(date +"%Y_%m_%d_%I_%M_%p").dat
-
-DATA_FILE_OUT=${DEV}-out-$(date +"%Y_%m_%d_%I_%M_%p").dat
+sudo ../../../tools/rocksdb/plugin/zenfs/util/zenfs mkfs \
+    --zbd=$1 \
+    --aux_path=/tmp/aux \
+    --force \
+    --enable_gc
 
 # (sudo ~/src/bpftrace/build/src/bpftrace ./trace.bt $1 -o data/${DATA_FILE}) &
 (sudo ~/src/bpftrace/build/src/bpftrace ./print_resets.bt $1 -o data/${DATA_FILE}) &
@@ -59,9 +58,8 @@ DATA_FILE_OUT=${DEV}-out-$(date +"%Y_%m_%d_%I_%M_%p").dat
 sleep 10
 
 # num was 10000000, now it i 1000000000
-
 # Fill the 1st namespace with data
-sudo /home/user/src/rocksdb/db_bench \
+sudo ../../../tools/rocksdb/db_bench \
     --fs_uri=zenfs://dev:$1 \
     --benchmarks=fillrandom \
     --use_existing_db=0 \
@@ -81,7 +79,7 @@ sudo /home/user/src/rocksdb/db_bench \
 workload_switch_time=$(date +"%H:%M:%S")
 
 # Start overwriting and generating some active GC
-sudo /home/user/src/rocksdb/db_bench \
+sudo ../../../tools/rocksdb/db_bench \
     --fs_uri=zenfs://dev:$1 \
     --benchmarks=overwrite \
     --use_existing_db=1 \
@@ -99,11 +97,5 @@ sudo /home/user/src/rocksdb/db_bench \
     --histogram=1 >> data/${DATA_FILE_OUT}
 
 
-# (sudo /home/user/src/rocksdb/db_bench --fs_uri=zenfs://dev:$1 --benchmarks=overwrite --num=75000000 --compression_type=none --value_size=4000 --key_size=16 --target_file_size_base=$(($ZONE_CAP * 2 * 65 / 100)) --use_direct_io_for_flush_and_compaction --max_bytes_for_level_multiplier=4 --max_background_jobs=8 --use_direct_reads --write_buffer_size=${WB_SIZE} --seed=42 --use_existing_db=1 --statistics=1 --stats_per_interval=0 --stats_interval_seconds=10 --histogram=1 &> data/zenfs_data_gc.log) &
-
-# # Start the 2nd namespace workload
-# sudo /home/user/src/rocksdb/db_bench --fs_uri=zenfs://dev:$2 --benchmarks=fillrandom --num=75000000 --compression_type=none --value_size=4000 --key_size=16 --target_file_size_base=$(($ZONE_CAP * 2 * 95 / 100)) --use_direct_io_for_flush_and_compaction --max_bytes_for_level_multiplier=4 --max_background_jobs=8 --use_direct_reads --write_buffer_size=${WB_SIZE} --seed=42 --use_existing_db=0 --statistics=1 --stats_per_interval=0 --stats_interval_seconds=10 --histogram=1 &> data/zenfs_data.log
-
 wait $!
-
 echo "(${workload_switch_time}, 4)" >> data/${DATA_FILE}

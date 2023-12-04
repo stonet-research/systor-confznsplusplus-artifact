@@ -44,23 +44,49 @@ CAP_SECTORS=$(sudo blkzone report -c 5 /dev/$1 | grep -oP '(?<=cap )[0-9xa-f]+' 
 ZONE_CAP=$((${CAP_SECTORS} * 512))
 WB_SIZE=$(( 2 * 1024 * 1024 * 1024))
 
-echo mq-deadline | sudo tee /sys/block/$1/queue/scheduler
-# sudo nvme zns reset-zone /dev/$1 -a
 
-## Start the ZenFS benchmark
-# TODO: REMOVE STATIC LINK AND HAVE MODULE FOR ROCKSDB AND ZENFS
+## Create ZenFS
+echo mq-deadline | sudo tee /sys/block/$1/queue/scheduler
+sudo nvme zns reset-zone /dev/$1 -a
 sudo rm -rf /tmp/aux
 sudo rm -rf data/zenfs_data.log
-sudo /home/user/src/rocksdb2/plugin/zenfs/util/zenfs mkfs --zbd=$1 --aux_path=/tmp/aux --force
+sudo ../../../../tools/rocksdb/plugin/zenfs/util/zenfs mkfs \
+    --zbd=$1 \
+    --aux_path=/tmp/aux \
+    --force
 
 echo "Running device prefill portion"
-sudo env "DEV=${DEV}" ../fio/fio --output-format=json --output=data/fio-fill.json job-prefill.fio
+sudo env "DEV=${DEV}" ../../../../tools/fio/fio \
+    --output-format=json \
+    --output=data/fio-fill.json \
+        job-prefill.fio
 
-(sudo /home/user/src/rocksdb2/db_bench --fs_uri=zenfs://dev:$1 --benchmarks=fillrandom --num=120000000 --compression_type=none --value_size=4000 --key_size=16 --target_file_size_base=$(($ZONE_CAP * 2 * 95 / 100)) --use_direct_io_for_flush_and_compaction --max_bytes_for_level_multiplier=4 --max_background_jobs=8 --use_direct_reads --write_buffer_size=${WB_SIZE} --seed=42 --use_existing_db=0 --statistics=1 --stats_per_interval=1 --stats_interval_seconds=1 --report_interval_seconds=1 --histogram=1 &> data/zenfs_data.log) &
+(sudo ../../../../tools/rocksdb/db_bench \
+    --fs_uri=zenfs://dev:$1 \
+    --benchmarks=fillrandom \
+    --num=120000000 \
+    --compression_type=none \
+    --value_size=4000 \
+    --key_size=16 \
+    --target_file_size_base=$(($ZONE_CAP * 2 * 95 / 100)) \
+    --use_direct_io_for_flush_and_compaction \
+    --max_bytes_for_level_multiplier=4 \
+    --max_background_jobs=8 \
+    --use_direct_reads \
+    --write_buffer_size=${WB_SIZE} \
+    --seed=42 \
+    --use_existing_db=0 \
+    --statistics=1 \
+    --stats_per_interval=1 \
+    --stats_interval_seconds=1 \
+    --report_interval_seconds=1 \
+    --histogram=1 &> data/zenfs_data.log) &
 
-sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "TRIM_SIZE=${TRIM_SIZE}" "FILL_SIZE=${FILL_SIZE}" ../fio/fio --output-format=json --output=data/fio.json job.fio
+sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "TRIM_SIZE=${TRIM_SIZE}" "FILL_SIZE=${FILL_SIZE}" ../../../../tools/fio/fio \
+    --output-format=json \
+    --output=data/fio.json \
+        job.fio
 
 # After completing interference let rocksdb get back to usual performance
 sleep 30
-
 sudo pkill -P $$

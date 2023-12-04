@@ -15,7 +15,7 @@ DEV_ZONES=$(cat /sys/block/$1/queue/nr_zones)
 CAP_SECTORS=$(sudo blkzone report -c 5 /dev/$1 | grep -oP '(?<=cap )[0-9xa-f]+' | head -1)
 ZONE_CAP=$((${CAP_SECTORS} * 512))
 WB_SIZE=$((2 * 1024 * 1024 * 1024))
-DATA_FILE_OUT=zNEW-optimal-inter-${1}-out-zenfs-$(date +"%Y_%m_%d_%I_%M_%p").dat
+DATA_FILE_OUT=out-${1}-out-zenfs-$(date +"%Y_%m_%d_%I_%M_%p").dat
 
 echo "#########################################################"
 echo "####################### ZNS  SETUP ######################"
@@ -33,11 +33,10 @@ printf 'DEV_ZONES: %46s\n' "${DEV_ZONES}"
 echo "---------------------------------------------------------"
 echo ""
 
-# Prepare
+# Prepare scheduler
 mkdir -p data
 echo $5 | sudo tee /sys/block/$1/queue/scheduler
 sudo nvme zns reset-zone /dev/$1 -a
-
 case "$5" in
     *zinc*)
         echo 3 | sudo tee /sys/block/$1/queue/iosched/max_priority
@@ -52,21 +51,21 @@ case "$5" in
     ;;
 esac
 
-# Get bandwidth of trim from NVMe3
+# Get reset bandwidth of trim from disk
 echo "Benchmarking ZNS Device Reset Rate Limit"
-# sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=1" ../../fio/fio \
-#     --output-format=json \
-#     --output=data/bw.json \
-#     jobs/job-trim.fio
+sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=1" ../../../../tools/fio/fio \
+     --output-format=json \
+     --output=data/bw.json \
+         jobs/job-trim.fio
 echo "GOT BANDWIDTH"
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
 echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
-sudo nvme zns reset-zone /dev/$1 -a
 
 ## Make ZenFS 
+sudo nvme zns reset-zone /dev/$1 -a
 sudo rm -rf /tmp/aux
 sudo rm -rf data/zenfs_data.log
-sudo /home/user/src/rocksdb/plugin/zenfs/util/zenfs mkfs \
+sudo ../../../../tools/rocksdb/plugin/zenfs/util/zenfs mkfs \
     --zbd=$1 \
     --aux_path=/tmp/aux \
     --force \
@@ -74,9 +73,10 @@ sudo /home/user/src/rocksdb/plugin/zenfs/util/zenfs mkfs \
 
 # Fill namespace 3
 if [ "$4" -eq "1" ]; then
-    sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=700" "OFFSET_ZONES=$3" ../../fio/fio \
+    sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=700" "OFFSET_ZONES=$3" ../../../../tools/fio/fio \
         --output-format=json \
-        --output=data/fill.json jobs/fill.fio
+        --output=data/fill.json \
+            jobs/fill.fio
     echo "FILL done"
 fi
 
@@ -84,32 +84,31 @@ fi
 # Spawn concurrent reset/write workload
 trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc)
 echo "Reset max=${BW}, rate_limit=${trim_rate_limit}"
-
 if [ "$4" -eq "1" ]; then
     sudo env "DEV=$1" \
         "OFFSET_ZONES_B=$2" \
         "OFFSET_ZONES_C=$3" \
         "BS=${DEV_ZONE_SIZE}" \
-        "RESET_LIMIT=${trim_rate_limit}"  ../../fio/fio \
+        "RESET_LIMIT=${trim_rate_limit}"  ../../../../tools/fio/fio \
             --output-format=json \
             --output=data/conc-zenfs-intererference-$(date +"%Y_%m_%d_%I_%M_%p").json \
-            jobs/concurrent-reset-write-intererference.fio &
+                jobs/concurrent-reset-write-intererference.fio &
     sidejob=$!
 else
     sudo env "DEV=$1" \
         "OFFSET_ZONES_B=$2" \
         "OFFSET_ZONES_C=$3" \
         "BS=${DEV_ZONE_SIZE}" \
-        "RESET_LIMIT=${trim_rate_limit}"  ../../fio/fio \
+        "RESET_LIMIT=${trim_rate_limit}"  ../../../../tools/fio/fio \
             --output-format=json \
             --output=data/conc-zenfs-no-intererference-$(date +"%Y_%m_%d_%I_%M_%p").json \
-            jobs/concurrent-write-intererference.fio &
+                jobs/concurrent-write-intererference.fio &
     sidejob=$!
 fi
 echo "Spawned dettached fio"
 
 # Run RocksDB for 30 seconds
-sudo /home/user/src/rocksdb/db_bench \
+sudo ../../../../tools/rocksdb/db_bench \
     --fs_uri=zenfs://dev:$1 \
     --benchmarks=fillrandom \
     --use_existing_db=0 \
@@ -126,6 +125,5 @@ sudo /home/user/src/rocksdb/db_bench \
     --histogram=1 > data/${DATA_FILE_OUT} \
     --duration=30
 
-echo "DONE with benchmark"
-
 wait $sidejob
+echo "DONE with benchmark"

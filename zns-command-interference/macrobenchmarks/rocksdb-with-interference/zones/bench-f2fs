@@ -40,14 +40,17 @@ sudo nvme zns reset-zone /dev/$1 -a
 
 # Get bandwidth of trim from NVMe3
 echo "Benchmarking ZNS Device Reset Rate Limit"
-#sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../../fio/fio --output-format=json --output=data/bw.json jobs/job-trim.fio
+sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../../../../tools/fio/fio \
+    --output-format=json \
+    --output=data/bw.json \
+        jobs/job-trim.fio
 echo "GOT BANDWIDTH"
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
 echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
-sudo nvme zns reset-zone /dev/$1 -a
 
 ## Make F2FS 
 DEV=$(sudo ../../nullblk_create 4096 7168)  # TODO: remove hardcode
+sudo nvme zns reset-zone /dev/$1 -a
 export DEV
 sudo env "PATH=${PATH}" mkfs.f2fs -f -m -c /dev/${1} /dev/${DEV}
 sudo mkdir -p /mnt/bench-f2fs
@@ -55,35 +58,36 @@ sudo mount -t f2fs /dev/${DEV} /mnt/bench-f2fs
 
 # Fill namespace 3
 if [ "$4" -eq "1" ]; then
-    sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=700" "OFFSET_ZONES=$3" ../../fio/fio \
+    sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=700" "OFFSET_ZONES=$3" ../../../../tools/fio/fio \
         --output-format=json \
-        --output=data/fill.json jobs/fill.fio
+        --output=data/fill.json \
+            jobs/fill.fio
     echo "FILL done"
 fi
 
 
 # Spawn concurrent reset/write workload
 trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc)
-
 if [ "$4" -eq "1" ]; then
     sudo env "DEV=$1" \
         "OFFSET_ZONES_B=$2" \
         "OFFSET_ZONES_C=$3" \
         "BS=${DEV_ZONE_SIZE}" \
-        "RESET_LIMIT=${trim_rate_limit}"  ../../fio/fio \
+        "RESET_LIMIT=${trim_rate_limit}"  .../../../../tools/fio/fio \
             --output-format=json \
             --output=data/conc-f2fs.json \
             jobs/concurrent-reset-write-intererference.fio &
 else
-    sudo env "DEV=$1" "OFFSET_ZONES_B=$2" "OFFSET_ZONES_C=$3" "BS=${DEV_ZONE_SIZE}" "RESET_LIMIT=${trim_rate_limit}"  ../../fio/fio \
-        --output-format=json \
-        --output=data/conc2-f2fs.json \
-        jobs/concurrent-write-intererference.fio &
+    sudo env "DEV=$1" "OFFSET_ZONES_B=$2" "OFFSET_ZONES_C=$3" "BS=${DEV_ZONE_SIZE}" "RESET_LIMIT=${trim_rate_limit}" \
+        ../../../../tools/fio/fio \
+            --output-format=json \
+            --output=data/conc2-f2fs.json \
+                jobs/concurrent-write-intererference.fio &
 fi
 echo "Spawned dettached fio"
 
 # Run RocksDB for 30 seconds
-sudo /home/user/src/rocksdb/db_bench \
+sudo ../../../../tools/rocksdb/db_bench \
     --db=/mnt/bench-f2fs/db0 --wal_dir=/mnt/bench-f2fs/wal0 \
     --benchmarks=fillrandom \
     --use_existing_db=0 \

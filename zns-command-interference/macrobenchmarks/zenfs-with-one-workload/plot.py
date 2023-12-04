@@ -17,7 +17,7 @@ plt.rc('ytick', labelsize=12)    # fontsize of the tick labels
 plt.rc('legend', fontsize=12)    # legend fontsize
 
 if __name__ == "__main__":
-    file_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])
+    file_path = '/'.join(os.path.abspath(__file__).split('/')[:-1]) + '/../../../../'
 
     data = []
     seconds = 1

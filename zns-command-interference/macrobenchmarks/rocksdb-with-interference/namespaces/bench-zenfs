@@ -42,36 +42,50 @@ sudo nvme zns reset-zone /dev/$3 -a
 
 # Get bandwidth of trim from NVMe3
 echo "Benchmarking ZNS Device Reset Rate Limit"
-#sudo env "DEV=$3" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../../fio/fio --output-format=json --output=data/bw.json jobs/job-trim.fio
+sudo env "DEV=$3" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ../../../../tools/fio/fio \
+    --output-format=json \
+    --output=data/bw.json \
+        jobs/job-trim.fio
 echo "GOT BANDWIDTH"
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
 echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
 
 # Fill namespace 3
 if [ "$4" -eq "1" ]; then
-    sudo env "DEV=$3" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=700" ../../fio/fio --output-format=json --output=data/fill.json jobs/fill.fio
+    sudo env "DEV=$3" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=700" ../../../../tools/fio/fio \
+        --output-format=json \
+        --output=data/fill.json \
+            jobs/fill.fio
     echo "FILL done"
 fi
 
 ## Make ZenFS 
 sudo rm -rf /tmp/aux
 sudo rm -rf data/zenfs_data.log
-sudo /home/user/src/rocksdb/plugin/zenfs/util/zenfs mkfs --zbd=$1 --aux_path=/tmp/aux --force --enable_gc
-
+sudo ../../../../tools/rocksdb/plugin/zenfs/util/zenfs mkfs \
+    --zbd=$1 \
+    --aux_path=/tmp/aux \
+    --force \
+    --enable_gc
 sleep 20
 
 # Spawn concurrent reset/write workload
 trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc)
-
 if [ "$4" -eq "1" ]; then
-    sudo env "DEVB=$2" "DEVC=$3" "BS=${DEV_ZONE_SIZE}" "RESET_LIMIT=${trim_rate_limit}"  ../../fio/fio --output-format=json --output=data/conc.json jobs/concurrent-reset-write-intererference.fio &
+    sudo env "DEVB=$2" "DEVC=$3" "BS=${DEV_ZONE_SIZE}" "RESET_LIMIT=${trim_rate_limit}"  ../../../../tools/fio/fio \
+        --output-format=json \
+        --output=data/conc.json \
+            jobs/concurrent-reset-write-intererference.fio &
 else
-    sudo env "DEVB=$2" "DEVC=$3" "BS=${DEV_ZONE_SIZE}" "RESET_LIMIT=${trim_rate_limit}"  ../../fio/fio --output-format=json --output=data/conc.json jobs/concurrent-write-intererference.fio &
+    sudo env "DEVB=$2" "DEVC=$3" "BS=${DEV_ZONE_SIZE}" "RESET_LIMIT=${trim_rate_limit}"  ../../../../tools/fio/fio \
+        --output-format=json \
+        --output=data/conc.json \
+            jobs/concurrent-write-intererference.fio &
 fi
 echo "Spawned dettached fio"
 
 # Run RocksDB for 30 seconds
-sudo /home/user/src/rocksdb/db_bench \
+sudo ../../../../tools/rocksdb/db_bench \
     --fs_uri=zenfs://dev:$1 \
     --benchmarks=fillrandom \
     --use_existing_db=0 \
