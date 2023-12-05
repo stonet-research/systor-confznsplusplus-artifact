@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 
+from interference_model.quantification import get_interference_gpt
 import os
 import re
 import glob
@@ -14,17 +15,20 @@ from colorama import Fore, Style
 import seaborn as sns
 import matplotlib.patches as mpatches
 
-import os, sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import os
+import sys
+sys.path.append(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))) + '/../../')
 
-from interference_model.quantification import get_interference_gpt
 
 # TODO: retrieve these values from ZenFS tracing for final calculation
 WRITE_INTERFERENCE_GAMMA = 0.5
 RESET_INTERFERENCE_DELTA = 0.5
 
-RESET_ON_WRITE_RMS = 0.241 # From our benchmark reset-on-write-interference, the retrieved RMS value
-WRITE_ON_RESET_RMS = 0.072 # From our benchmark write-on-reset-interference, the retrieved RMS value
+# From our benchmark reset-on-write-interference, the retrieved RMS value
+RESET_ON_WRITE_RMS = 0.241
+# From our benchmark write-on-reset-interference, the retrieved RMS value
+WRITE_ON_RESET_RMS = 0.072
 
 
 plt.rc('font', size=12)          # controls default text sizes
@@ -67,12 +71,13 @@ legend_font_size = 46
 heatmap_axis_tick_font_size = 26
 heatmap_data_tag_size = 16
 
+
 def parse_fio_data(data_path, data):
     if not os.path.exists(f'{data_path}') or \
             os.listdir(f'{data_path}') == []:
         print(f"No data in {data_path}")
         return 0
-    
+
     for file in glob.glob(f'{data_path}/*'):
         if "bw" in file:
             continue
@@ -86,13 +91,14 @@ def parse_fio_data(data_path, data):
                         temp.writelines(rows)
                     break
 
-        if Path(os.path.join(os.getcwd(), "temp.json")).exists(): 
+        if Path(os.path.join(os.getcwd(), "temp.json")).exists():
             with open(os.path.join(os.getcwd(), "temp.json"), 'r') as temp:
                 data[file] = dict()
                 data[file] = json.load(temp)
                 os.remove(os.path.join(os.getcwd(), "temp.json"))
 
     return 1
+
 
 def init_baseline(baseline):
     val = baseline[0]
@@ -102,9 +108,10 @@ def init_baseline(baseline):
         baseline[i] = val
         i += 1
 
+
 def parse_write_baseline(write_baseline_iops, write_baseline_lat, mqddl_iops, mqddl_lat, mqddl50_iops, mqddl50_lat,
-                          mqddl_reset_iops, mqddl_reset_lat, zinc_baseline_iops, zinc_baseline_lat):
-     for conf_key, conf_value in data.items():
+                         mqddl_reset_iops, mqddl_reset_lat, zinc_baseline_iops, zinc_baseline_lat):
+    for conf_key, conf_value in data.items():
 
         for key, value in conf_value.items():
             if conf_key == "baseline":
@@ -115,30 +122,41 @@ def parse_write_baseline(write_baseline_iops, write_baseline_lat, mqddl_iops, mq
                 elif "50-mq_deadline" in key:
                     head, tail = os.path.split(key)
                     numjobs = int(re.search(r'\d+', tail).group())
-                    mqddl50_iops[numjobs - 1] =  value["jobs"][2]["finish"]["iops_mean"]/1000
-                    mqddl50_lat[numjobs - 1] = value["jobs"][2]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
-                    mqddl_reset_iops[numjobs - 1] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
-                    mqddl_reset_lat[numjobs - 1] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000
+                    mqddl50_iops[numjobs -
+                                 1] = value["jobs"][2]["finish"]["iops_mean"]/1000
+                    mqddl50_lat[numjobs -
+                                1] = value["jobs"][2]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
+                    mqddl_reset_iops[numjobs -
+                                     1] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
+                    mqddl_reset_lat[numjobs -
+                                    1] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000
                 elif "100-mq_deadline" in key:
                     head, tail = os.path.split(key)
                     numjobs = int(re.search(r'\d+', tail).group())
-                    mqddl_iops[numjobs - 1] =  value["jobs"][0]["finish"]["iops_mean"]/1000
-                    mqddl_lat[numjobs - 1] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
+                    mqddl_iops[numjobs -
+                               1] = value["jobs"][0]["finish"]["iops_mean"]/1000
+                    mqddl_lat[numjobs -
+                              1] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
                 elif "100-zinc" in key:
                     head, tail = os.path.split(key)
                     numjobs = int(re.search(r'\d+', tail).group())
-                    zinc_baseline_iops[numjobs - 1] =  value["jobs"][0]["finish"]["iops_mean"]/1000
-                    zinc_baseline_lat[numjobs - 1] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
+                    zinc_baseline_iops[numjobs -
+                                       1] = value["jobs"][0]["finish"]["iops_mean"]/1000
+                    zinc_baseline_lat[numjobs -
+                                      1] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
                 else:
                     head, tail = os.path.split(key)
                     numjobs = int(re.search(r'\d+', tail).group())
-                    write_baseline_iops[numjobs - 1] =  value["jobs"][0]["finish"]["iops_mean"]/1000
-                    write_baseline_lat[numjobs - 1] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
+                    write_baseline_iops[numjobs -
+                                        1] = value["jobs"][0]["finish"]["iops_mean"]/1000
+                    write_baseline_lat[numjobs -
+                                       1] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
             else:
                 continue
 
+
 def parse_reset_baseline(reset_baseline_iops, reset_baseline_write):
-     for conf_key, conf_value in data.items():
+    for conf_key, conf_value in data.items():
 
         for key, value in conf_value.items():
             if conf_key == "baseline":
@@ -167,6 +185,7 @@ def get_matrix_col(val):
         case 128:
             return 0
 
+
 def get_matrix_row(val):
     """Get the config index for the row which represents the write ratio"""
     match(val):
@@ -178,50 +197,51 @@ def get_matrix_row(val):
             return 2
         case 200000:
             return 3
-        
+
+
 def generate_heatmap(config_interference, job, max):
     reset_latency = [16, 32, 64, 128]
-    write_ratio    = [200, 2000, 20000, 200000]
+    write_ratio = [200, 2000, 20000, 200000]
 
     cmap = sns.color_palette('rocket_r', as_cmap=True).copy()
     cmap.set_under('#88CCEE')
-    
-    ax = sns.heatmap(config_interference, 
-                    linewidth=0.1, 
-                    xticklabels=True, 
-                    cmap=cmap, 
-                    yticklabels=True, 
-                    clip_on=False, 
-                    # cbar_kws={'shrink': 0.8, 'extend': 'min', 'extendrect': True, 'format': '%d Blocks (512B)'}, 
-                    square=True, 
-                    cbar=True, 
-                    vmin=0,
-                    vmax=max,
-                    linecolor='black',  annot_kws={"size": 20})
+
+    ax = sns.heatmap(config_interference,
+                     linewidth=0.1,
+                     xticklabels=True,
+                     cmap=cmap,
+                     yticklabels=True,
+                     clip_on=False,
+                     # cbar_kws={'shrink': 0.8, 'extend': 'min', 'extendrect': True, 'format': '%d Blocks (512B)'},
+                     square=True,
+                     cbar=True,
+                     vmin=0,
+                     vmax=max,
+                     linecolor='black',  annot_kws={"size": 20})
 
     ax.set_xticks([x+0.5 for x in np.arange(len(write_ratio))])
     ax.set_xticklabels(labels=write_ratio,
-                fontsize=heatmap_axis_tick_font_size)
-    ax.xaxis.set_label_position('top') 
+                       fontsize=heatmap_axis_tick_font_size)
+    ax.xaxis.set_label_position('top')
     ax.xaxis.tick_top()
 
     ax.set_yticks([x+0.5 for x in np.arange(len(reset_latency))])
     ax.set_yticklabels(labels=reset_latency[::-1],
-                    fontsize=heatmap_axis_tick_font_size)
+                       fontsize=heatmap_axis_tick_font_size)
 
     plt.setp(ax.get_xticklabels(),
-                rotation=45,
-                ha="left",
-                rotation_mode="anchor")
-    
+             rotation=45,
+             ha="left",
+             rotation_mode="anchor")
+
     plt.setp(ax.get_yticklabels(),
-                rotation=45,
-                ha="right",
-                rotation_mode="anchor")
-    
+             rotation=45,
+             ha="right",
+             rotation_mode="anchor")
+
     ax.set_ylabel("Reset Latency")
     ax.set_xlabel("Write Ratio")
-    
+
     for i in range(len(config_interference)):
         for j in range(len(config_interference[0])):
             text = round(config_interference[i][j], 3)
@@ -232,21 +252,24 @@ def generate_heatmap(config_interference, job, max):
             else:
                 color = 'black'
             text = ax.text(j+0.5,
-                            i+0.5,
-                            text,
-                            ha="center",
-                            va="center",
-                            color=color,
-                            fontsize=heatmap_data_tag_size)
+                           i+0.5,
+                           text,
+                           ha="center",
+                           va="center",
+                           color=color,
+                           fontsize=heatmap_data_tag_size)
 
     cbar = ax.collections[0].colorbar
     # here set the labelsize by 20
     cbar.ax.tick_params(labelsize=20)
 
-    plt.savefig(f"{file_path}/figures/configuration-interference-{job}.pdf", bbox_inches="tight")
-    plt.savefig(f"{file_path}/figures/configuration-interference-{job}.png", bbox_inches="tight")
+    plt.savefig(
+        f"{file_path}/figures/configuration-interference-{job}.pdf", bbox_inches="tight")
+    plt.savefig(
+        f"{file_path}/figures/configuration-interference-{job}.png", bbox_inches="tight")
     plt.clf()
     plt.close()
+
 
 if __name__ == "__main__":
     file_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])
@@ -272,8 +295,10 @@ if __name__ == "__main__":
 
     reset_baseline_iops = [None] * len(queue_depths)
     reset_baseline_lat = [None] * len(queue_depths)
-    write_baseline_iops = [None] * len(queue_depths) # NOTE: This is the old setup, now instead use mqddl_iops
-    write_baseline_lat = [None] * len(queue_depths) # NOTE: This is the old setup, now instead use mqddl_lat
+    # NOTE: This is the old setup, now instead use mqddl_iops
+    write_baseline_iops = [None] * len(queue_depths)
+    # NOTE: This is the old setup, now instead use mqddl_lat
+    write_baseline_lat = [None] * len(queue_depths)
     config_reset_limit = []
     config_write_ratio = []
     config_interference = np.zeros(shape=(4, 4))
@@ -292,12 +317,16 @@ if __name__ == "__main__":
                          mqddl_reset_iops, mqddl_reset_lat, zinc_baseline_iops, zinc_baseline_lat)
     parse_reset_baseline(reset_baseline_iops, reset_baseline_lat)
 
-    mqddl_write_interference = get_interference_gpt(mqddl_iops, mqddl50_iops, mqddl_lat, mqddl50_lat)
-    mqddl_reset_interference = get_interference_gpt(reset_baseline_iops, mqddl_reset_iops, reset_baseline_lat, mqddl_reset_lat)
+    mqddl_write_interference = get_interference_gpt(
+        mqddl_iops, mqddl50_iops, mqddl_lat, mqddl50_lat)
+    mqddl_reset_interference = get_interference_gpt(
+        reset_baseline_iops, mqddl_reset_iops, reset_baseline_lat, mqddl_reset_lat)
 
     print("-------------------------------------------------------------------------------------")
-    print(f"mq-deadline WRITE Interference RMS {mqddl_write_interference: >20.15f}")
-    print(f"mq-deadline RESET Interference RMS {mqddl_reset_interference: >20.15f}")
+    print(
+        f"mq-deadline WRITE Interference RMS {mqddl_write_interference: >20.15f}")
+    print(
+        f"mq-deadline RESET Interference RMS {mqddl_reset_interference: >20.15f}")
     print("-------------------------------------------------------------------------------------")
 
     for conf_key, conf_value in data.items():
@@ -308,7 +337,7 @@ if __name__ == "__main__":
 
         for key, value in conf_value.items():
             if conf_key == "baseline":
-               continue
+                continue
             elif "reset_limit_val" in key or "write_ratio_val" in key:
                 continue
             else:
@@ -322,47 +351,61 @@ if __name__ == "__main__":
 
         # While debugging skip all that are ongoing and don't have all data
         if not None in write_iops:
-             # NOTE: we calculate the RMS usig mq-deadline at 0% resets and then then the different zinc configs for the 50% reset 
-             # (@KD: we also have data for zinc 0% in zinc_baseline_{iops,lat})
-            write_interference = get_interference_gpt(mqddl_iops, write_iops, mqddl_lat, write_lat)
-            reset_interference = get_interference_gpt(reset_baseline_iops, reset_iops, reset_baseline_lat, reset_lat)
+            # NOTE: we calculate the RMS usig mq-deadline at 0% resets and then then the different zinc configs for the 50% reset
+            # (@KD: we also have data for zinc 0% in zinc_baseline_{iops,lat})
+            write_interference = get_interference_gpt(
+                mqddl_iops, write_iops, mqddl_lat, write_lat)
+            reset_interference = get_interference_gpt(
+                reset_baseline_iops, reset_iops, reset_baseline_lat, reset_lat)
 
-            print("-------------------------------------------------------------------------------------")
-            print(f"Config {conf_key: >40} WRITE Interference RMS {write_interference: >20.15f}")
-            print(f"Config {conf_key: >40} RESET Interference RMS {reset_interference: >20.15f}")
+            print(
+                "-------------------------------------------------------------------------------------")
+            print(
+                f"Config {conf_key: >40} WRITE Interference RMS {write_interference: >20.15f}")
+            print(
+                f"Config {conf_key: >40} RESET Interference RMS {reset_interference: >20.15f}")
 
-            interference = WRITE_INTERFERENCE_GAMMA * write_interference + RESET_INTERFERENCE_DELTA * reset_interference
-            print(f"Config {conf_key : >40} Interference RMS {interference : >26.15f}")
-            print("-------------------------------------------------------------------------------------")
+            interference = WRITE_INTERFERENCE_GAMMA * write_interference + \
+                RESET_INTERFERENCE_DELTA * reset_interference
+            print(
+                f"Config {conf_key : >40} Interference RMS {interference : >26.15f}")
+            print(
+                "-------------------------------------------------------------------------------------")
 
             # config_reset_limit.append(int(conf_value["reset_limit_val"]))
             # config_write_ratio.append(int(conf_value["write_ratio_val"]))
-            config_interference[get_matrix_col(int(conf_value["reset_limit_val"]))][get_matrix_row(int(conf_value["write_ratio_val"]))] = interference
-            
-            config_interference_write[get_matrix_col(int(conf_value["reset_limit_val"]))][get_matrix_row(int(conf_value["write_ratio_val"]))] = write_interference
-            config_interference_reset[get_matrix_col(int(conf_value["reset_limit_val"]))][get_matrix_row(int(conf_value["write_ratio_val"]))] = reset_interference
-            
+            config_interference[get_matrix_col(int(conf_value["reset_limit_val"]))][get_matrix_row(
+                int(conf_value["write_ratio_val"]))] = interference
+
+            config_interference_write[get_matrix_col(int(conf_value["reset_limit_val"]))][get_matrix_row(
+                int(conf_value["write_ratio_val"]))] = write_interference
+            config_interference_reset[get_matrix_col(int(conf_value["reset_limit_val"]))][get_matrix_row(
+                int(conf_value["write_ratio_val"]))] = reset_interference
+
             # This one is to calculate relative gains respective to the benchmarked reset-on-write-interference RMS
             # rms_repesctive_change = float(RESET_ON_WRITE_RMS) / write_interference
             # config_interference_write[get_matrix_col(int(conf_value["reset_limit_val"]))][get_matrix_row(int(conf_value["write_ratio_val"]))] = rms_repesctive_change
-           
+
             # This one is to calculate relative gains respective to the benchmarked write-on-reset-interference RMS
             # rms_repesctive_change = float(WRITE_ON_RESET_RMS) / reset_interference
             # config_interference_reset[get_matrix_col(int(conf_value["reset_limit_val"]))][get_matrix_row(int(conf_value["write_ratio_val"]))] = rms_repesctive_change
-
 
             inter = lowest_interference[1]
             if inter == None:
                 lowest_interference = (conf_key, interference)
             elif interference < inter:
-                    lowest_interference = (conf_key, interference)
+                lowest_interference = (conf_key, interference)
 
             fig, ax = plt.subplots()
 
-            ax.plot(mqddl_iops, mqddl_lat, markersize = 4, marker = '>', label="   0% reset - mqddl")
-            ax.plot(mqddl50_iops, mqddl50_lat, markersize = 4, marker = '>', label="  50% reset - mqddl")
-            ax.plot(zinc_baseline_iops, zinc_baseline_lat, markersize = 4, marker = '>', label="   0% reset - zinc")
-            ax.plot(write_iops, write_lat, markersize = 4, marker = '*', label=" 50% reset - zinc")
+            ax.plot(mqddl_iops, mqddl_lat, markersize=4,
+                    marker='>', label="   0% reset - mqddl")
+            ax.plot(mqddl50_iops, mqddl50_lat, markersize=4,
+                    marker='>', label="  50% reset - mqddl")
+            ax.plot(zinc_baseline_iops, zinc_baseline_lat,
+                    markersize=4, marker='>', label="   0% reset - zinc")
+            ax.plot(write_iops, write_lat, markersize=4,
+                    marker='*', label=" 50% reset - zinc")
 
             fig.tight_layout()
             ax.grid(which='major', linestyle='dashed', linewidth='1')
@@ -373,14 +416,16 @@ if __name__ == "__main__":
             ax.set_xlim(left=0)
             ax.set_ylabel("p95 write Latency (usec)")
             ax.set_xlabel("Total IOPS (x1000)")
-            plt.savefig(f"{file_path}/figures/loaded_write_latency-{conf_key}.pdf", bbox_inches="tight")
-            plt.savefig(f"{file_path}/figures/loaded_write_latency-{conf_key}.png", bbox_inches="tight")
+            plt.savefig(
+                f"{file_path}/figures/loaded_write_latency-{conf_key}.pdf", bbox_inches="tight")
+            plt.savefig(
+                f"{file_path}/figures/loaded_write_latency-{conf_key}.png", bbox_inches="tight")
             plt.clf()
             plt.close()
 
     print("\n=====================================================================================")
-    print(f"{Fore.GREEN}Lowest{Style.RESET_ALL} {lowest_interference[0] : >40} Interference RMS {lowest_interference[1]:>26.15f}")
-
+    print(
+        f"{Fore.GREEN}Lowest{Style.RESET_ALL} {lowest_interference[0] : >40} Interference RMS {lowest_interference[1]:>26.15f}")
 
     generate_heatmap(config_interference_write, "write", 2)
     generate_heatmap(config_interference_reset, "reset", 25)
