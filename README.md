@@ -5,6 +5,7 @@ This repository contains ZINC, and a ZNS command (I/O and management) interferen
 ## Building Benchmarks and ZINC
 
 This section provides instructions for building each of the required tools used during our study.
+Note that the benchmarks require using a custom version of fio (`tools/fio`).
 
 ### Build fio
 
@@ -15,6 +16,21 @@ pushd tools/fio
 ./configure
 make -j
 popd
+```
+
+## Run micro interference experiments
+
+In order to run our micro benchmarks for one namespace, change the directory to `./zns-command-interference/microbenchmarks/one-namespace`.
+For each type of interference there is a separate dir, for example "finish on reset interference" is in `finish-on-reset-interference`. Running the benchmarks is then equal to:
+```bash
+./bench nvmexny 
+```
+For experiments with `finish` it is necessary to specify the amount of zones that will be used for finishing zones.
+We recommend setting this to ~30% of the zones. We picked the number of zones with the following reasoning:
+```
+For the evaluated SSDs finish commands are completed at ~1 finish/sec. With a 50% rate limit we can do 1 finish every 2 seconds 
+and for benchmarks we try to run for 10 minutes (10*60/2) = 300 and peak write bandwidth is 1.2GB/s = ~1 zone so within 10 
+minutes we can fill (10*60) = 600 and we have a total of 904 zones
 ```
 
 ### Build ZenFS
@@ -41,7 +57,7 @@ cd linux-6.3.8/block/
 
 # Make module
 make
-# Instal the module
+# Install the module
 sudo insmod zinc.ko
 ```
 

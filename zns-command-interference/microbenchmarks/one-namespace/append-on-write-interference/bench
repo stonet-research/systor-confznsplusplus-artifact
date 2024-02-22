@@ -2,8 +2,8 @@
 
 set -e
 
-if [ $# != 1 ]; then
-    echo "Usage: $0 <ZNS device (e.g., nvme0n2)>"
+if [ $# != 2 ]; then
+    echo "Usage: $0 <ZNS device (e.g., nvme0n2)> $1 <zones to append (e.g., 300)>"
     exit 1
 fi
 
@@ -12,6 +12,7 @@ DEV_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
 DEV_ZONE_SIZE_BLOCKS=$(cat /sys/block/$1/queue/chunk_sectors)
 DEV_ZONE_SIZE=$(echo "${DEV_ZONE_SIZE_BLOCKS} * 512" | bc)
 DEV_ZONES=$(cat /sys/block/$1/queue/nr_zones)
+APPEND_SIZE=$2
 
 echo "#########################################################"
 echo "####################### ZNS  SETUP ######################"
@@ -35,10 +36,7 @@ mkdir -p data
 ## fio options for specific ZNS ##
 ##################################
 BS=$(echo "${DEV_SECT_SIZE} * ${DEV_ZONE_SIZE}" | bc)
-
-APPEND_SIZE=300
 WRITE_ZONES=$(echo "${DEV_ZONES} - ${APPEND_SIZE}" | bc) # All but the fill zones
-
 WRITE_IODEPTH=(1 2 3 4 5 6 7) 
 WRITE_FLOW=(100 99 95 90 75 50) # 25)
 
