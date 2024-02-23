@@ -70,7 +70,7 @@ After the `zinc.ko` module is installed, it can be set in on any NVMe device as 
 echo zinc | sudo tee /sys/block/nvme*n*/queue/scheduler
 ```
 
-## Reproducing CCGRID'24 Results
+## Reproducing [paper] Results
 
 The [`paperplots notebook`](./plotting-notebooks/paperplots.ipynb) contains all plotting scripts, with the respective data, for all figures used in the paper.
 
