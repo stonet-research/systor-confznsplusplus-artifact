@@ -1,7 +1,9 @@
 *.swp
 */venv/*
-*.txt
 .DS_Store
 interference_model/__pycache__/*
 __pycache__
 .ipynb_checkpoints
+*/linux-6.3.8/*
+*.deb
+*.ko
