@@ -11,6 +11,17 @@ All of our experiments utilize the `io_uring NVMe passthrough` functionality, wh
 Additionally, our scheduler is built on `Linux 6.3.8`, so we recommend using `Linux 6.3.8` of the Linux kernel for reproducability.
 Note that all our benchmarks require using a custom version of fio (`tools/fio`).
 
+All of our dependencies can also be retrieved with patches. In the `tools` directory, we list all of our three dependencies with the appropriate hashes. For example, to retrieve the code of fio:
+
+```bash
+cd tools
+rm -r fio
+git clone https://github.com/axboe/fio.git fio
+cd fio
+git checkout 4a0c766
+git apply ../fio.4a0c766
+```
+
 ### Build fio
 
 Our micro benchmarks use fio.

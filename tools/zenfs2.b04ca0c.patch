@@ -1,0 +1,54 @@
+diff --git a/fs/zbdlib_zenfs.cc b/fs/zbdlib_zenfs.cc
+index 2ad44e7..6acbd49 100644
+--- a/fs/zbdlib_zenfs.cc
++++ b/fs/zbdlib_zenfs.cc
+@@ -49,10 +49,13 @@ IOStatus ZbdlibBackend::CheckScheduler() {
+ 
+   std::string buf;
+   getline(f, buf);
+-  if (buf.find("[mq-deadline]") == std::string::npos) {
++  // ZINC, allow zinc scheduler as well
++  if (buf.find("[mq-deadline]") == std::string::npos &&
++      buf.find("[zinc]") == std::string::npos) {
+     f.close();
+     return IOStatus::InvalidArgument(
+-        "Current ZBD scheduler is not mq-deadline, set it to mq-deadline.");
++        "Current ZBD scheduler is not mq-deadline or zinc, set it to "
++        "mq-deadline or zinc.");
+   }
+ 
+   f.close();
+@@ -103,7 +106,9 @@ IOStatus ZbdlibBackend::Open(bool readonly, bool exclusive,
+ 
+   block_sz_ = info.pblock_size;
+   zone_sz_ = info.zone_size;
+-  nr_zones_ = info.nr_zones;
++  // nr_zones_ = info.nr_zones;
++  // ZINC force only issuing the first 100 zones
++  nr_zones_ = info.nr_zones > 100 ? 100 : info.nr_zones;
+   *max_active_zones = info.max_nr_active_zones;
+   *max_open_zones = info.max_nr_open_zones;
+   return IOStatus::OK();
+@@ -120,6 +125,9 @@ std::unique_ptr<ZoneList> ZbdlibBackend::ListZones() {
+     return nullptr;
+   }
+ 
++  // ZINC force only issuing the first 100 zones
++  nr_zones = nr_zones > 100 ? 100 : nr_zones;
++
+   std::unique_ptr<ZoneList> zl(new ZoneList(zones, nr_zones));
+ 
+   return zl;
+diff --git a/util/Makefile b/util/Makefile
+index 8f96cd3..8de17a7 100644
+--- a/util/Makefile
++++ b/util/Makefile
+@@ -17,7 +17,7 @@ $(error pkg-config failed)
+ endif
+ 
+ CXXFLAGS +=  $(EXTRA_CXXFLAGS)
+-LDFLAGS +=  $(EXTRA_LDFLAGS)
++LDFLAGS +=  $(EXTRA_LDFLAGS) -lzbd
+ 
+ all: $(TARGET) $(TARGET).dbg
+ 

@@ -1,0 +1,581 @@
+diff --git a/engines/io_uring.c b/engines/io_uring.c
+index 6cdf1b4f..0c9379e8 100644
+--- a/engines/io_uring.c
++++ b/engines/io_uring.c
+@@ -90,6 +90,8 @@ struct ioring_options {
+ 	unsigned int fixedbufs;
+ 	unsigned int registerfiles;
+ 	unsigned int sqpoll_thread;
++	unsigned int finish;
++	unsigned int zone_append;
+ 	unsigned int sqpoll_set;
+ 	unsigned int sqpoll_cpu;
+ 	unsigned int nonvectored;
+@@ -161,6 +163,15 @@ static struct fio_option options[] = {
+ 		.category = FIO_OPT_C_ENGINE,
+ 		.group	= FIO_OPT_G_IOURING,
+ 	},
++	{
++		.name	= "finish",
++		.lname	= "FINISH ZNS",
++		.type	= FIO_OPT_STR_SET,
++		.off1	= offsetof(struct ioring_options, finish),
++		.help	= "Issue FINISH Commands to ZNS device",
++		.category = FIO_OPT_C_ENGINE,
++		.group	= FIO_OPT_G_IOURING,
++	},
+ 	{
+ 		.name	= "sqthread_poll_cpu",
+ 		.lname	= "SQ Thread Poll CPU",
+@@ -274,6 +285,15 @@ static struct fio_option options[] = {
+ 		.category = FIO_OPT_C_ENGINE,
+ 		.group	= FIO_OPT_G_IOURING,
+ 	},
++	{
++		.name = "zone_append",
++		.lname = "ZNS zone append",
++		.type = FIO_OPT_BOOL,
++		.off1   = offsetof(struct ioring_options, zone_append),
++		.help   = "Use zone appends for ZNS",
++		.category = FIO_OPT_C_ENGINE,
++		.group  = FIO_OPT_G_IOURING,
++	},
+ 	{
+ 		.name	= NULL,
+ 	},
+@@ -421,6 +441,10 @@ static int fio_ioring_cmd_prep(struct thread_data *td, struct io_u *io_u)
+ 		sqe->buf_index = io_u->index;
+ 	}
+ 
++	if (o->zone_append && io_u->ddir == DDIR_WRITE) {
++        	io_u->ddir = DDIR_APPEND;
++        }
++
+ 	cmd = (struct nvme_uring_cmd *)sqe->cmd;
+ 	return fio_nvme_uring_cmd_prep(cmd, io_u,
+ 			o->nonvectored ? NULL : &ld->iovecs[io_u->index],
+@@ -1338,6 +1362,34 @@ static int fio_ioring_cmd_close_file(struct thread_data *td,
+ 	return 0;
+ }
+ 
++static int fio_ioring_get_file_size(struct thread_data *td,
++					struct fio_file *f)
++{
++	struct ioring_options *o = td->eo;
++
++	if (fio_file_size_known(f))
++		return 0;
++
++	if (o->finish) {
++		struct nvme_data *data = NULL;
++		__u64 nlba = 0;
++		int ret;
++
++		data = calloc(1, sizeof(struct nvme_data));
++		ret = fio_nvme_get_info(f, &nlba, o->pi_act, data);
++		if (ret) {
++			free(data);
++			return ret;
++		}
++
++		f->real_file_size = data->lba_size * nlba;
++
++		FILE_SET_ENG_DATA(f, data);
++	}
++	
++	return generic_get_file_size(td, f);
++}
++
+ static int fio_ioring_cmd_get_file_size(struct thread_data *td,
+ 					struct fio_file *f)
+ {
+@@ -1346,7 +1398,7 @@ static int fio_ioring_cmd_get_file_size(struct thread_data *td,
+ 	if (fio_file_size_known(f))
+ 		return 0;
+ 
+-	if (o->cmd_type == FIO_URING_CMD_NVME) {
++	if (o->finish || o->cmd_type == FIO_URING_CMD_NVME) {
+ 		struct nvme_data *data = NULL;
+ 		__u64 nlba = 0;
+ 		int ret;
+@@ -1388,6 +1440,12 @@ static int fio_ioring_cmd_reset_wp(struct thread_data *td, struct fio_file *f,
+ 	return fio_nvme_reset_wp(td, f, offset, length);
+ }
+ 
++static int fio_ioring_cmd_finish_zone(struct thread_data *td, struct fio_file *f,
++				   uint64_t offset, uint64_t length)
++{
++	return fio_nvme_finish_zone(td, f, offset, length);
++}
++
+ static int fio_ioring_cmd_get_max_open_zones(struct thread_data *td,
+ 					     struct fio_file *f,
+ 					     unsigned int *max_open_zones)
+@@ -1430,11 +1488,12 @@ static struct ioengine_ops ioengine_uring = {
+ 	.queue			= fio_ioring_queue,
+ 	.commit			= fio_ioring_commit,
+ 	.getevents		= fio_ioring_getevents,
++	.finish_zone    = fio_ioring_cmd_finish_zone,
+ 	.event			= fio_ioring_event,
+ 	.cleanup		= fio_ioring_cleanup,
+ 	.open_file		= fio_ioring_open_file,
+ 	.close_file		= fio_ioring_close_file,
+-	.get_file_size		= generic_get_file_size,
++	.get_file_size		= fio_ioring_get_file_size,
+ 	.options		= options,
+ 	.option_struct_size	= sizeof(struct ioring_options),
+ };
+@@ -1460,6 +1519,7 @@ static struct ioengine_ops ioengine_uring_cmd = {
+ 	.get_zoned_model	= fio_ioring_cmd_get_zoned_model,
+ 	.report_zones		= fio_ioring_cmd_report_zones,
+ 	.reset_wp		= fio_ioring_cmd_reset_wp,
++	.finish_zone = fio_ioring_cmd_finish_zone,
+ 	.get_max_open_zones	= fio_ioring_cmd_get_max_open_zones,
+ 	.options		= options,
+ 	.option_struct_size	= sizeof(struct ioring_options),
+diff --git a/engines/nvme.c b/engines/nvme.c
+index 08503b33..bff48d79 100644
+--- a/engines/nvme.c
++++ b/engines/nvme.c
+@@ -7,6 +7,7 @@
+ #include "nvme.h"
+ #include "../crc/crc-t10dif.h"
+ #include "../crc/crc64.h"
++#include "zbd.h"
+ 
+ static inline __u64 get_slba(struct nvme_data *data, struct io_u *io_u)
+ {
+@@ -345,6 +346,24 @@ void fio_nvme_uring_cmd_trim_prep(struct nvme_uring_cmd *cmd, struct io_u *io_u,
+ 	dsm->nlb = get_nlb(data, io_u) + 1;
+ }
+ 
++/**
++ * zbd_offset_to_zone_idx - convert an offset into a zone number
++    1  * @f: file pointer.
++    2  * @offset: offset in bytes. If this offset is in the first zone_size bytes
++    3  *      past the disk size then the index of the sentinel is returned.
++    4  */
++static unsigned int zbd_offset_to_zone_idx(const struct fio_file *f,
++                            uint64_t offset)
++{
++	uint32_t zone_idx;
++ 
++        if (f->zbd_info->zone_size_log2 > 0)
++            zone_idx = offset >> f->zbd_info->zone_size_log2;
++        else
++            zone_idx = offset / f->zbd_info->zone_size;
++ 	return min(zone_idx, f->zbd_info->nr_zones);
++}
++
+ int fio_nvme_uring_cmd_prep(struct nvme_uring_cmd *cmd, struct io_u *io_u,
+ 			    struct iovec *iov, struct nvme_dsm_range *dsm)
+ {
+@@ -364,12 +383,21 @@ int fio_nvme_uring_cmd_prep(struct nvme_uring_cmd *cmd, struct io_u *io_u,
+ 	case DDIR_TRIM:
+ 		fio_nvme_uring_cmd_trim_prep(cmd, io_u, dsm);
+ 		return 0;
++	case DDIR_APPEND:
++        	cmd->opcode = nvme_zns_cmd_append;	
++			break;
+ 	default:
+ 		return -ENOTSUP;
+ 	}
+ 
+ 	slba = get_slba(data, io_u);
+ 	nlb = get_nlb(data, io_u);
++	if (io_u->ddir == DDIR_APPEND) {
++        	struct fio_file *f = io_u->file;
++		slba =  zbd_offset_to_zone_idx(f, io_u->offset) * f->zbd_info->zone_size;
++		slba >>= data->lba_shift;
++		io_u->ddir = DDIR_WRITE;
++    	}
+ 
+ 	/* cdw10 and cdw11 represent starting lba */
+ 	cmd->cdw10 = slba & 0xffffffff;
+@@ -478,7 +506,11 @@ int fio_nvme_get_info(struct fio_file *f, __u64 *nlba, __u32 pi_act,
+ 	int fd, err;
+ 	__u32 format_idx, elbaf;
+ 
+-	if (f->filetype != FIO_TYPE_CHAR) {
++	/*
++	 * For io_uring with finish workload on a block device we still want to pass this check, such that 
++	 * it does not require io_uring_cmd. But still fail if doing it on a regular file
++	 */
++	if (f->filetype != FIO_TYPE_BLOCK && f->filetype != FIO_TYPE_CHAR) {
+ 		log_err("ioengine io_uring_cmd only works with nvme ns "
+ 			"generic char devices (/dev/ngXnY)\n");
+ 		return 1;
+@@ -819,6 +851,45 @@ int fio_nvme_reset_wp(struct thread_data *td, struct fio_file *f,
+ 	return -ret;
+ }
+ 
++int fio_nvme_finish_zone(struct thread_data *td, struct fio_file *f,
++		      uint64_t offset, uint64_t length)
++{
++	struct nvme_data *data = FILE_ENG_DATA(f);
++	unsigned int nr_zones;
++	unsigned long long zslba;
++	int i, fd, ret = 0;
++
++	/* If the file is not yet opened, open it for this function. */
++	fd = f->fd;
++	if (fd < 0) {
++		fd = open(f->file_name, O_RDWR | O_LARGEFILE);
++		if (fd < 0)
++			return -errno;
++	}
++	
++	zslba = offset >> data->lba_shift;
++	nr_zones = (length + td->o.zone_size - 1) / td->o.zone_size;
++
++	for (i = 0; i < nr_zones; i++, zslba += (td->o.zone_size >> data->lba_shift)) {
++		struct nvme_passthru_cmd cmd = {
++			.opcode         = nvme_zns_cmd_mgmt_send,
++			.nsid           = data->nsid,
++			.cdw10          = zslba & 0xffffffff,
++			.cdw11          = zslba >> 32,
++			.cdw13          = NVME_ZNS_ZSA_FINISH,
++			.addr           = (__u64)(uintptr_t)NULL,
++			.data_len       = 0,
++			.timeout_ms     = NVME_DEFAULT_IOCTL_TIMEOUT,
++		};
++
++		ret = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
++	}
++
++	if (f->fd < 0)
++		close(fd);
++	return -ret;
++}
++
+ int fio_nvme_get_max_open_zones(struct thread_data *td, struct fio_file *f,
+ 				unsigned int *max_open_zones)
+ {
+diff --git a/engines/nvme.h b/engines/nvme.h
+index 792b35d8..f57f3f30 100644
+--- a/engines/nvme.h
++++ b/engines/nvme.h
+@@ -50,6 +50,7 @@ struct nvme_uring_cmd {
+ 
+ #define NVME_ZNS_ZRA_REPORT_ZONES 0
+ #define NVME_ZNS_ZRAS_FEAT_ERZ (1 << 16)
++#define NVME_ZNS_ZSA_FINISH 0x2
+ #define NVME_ZNS_ZSA_RESET 0x4
+ #define NVME_ZONE_TYPE_SEQWRITE_REQ 0x2
+ 
+@@ -79,6 +80,7 @@ enum nvme_io_opcode {
+ 	nvme_cmd_io_mgmt_recv		= 0x12,
+ 	nvme_zns_cmd_mgmt_send		= 0x79,
+ 	nvme_zns_cmd_mgmt_recv		= 0x7a,
++	nvme_zns_cmd_append		= 0x7d,
+ };
+ 
+ enum nvme_zns_zs {
+@@ -438,6 +440,9 @@ int fio_nvme_report_zones(struct thread_data *td, struct fio_file *f,
+ int fio_nvme_reset_wp(struct thread_data *td, struct fio_file *f,
+ 		      uint64_t offset, uint64_t length);
+ 
++int fio_nvme_finish_zone(struct thread_data *td, struct fio_file *f,
++		      uint64_t offset, uint64_t length);
++
+ int fio_nvme_get_max_open_zones(struct thread_data *td, struct fio_file *f,
+ 				unsigned int *max_open_zones);
+ 
+diff --git a/io_ddir.h b/io_ddir.h
+index 217eb628..a25fea61 100644
+--- a/io_ddir.h
++++ b/io_ddir.h
+@@ -14,6 +14,8 @@ enum fio_ddir {
+ 
+ 	DDIR_RWDIR_CNT = 3,
+ 	DDIR_RWDIR_SYNC_CNT = 4,
++
++	DDIR_APPEND = 8,
+ };
+ 
+ #define for_each_rw_ddir(ddir)	for (enum fio_ddir ddir = 0; ddir < DDIR_RWDIR_CNT; ddir++)
+diff --git a/io_u.h b/io_u.h
+index 786251d5..f4c983c9 100644
+--- a/io_u.h
++++ b/io_u.h
+@@ -111,7 +111,7 @@ struct io_u {
+ 	 * ZBD mode zbd_put_io callback: called in after completion of an I/O
+ 	 * or commit of an async I/O to unlock the I/O target zone.
+ 	 */
+-	void (*zbd_put_io)(struct thread_data *td, const struct io_u *);
++	void (*zbd_put_io)(struct thread_data *td, struct io_u *);
+ 
+ 	/*
+ 	 * Callback for io completion
+diff --git a/stat.c b/stat.c
+index 7b791628..93c242fa 100644
+--- a/stat.c
++++ b/stat.c
+@@ -1448,15 +1448,30 @@ static struct json_object *add_ddir_lat_json(struct thread_stat *ts,
+ 	return lat_object;
+ }
+ 
++static bool is_finish_set(struct flist_head *opt_list)
++{
++	struct flist_head *entry;
++	struct print_option *p;
++
++	flist_for_each(entry, opt_list) {
++		p = flist_entry(entry, struct print_option, list);
++		if (strcmp(p->name, "finish") && p->value && strcmp(p->value, "1"))
++			return true;
++	}
++
++	return false;
++}
++
+ static void add_ddir_status_json(struct thread_stat *ts,
+ 				 struct group_run_stats *rs, enum fio_ddir ddir,
+-				 struct json_object *parent)
++				 struct json_object *parent, struct flist_head *opt_list)
+ {
+ 	unsigned long long min, max;
+ 	unsigned long long bw_bytes, bw;
+ 	double mean, dev, iops;
+ 	struct json_object *dir_object, *tmp_object;
+ 	double p_of_agg = 100.0;
++    struct thread_data *global;
+ 
+ 	assert(ddir_rw(ddir) || ddir_sync(ddir));
+ 
+@@ -1464,8 +1479,18 @@ static void add_ddir_status_json(struct thread_stat *ts,
+ 		return;
+ 
+ 	dir_object = json_create_object();
+-	json_object_add_value_object(parent,
+-		(ts->unified_rw_rep == UNIFIED_MIXED) ? "mixed" : io_ddir_name(ddir), dir_object);
++
++    global = get_global_options();
++    if (ddir == DDIR_WRITE && is_finish_set(opt_list)) {
++        json_object_add_value_object(parent, "finish", dir_object);
++        json_object_add_value_int(dir_object, "total_zone_resets", ts->nr_zone_resets);
++    } else if (global->o.zone_mode == ZONE_MODE_ZBD && ddir == DDIR_TRIM) {
++        json_object_add_value_object(parent, "ZNS Reset", dir_object);
++        json_object_add_value_int(dir_object, "total_zone_resets", ts->nr_zone_resets);
++    } else {
++        json_object_add_value_object(parent,
++            (ts->unified_rw_rep == UNIFIED_MIXED) ? "mixed" : io_ddir_name(ddir), dir_object);
++    }
+ 
+ 	if (ddir_rw(ddir)) {
+ 		bw_bytes = 0;
+@@ -1591,7 +1616,7 @@ static void add_mixed_ddir_status_json(struct thread_stat *ts,
+ 
+ 	/* add the aggregated stats to json parent */
+ 	if (ts_lcl)
+-		add_ddir_status_json(ts_lcl, rs, DDIR_READ, parent);
++		add_ddir_status_json(ts_lcl, rs, DDIR_READ, parent, NULL);
+ 
+ 	free_clat_prio_stats(ts_lcl);
+ 	free(ts_lcl);
+@@ -1725,10 +1750,10 @@ static struct json_object *show_thread_status_json(struct thread_stat *ts,
+ 	if (opt_list)
+ 		json_add_job_opts(root, "job options", opt_list);
+ 
+-	add_ddir_status_json(ts, rs, DDIR_READ, root);
+-	add_ddir_status_json(ts, rs, DDIR_WRITE, root);
+-	add_ddir_status_json(ts, rs, DDIR_TRIM, root);
+-	add_ddir_status_json(ts, rs, DDIR_SYNC, root);
++	add_ddir_status_json(ts, rs, DDIR_READ, root, opt_list);
++	add_ddir_status_json(ts, rs, DDIR_WRITE, root, opt_list);
++    add_ddir_status_json(ts, rs, DDIR_TRIM, root, opt_list);
++	add_ddir_status_json(ts, rs, DDIR_SYNC, root, opt_list);
+ 
+ 	if (ts->unified_rw_rep == UNIFIED_BOTH)
+ 		add_mixed_ddir_status_json(ts, rs, root);
+@@ -1743,6 +1768,7 @@ static struct json_object *show_thread_status_json(struct thread_stat *ts,
+ 		usr_cpu = 0;
+ 		sys_cpu = 0;
+ 	}
++
+ 	json_object_add_value_int(root, "job_runtime", ts->total_run_time);
+ 	json_object_add_value_float(root, "usr_cpu", usr_cpu);
+ 	json_object_add_value_float(root, "sys_cpu", sys_cpu);
+diff --git a/zbd.c b/zbd.c
+index caac68bb..2b9b57c1 100644
+--- a/zbd.c
++++ b/zbd.c
+@@ -23,6 +23,43 @@
+ #include "pshared.h"
+ #include "zbd.h"
+ 
++#define CMDPRIO_RWDIR_CNT 2
++
++struct cmdprio_options {
++	unsigned int percentage[CMDPRIO_RWDIR_CNT];
++	unsigned int class[CMDPRIO_RWDIR_CNT];
++	unsigned int level[CMDPRIO_RWDIR_CNT];
++	unsigned int hint[CMDPRIO_RWDIR_CNT];
++	char *bssplit_str;
++};
++
++enum uring_cmd_type {
++	FIO_URING_CMD_NVME = 1,
++};
++
++struct ioring_options {
++	struct thread_data *td;
++	unsigned int hipri;
++	struct cmdprio_options cmdprio_options;
++	unsigned int fixedbufs;
++	unsigned int registerfiles;
++	unsigned int sqpoll_thread;
++	unsigned int finish;
++	unsigned int sqpoll_set;
++	unsigned int sqpoll_cpu;
++	unsigned int nonvectored;
++	unsigned int uncached;
++	unsigned int nowait;
++	unsigned int force_async;
++	unsigned int md_per_io_size;
++	unsigned int pi_act;
++	unsigned int apptag;
++	unsigned int apptag_mask;
++	unsigned int prchk;
++	char *pi_chk;
++	enum uring_cmd_type cmd_type;
++};
++
+ static bool is_valid_offset(const struct fio_file *f, uint64_t offset)
+ {
+ 	return (uint64_t)(offset - f->file_offset) < f->io_size;
+@@ -313,15 +350,16 @@ static void zbd_write_zone_put(struct thread_data *td, const struct fio_file *f,
+ 			       struct fio_zone_info *z)
+ {
+ 	uint32_t zi;
++	struct ioring_options *o = td->eo;
+ 
+-	if (!z->write)
++	if (!o->finish && !z->write)
+ 		return;
+ 
+ 	for (zi = 0; zi < f->zbd_info->num_write_zones; zi++) {
+ 		if (zbd_get_zone(f, f->zbd_info->write_zones[zi]) == z)
+ 			break;
+ 	}
+-	if (zi == f->zbd_info->num_write_zones)
++	if (!o->finish && zi == f->zbd_info->num_write_zones)
+ 		return;
+ 
+ 	dprint(FD_ZBD, "%s: removing zone %u from write zone array\n",
+@@ -1337,6 +1375,7 @@ void zbd_file_reset(struct thread_data *td, struct fio_file *f)
+ {
+ 	struct fio_zone_info *zb, *ze;
+ 	bool verify_data_left = false;
++	struct ioring_options *o = td->eo;
+ 
+ 	if (!f->zbd_info || !td_write(td))
+ 		return;
+@@ -1349,7 +1388,7 @@ void zbd_file_reset(struct thread_data *td, struct fio_file *f)
+ 	 * writing any data to avoid that a zone reset has to be issued while
+ 	 * writing data, which causes data loss.
+ 	 */
+-	if (td->o.verify != VERIFY_NONE) {
++	if (td->o.verify != VERIFY_NONE || o->finish) {
+ 		verify_data_left = td->runstate == TD_VERIFYING ||
+ 			td->io_hist_len || td->verify_batch;
+ 		if (td->io_hist_len && td->o.verify_backlog)
+@@ -1743,10 +1782,11 @@ unlock:
+  * zbd_put_io - Unlock an I/O unit target zone lock
+  * @io_u: I/O unit
+  */
+-static void zbd_put_io(struct thread_data *td, const struct io_u *io_u)
++static void zbd_put_io(struct thread_data *td, struct io_u *io_u)
+ {
+-	const struct fio_file *f = io_u->file;
++	struct fio_file *f = io_u->file;
+ 	struct fio_zone_info *z;
++	struct ioring_options *o = td->eo;
+ 
+ 	assert(f->zbd_info);
+ 
+@@ -1757,6 +1797,34 @@ static void zbd_put_io(struct thread_data *td, const struct io_u *io_u)
+ 	       "%s: terminate I/O (%lld, %llu) for zone %u\n",
+ 	       f->file_name, io_u->offset, io_u->buflen, zbd_zone_idx(f, z));
+ 
++	/*
++	 * After completing full write finish the zone
++	 */
++	if (io_u->ddir == DDIR_WRITE && o->finish) {
++		pthread_mutex_lock(&f->zbd_info->mutex);
++		zbd_write_zone_put(td, f, z);
++		pthread_mutex_unlock(&f->zbd_info->mutex);
++		dprint(FD_ZBD,
++				"%s: finish zone %d\n",
++				f->file_name, zbd_zone_idx(f, z));
++		io_u_quiesce(td);
++		zbd_finish_zone(td, f, z);
++		
++		z->reset_zone = false;
++		z->write = false;
++
++		/* 
++		 * Hardcoded to only account for finish bytes written and remove the 4K write before.
++		 * We only use bw_bytes so we do not need so track all info.
++		 */
++		td->io_bytes[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
++		td->io_issue_bytes[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
++		td->bytes_done[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
++		td->rate_io_issue_bytes[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
++		td->stat_io_bytes[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
++		td->this_io_bytes[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
++	}
++
+ 	zbd_end_zone_io(td, io_u, z);
+ 
+ 	zone_unlock(z);
+@@ -1895,6 +1963,7 @@ enum io_u_action zbd_adjust_block(struct thread_data *td, struct io_u *io_u)
+ {
+ 	struct fio_file *f = io_u->file;
+ 	struct zoned_block_device_info *zbdi = f->zbd_info;
++	struct ioring_options *o = td->eo;
+ 	struct fio_zone_info *zb, *zl, *orig_zb;
+ 	uint32_t orig_len = io_u->buflen;
+ 	uint64_t min_bs = td->o.min_bs[io_u->ddir];
+@@ -2078,6 +2147,19 @@ retry:
+ 				zb->reset_zone = 1;
+ 		}
+ 
++		if (zbd_zone_full(f, zb, min_bs) && o->finish && !zb->reset_zone) {
++			zone_unlock(zb);
++
++			/* Find the next write pointer zone */
++			do {
++				zb++;
++				if (zbd_zone_idx(f, zb) >= f->max_zone)
++					zb = zbd_get_zone(f, f->min_zone);
++			} while (!zb->has_wp);
++
++			zone_lock(td, f, zb);
++		}
++
+ 		/* Reset the zone pointer if necessary */
+ 		if (zb->reset_zone || zbd_zone_full(f, zb, min_bs)) {
+ 			if (td->o.verify != VERIFY_NONE) {
+@@ -2093,13 +2175,6 @@ retry:
+ 				io_u->file = f;
+ 			}
+ 
+-			/*
+-			 * Since previous write requests may have been submitted
+-			 * asynchronously and since we will submit the zone
+-			 * reset synchronously, wait until previously submitted
+-			 * write requests have completed before issuing a
+-			 * zone reset.
+-			 */
+ 			io_u_quiesce(td);
+ 			zb->reset_zone = 0;
+ 			if (__zbd_reset_zone(td, f, zb) < 0)
+@@ -2166,6 +2241,7 @@ retry:
+ 
+ 	case DDIR_SYNC:
+ 		/* fall-through */
++	case DDIR_APPEND:
+ 	case DDIR_DATASYNC:
+ 	case DDIR_SYNC_FILE_RANGE:
+ 	case DDIR_WAIT:
