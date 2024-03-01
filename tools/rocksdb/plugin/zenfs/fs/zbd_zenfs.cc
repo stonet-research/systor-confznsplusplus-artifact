@@ -423,7 +423,6 @@ IOStatus ZonedBlockDevice::AllocateMetaZone(Zone **out_meta_zone) {
     /* If the zone is not used, reset and use it */
     if (z->Acquire()) {
       if (!z->IsUsed()) {
-        // fprintf(stdout, "Reset metadata zone (allocate)\n");
         if (!z->IsEmpty() && !z->Reset().ok()) {
           Warn(logger_, "Failed resetting zone!");
           IOStatus status = z->CheckRelease();
@@ -445,7 +444,6 @@ IOStatus ZonedBlockDevice::ResetUnusedIOZones() {
     if (z->Acquire()) {
       if (!z->IsEmpty() && !z->IsUsed()) {
         bool full = z->IsFull();
-        // fprintf(stdout, "Physical reset zone (unused zones)\n");
         IOStatus reset_status = z->Reset();
         IOStatus release_status = z->CheckRelease();
         if (!reset_status.ok()) return reset_status;
@@ -708,7 +706,6 @@ IOStatus ZonedBlockDevice::TakeMigrateZone(Zone **out_zone,
       GetBestOpenZoneMatch(file_lifetime, &best_diff, out_zone, min_capacity);
   if (s.ok() && (*out_zone) != nullptr) {
     Info(logger_, "TakeMigrateZone: %lu", (*out_zone)->start_);
-    // fprintf(stdout, "TakeMigrateZone: %lu", (*out_zone)->start_);
   } else {
     migrating_ = false;
   }

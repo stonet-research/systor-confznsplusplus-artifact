@@ -49,10 +49,13 @@ IOStatus ZbdlibBackend::CheckScheduler() {
 
   std::string buf;
   getline(f, buf);
-  if (buf.find("[mq-deadline]") == std::string::npos &&  buf.find("[zinc]") == std::string::npos) {
+  // ZINC, allow zinc scheduler as well
+  if (buf.find("[mq-deadline]") == std::string::npos &&
+      buf.find("[zinc]") == std::string::npos) {
     f.close();
     return IOStatus::InvalidArgument(
-        "Current ZBD scheduler is not mq-deadline or zinc, set it to mq-deadline or zinc.");
+        "Current ZBD scheduler is not mq-deadline or zinc, set it to "
+        "mq-deadline or zinc.");
   }
 
   f.close();
@@ -103,7 +106,8 @@ IOStatus ZbdlibBackend::Open(bool readonly, bool exclusive,
 
   block_sz_ = info.pblock_size;
   zone_sz_ = info.zone_size;
-  // KD UNCOMMENT nr_zones_ = info.nr_zones;
+  // nr_zones_ = info.nr_zones;
+  // ZINC force only issuing the first 100 zones
   nr_zones_ = info.nr_zones > 100 ? 100 : info.nr_zones;
   *max_active_zones = info.max_nr_active_zones;
   *max_open_zones = info.max_nr_open_zones;
@@ -121,7 +125,7 @@ std::unique_ptr<ZoneList> ZbdlibBackend::ListZones() {
     return nullptr;
   }
 
-  // KD REMOVE
+  // ZINC force only issuing the first 100 zones
   nr_zones = nr_zones > 100 ? 100 : nr_zones;
 
   std::unique_ptr<ZoneList> zl(new ZoneList(zones, nr_zones));

@@ -279,14 +279,6 @@ void ZenFS::GCWorker() {
     ZenFSSnapshot snapshot;
     ZenFSSnapshotOptions options;
 
-    // int64_t time;
-    // Zinc print: When GC?
-    // Env::Default()->GetCurrentTime(&time);
-    // std::string timestr =  Env::Default()->TimeToString(time);
-    // fprintf(stdout, "ZENFS %s %lu free percent, free %lu, non_free %lu\n",
-    // timestr.data(), free_percent,
-    //   free, non_free);
-
     if (free_percent > GC_START_LEVEL) continue;
 
     options.zone_ = 1;
@@ -318,16 +310,9 @@ void ZenFS::GCWorker() {
 
     if (migrate_exts.size() > 0) {
       IOStatus s;
-      // Env::Default()->GetCurrentTime(&time);
-      // timestr = Env::Default()->TimeToString(time);
-      // fprintf(stdout, "Garbage collecting %s %ld extents \n", timestr.data(),
-      //         migrate_exts.size());
       Info(logger_, "Garbage collecting %d extents \n",
            (int)migrate_exts.size());
       s = MigrateExtents(migrate_exts);
-      // Env::Default()->GetCurrentTime(&time);
-      // timestr = Env::Default()->TimeToString(time);
-      // fprintf(stdout, "Garbage collecting %s done \n", timestr.data());
       if (!s.ok()) {
         Error(logger_, "Garbage collection failed");
       }
@@ -454,8 +439,6 @@ IOStatus ZenFS::RollMetaZoneLocked() {
 
   /* We've rolled successfully, we can reset the old zone now */
   if (s.ok()) old_meta_log->GetZone()->Reset();
-  // fprintf(stdout, "Reset metadata zone (roll metadata)\n");
-
   return s;
 }
 
@@ -886,10 +869,7 @@ IOStatus ZenFS::OpenWritableFile(const std::string& filename,
         new ZonedWritableFile(zbd_, !file_opts.use_direct_writes, zoneFile));
   }
 
-  if (resetIOZones) {
-    // printf("ResetIOZones newwriteablefile\n");
-    s = zbd_->ResetUnusedIOZones();
-  }
+  if (resetIOZones) s = zbd_->ResetUnusedIOZones();
   return s;
 }
 
@@ -902,10 +882,7 @@ IOStatus ZenFS::DeleteFile(const std::string& fname, const IOOptions& options,
   files_mtx_.lock();
   s = DeleteFileNoLock(fname, options, dbg);
   files_mtx_.unlock();
-  if (s.ok()) {
-    // printf("ResetIOZones DeleteFile\n");
-    s = zbd_->ResetUnusedIOZones();
-  }
+  if (s.ok()) s = zbd_->ResetUnusedIOZones();
   zbd_->LogZoneStats();
 
   return s;
@@ -1073,10 +1050,7 @@ IOStatus ZenFS::RenameFile(const std::string& source_path,
     std::lock_guard<std::mutex> lock(files_mtx_);
     s = RenameFileNoLock(source_path, dest_path, options, dbg);
   }
-  if (s.ok()) {
-    // printf("ResetIOZones RenameFile\n");
-    s = zbd_->ResetUnusedIOZones();
-  }
+  if (s.ok()) s = zbd_->ResetUnusedIOZones();
   return s;
 }
 
@@ -1501,7 +1475,6 @@ Status ZenFS::Mount(bool readonly) {
 
   if (!readonly) {
     Info(logger_, "Resetting unused IO Zones..");
-    // printf("ResetIOZones Mount\n");
     IOStatus status = zbd_->ResetUnusedIOZones();
     if (!status.ok()) return status;
     Info(logger_, "  Done");
@@ -1540,7 +1513,6 @@ Status ZenFS::MkFS(std::string aux_fs_p, uint32_t finish_threshold,
       return Status::Aborted("Could not aquire busy flag of zone " +
                              std::to_string(mz->GetZoneNr()));
     }
-    // fprintf(stdout, "Reset metadata zone\n");
     if (mz->Reset().ok()) {
       if (!meta_zone) meta_zone = mz;
     } else {
@@ -1785,7 +1757,6 @@ IOStatus ZenFS::MigrateExtents(
   for (const auto& it : file_extents) {
     s = MigrateFileExtents(it.first, it.second);
     if (!s.ok()) break;
-    // printf("ResetIOZones Migrateextents\n");
     s = zbd_->ResetUnusedIOZones();
     if (!s.ok()) break;
   }

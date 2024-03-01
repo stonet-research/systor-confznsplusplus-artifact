@@ -800,8 +800,6 @@ ZonedWritableFile::ZonedWritableFile(ZonedBlockDevice* zbd, bool _buffered,
       size_t sparse_buffer_sz;
 
       sparse_buffer_sz =
-          // KD uncomment
-          //4096 + block_sz;
           1024 * 1024 + block_sz; /* one extra block size for padding */
       int ret = posix_memalign((void**)&sparse_buffer, sysconf(_SC_PAGESIZE),
                                sparse_buffer_sz);
