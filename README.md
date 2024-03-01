@@ -128,7 +128,7 @@ This repository is broken down into several distinct directories and subdirector
 - [`interference_model`](./interference_model/) contains the python lib of the presented quantification model, to be imported into data parsing scripts to calculate the $Z^{Inter}$ value.
 - [`plotting-notebooks`](./plotting-notebooks/) contains all plotting scripts, as jupyter notebooks, for generating figures.
 - [`tools`](./tools/) contains the custom `fio` and `ZenFS` repositories for generating all micro- and macro-level benchmarks of this study.
-- [`zinc-benchmarks`](./zinc-benchmarks/) contains all the benchmarking scripts and collected data for the benchmarks (micro- and macro-level) run on ZINC.
+- [`zinc-benchmarks`](./zinc-benchmarks/) contains all the benchmarking scripts and collected data for the benchmarks (micro- and macro-level) run on ZINC only. Benchmarks to compare interference of ZINC against mq-deadline are in [`zns-command-interference/macrobenchmarks/rocksdb-with-interference`](./zns-command-interference/macrobenchmarks/rocksdb-with-interference).
 - [`zinc-scheduler`](./zinc-scheduler/) contains the source code of ZINC.
 - [`zns-command-interference`](./zns-command-interference) contains all interference workloads run throughout the study. Each workload has its own subdirectory, with a benchmarking script to run the workload (run `./bench nvme0n2` on the respective device), all our collected data sets, and each workload has a plotting script to generate standalone figures apart from the paper figures (run `python3 plot.py`).
 - [`util`](./util/) contains utility scripts used throughout this study, which are typically called from other benchmarking scripts.

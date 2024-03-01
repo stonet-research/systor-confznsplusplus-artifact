@@ -93,15 +93,14 @@ sudo nvme zns reset-zone /dev/$1 -a
 echo none | sudo tee /sys/block/$1/queue/scheduler >> /dev/null
 
 
-mkdir -p perfout
-
+# mkdir -p perfout
 # echo "#!/bin/bash" > perfout/tmpjob.sh
 # sudo chmod +x perfout/tmpjob.sh
 # sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ../fio/fio --showcmd  job-reset-baseline.fio >> perfout/tmpjob.sh
-# sed -i 's/fio/sudo \/home\/user\/src\/zns-contract-bench\/fio\/fio/g' perfout/tmpjob.sh
+# sed -i 's/fio/sudo /fio\/fio/g' perfout/tmpjob.sh
 
-# sudo /home/user/src/perf record -a -e cycles,instructions -F 99 -g -o perfout/nonebase perfout/tmpjob.sh
-# sudo /home/user/src/perf report --vmlinux /home/user/vmlinux -n -m --stdio --full-source-path --source -s symbol -g -i perfout/nonebase --fields=cycle >> perfout/nonebaseparsed
+# sudo perf record -a -e cycles,instructions -F 99 -g -o perfout/nonebase perfout/tmpjob.sh
+# sudo perf report --vmlinux /home/user/vmlinux -n -m --stdio --full-source-path --source -s symbol -g -i perfout/nonebase --fields=cycle >> perfout/nonebaseparsed
 # python3 process_report_graph.py perfout/nonebaseparsed
 
 sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" \
