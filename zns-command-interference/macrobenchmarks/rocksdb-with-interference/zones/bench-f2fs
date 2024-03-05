@@ -73,7 +73,7 @@ if [ "$4" -eq "1" ]; then
         "OFFSET_ZONES_B=$2" \
         "OFFSET_ZONES_C=$3" \
         "BS=${DEV_ZONE_SIZE}" \
-        "RESET_LIMIT=${trim_rate_limit}"  .../../../../tools/fio/fio \
+        "RESET_LIMIT=${trim_rate_limit}"  ../../../../tools/fio/fio \
             --output-format=json \
             --output=data/conc-f2fs.json \
             jobs/concurrent-reset-write-intererference.fio &

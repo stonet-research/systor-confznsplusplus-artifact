@@ -59,7 +59,7 @@ echo ""
 
 echo "Benchmarking ZNS Device Finish Limit"
 sudo nvme zns reset-zone /dev/$1 -a
-sudo env "DEV=${DEV}" "FINISH_SIZE=${FINISH_SIZE}" .../../../../tools/fio/fio \
+sudo env "DEV=${DEV}" "FINISH_SIZE=${FINISH_SIZE}" ../../../../tools/fio/fio \
     --output-format=json \
     --output=data/bw.json \
         jobs/job-finish.fio

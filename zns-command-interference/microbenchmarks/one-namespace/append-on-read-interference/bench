@@ -56,7 +56,7 @@ echo ""
 
 echo "Benchmarking ZNS Device Append Rate Limit"
 sudo nvme zns reset-zone /dev/$1 -a
-sudo env "DEV=${DEV}" "APPEND_SIZE=${APPEND_SIZE}" .../../../../tools/fio/fio \
+sudo env "DEV=${DEV}" "APPEND_SIZE=${APPEND_SIZE}" ../../../../tools/fio/fio \
     --output-format=json \
     --output=data/bw.json \
         jobs/job-append.fio

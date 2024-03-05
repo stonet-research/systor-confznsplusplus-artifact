@@ -48,7 +48,7 @@ echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
 
 # Fill namespace 3
 if [ "$4" -eq "1" ]; then
-    sudo env "DEV=$3" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=700" .../../../../tools/fio/fio \
+    sudo env "DEV=$3" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=700" ../../../../tools/fio/fio \
         --output-format=json \
         --output=data/fill.json \
             jobs/fill.fio
