@@ -1,0 +1,124 @@
+
+=====[ partition info(nullb0). #0, RW, CP: Good]=====
+[SBI: fs_dirty]
+[SB: 1] [CP: 2] [SIT: 4] [NAT: 116] [SSA: 70] [MAIN: 33280(OverProv:3099 Resv:1710)]
+
+Current Time Sec: 2369 / Mounted Time Sec: 80
+
+Utilization: 67% (10496082 valid blocks, 0 discard blocks)
+  - Node: 10321 (Inode: 9, Other: 10312)
+  - Data: 10485761
+  - Inline_xattr Inode: 8
+  - Inline_data Inode: 0
+  - Inline_dentry Inode: 0
+  - Compressed Inode: 0, Blocks: 0
+  - Orphan/Append/Update Inode: 0, 0, 0
+
+Main area: 33280 segs, 1040 secs 1040 zones
+
+    Multi-Stream INFO:
+  - Stream Allocation:
+         Policy: SPF
+  - Maximum Streams: 15
+  - Active Streams: 15
+  - STREAMS:
+        Maximum:  [ 10  1  1  1  1  1  ]
+         Active:  [ 10  1  1  1  1  1  ]
+      EXCLUSIVE:  [  0  0  0  0  0  0  ]
+  - ACTIVE STREAM BITMAPS:
+       HOT_DATA   [ 1 1 1 1 1 1 1 1 1 1 ]
+       WARM_DATA  [ 1 0 0 0 0 0 0 0 0 0 ]
+       COLD_DATA  [ 1 0 0 0 0 0 0 0 0 0 ]
+       HOT_NODE   [ 1 0 0 0 0 0 0 0 0 0 ]
+       WARM_NODE  [ 1 0 0 0 0 0 0 0 0 0 ]
+       COLD_NODE  [ 1 0 0 0 0 0 0 0 0 0 ]
+  - EXCLUSIVE STREAM BITMAPS:
+       HOT_DATA   [ - 0 0 0 0 0 0 0 0 0 ]
+       WARM_DATA  [ - ]
+       COLD_DATA  [ - ]
+       HOT_NODE   [ - ]
+       WARM_NODE  [ - ]
+       COLD_NODE  [ - ]
+  - EXCLUSIVE STREAM INO-MAP:
+       HOT_DATA   [ - 0 0 0 0 0 0 0 0 0 ]
+       WARM_DATA  [ - ]
+       COLD_DATA  [ - ]
+       HOT_NODE   [ - ]
+       WARM_NODE  [ - ]
+       COLD_NODE  [ - ]
+
+    TYPE       STREAM    segno    secno   zoneno  dirty_seg   full_seg  valid_blk
+  - HOT  data:      0    28511      890      890       1728       4255    2621440
+  - HOT  data:      1    28640      895      895          0       2560    1310720
+  - HOT  data:      2    28800      900      900          0       2560    1310720
+  - HOT  data:      3    20744      648      648          2       1256     643494
+  - HOT  data:      4    20406      637      637          0       3798    1944576
+  - HOT  data:      5      480       15       15          0          0          0
+  - HOT  data:      6     1984       62       62          0          0          0
+  - HOT  data:      7     6080      190      190          0          0          0
+  - HOT  data:      8      416       13       13          1          0          1
+  - HOT  data:      9    28832      901      901          0       2560    1310720
+  - WARM data:      0      128        4        4          0          0          0
+  - COLD data:      0      160        5        5          0          0          0
+  - HOT  node:      0        0        0        0          1          0          1
+  - WARM node:      0    21235      663      663       1560          0       7728
+  - COLD node:      0       64        2        2          1          0         12
+  - Pinned file:            -1       -1       -1
+  - ATGC   data:            -1       -1       -1
+
+  - Valid: 17004
+  - Dirty: 3287
+  - Prefree: 0
+  - Free: 12989 (106)
+
+CP calls: 1892 (BG: 13)
+  - cp blocks : 5922
+  - sit blocks : 18807
+  - nat blocks : 3228
+  - ssa blocks : 59985
+CP merge (Queued:    0, Issued:   15, Total:   15, Cur time:    1(ms), Peak time:  790(ms))
+GC calls: 1149 (BG: 0)
+  - data segments : 0 (0)
+  - node segments : 4051 (0)
+  - Reclaimed segs : Normal (4051), Idle CB (0), Idle Greedy (0), Idle AT (0), Urgent High (0), Urgent Mid (0), Urgent Low (0)
+Try to move 6532 blocks (BG: 0)
+  - data blocks : 0 (0)
+  - node blocks : 6532 (0)
+BG skip : IO: 36, Other: 1
+
+Extent Cache:
+  - Hit Count: L1-1:0 L1-2:0 L2:0
+  - Hit Ratio: 0% (0 / 0)
+  - Inner Struct Count: tree: 8(0), node: 242683
+
+Balancing F2FS Async:
+  - DIO (R:    0, W:    0)
+  - IO_R (Data:    0, Node:    0, Meta:    0
+  - IO_W (CP:    0, Data: 22094, Flush: (   0 10485752    1), Discard: (   0    0)) cmd:    0 undiscard:   0
+  - atomic IO:    0 (Max.    0)
+  - compress:    0, hit:       0
+  - nodes: 2581 in 10321
+  - dents:    1 in dirs:   1 (   0)
+  - datas: 1344232 in files:   0
+  - quota datas:    0 in quota files:   0
+  - meta: 2399 in 27455
+  - imeta:    0
+  - fsync mark:    0
+  - NATs:      2580/     2580
+  - SITs:      2497/    33280
+  - free_nids:      1051/ 13501356
+  - alloc_nids:         0
+
+Distribution of User Blocks: [ valid | invalid | free ]
+  [-----------------------------|-----|----------------]
+
+IPU: 0 blocks
+SSR: 0 blocks in 0 segments
+LFS: 31941829 blocks in 62393 segments
+
+BDF: 94, avg. vblocks: 1252
+
+Memory: 176803 KB
+  - static: 10316 KB
+  - cached: 15382 KB
+  - paged : 151104 KB

@@ -1,0 +1,39 @@
+ 2017  sudo gdb --args ../fio/fio --name=test --filename=/dev/nvme0n2 --rw=write --bs=1129316352
+ 2018  sudo gdb --args ../fio/fio --name=test --filename=/dev/nvme0n2 --rw=write --bs=50/4096,50/1129312256
+ 2019  sudo gdb --args ../fio/fio --name=test --filename=/dev/nvme0n2 --rw=write --bs=50/4096,50/1129312256 --zonemode=zbd --direct=1
+ 2026  sudo gdb --args ../fio/fio --name=test --filename=/dev/nvme0n2 --rw=write --bs=1129316352 --zonemode=zbd --direct=1
+ 2038  sudo gdb --args ./fio --name=test --filename=/dev/nvme0n2 --rw=write --bs=1129316352 --zonemode=zbd --direct=1 --size=10z --debug=all 
+ 2041  sudo gdb --args ./fio --name=test --filename=/dev/nvme0n2 --rw=write --bs=1129316352 --zonemode=zbd --direct=1 --size=10z --debug=all --ioengine=io_uring_cmd 
+ 2069  sudo gdb --args ../fio/fio job-finish.fio
+ 2089  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=finish --bs=$((1129316352)) --zonemode=zbd --size=10z --ioengine=io_uring_cmd
+ 2100  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=finish --bs=$((1129316352)) --zonemode=zbd --size=10z --ioengine=io_uring_cmd
+ 2109  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=finish --bs=$((1129316352)) --zonemode=zbd --size=10z --ioengine=io_uring_cmd
+ 2111  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=finish --bs=$((1129316352)) --zonemode=zbd --size=10z --ioengine=io_uring_cmd
+ 2112  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=trim --bs=$((1129316352)) --zonemode=zbd --size=10z --ioengine=io_uring_cmd
+ 2113  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=trim --bs=2147483648 --zonemode=zbd --size=10z --ioengine=io_uring_cmd
+ 2123  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=trim --bs=2147483648 --zonemode=zbd --size=10z --ioengine=io_uring_cmd
+ 2126  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=trim --bs=2147483648 --zonemode=zbd --size=10z --ioengine=io_uring_cmd
+ 2129  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=trim --bs=2147483648 --zonemode=zbd --size=10z --ioengine=io_uring_cmd
+ 2131  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=trim --bs=2147483648 --zonemode=zbd --size=10z --ioengine=io_uring_cmd
+ 2133  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=trim --bs=2147483648 --zonemode=zbd --size=10z --ioengine=io_uring_cmd
+ 2135  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=trim --bs=2147483648 --zonemode=zbd --size=10z --ioengine=io_uring_cmd
+ 2137  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=trim --bs=2147483648 --zonemode=zbd --size=10z --ioengine=io_uring_cmd
+ 2140  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=trim --bs=2147483648 --zonemode=zbd --size=10z --ioengine=io_uring_cmd
+ 2142  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=finish --bs=2147483648 --zonemode=zbd --size=10z --ioengine=io_uring_cmd
+ 2145  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=finish --bs=2147483648 --zonemode=zbd --size=10z --ioengine=io_uring_cmd --finish=1
+ 2146  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=trim --bs=2147483648 --zonemode=zbd --size=10z --ioengine=io_uring_cmd --finish=1
+ 2149  sudo gdb --args ../fio/fio --name=test --filename=/dev/ng0n2 --rw=trim --bs=2147483648 --zonemode=zbd --size=10z --ioengine=io_uring_cmd --finish=1
+ 2150  sudo env "DEV=ng0n2" "BS=214746438" "CONCUR_FILL_SIZE=10" "CONCUR_FILL=1" "FILL_SIZE=10" "TRIM_IODEPTH=1" gdb --args ./fio job-trim.fio 
+ 2164  sudo env "DEV=ng0n2" "BS=2147486438" "CONCUR_FILL_SIZE=10" "CONCUR_FILL=1" "FILL_SIZE=10" "TRIM_IODEPTH=1" gdb --args ./fio job-trim.fio 
+ 2166  sudo env "DEV=ng0n2" "BS=2147486438" "CONCUR_FILL_SIZE=10" "CONCUR_FILL=1" "FILL_SIZE=10" "TRIM_IODEPTH=1" gdb --args ./fio job-trim.fio 
+ 2168  sudo env "DEV=ng0n2" "BS=2147486438" "CONCUR_FILL_SIZE=10" "CONCUR_FILL=1" "FILL_SIZE=10" "TRIM_IODEPTH=1" gdb --args ./fio job-trim.fio 
+ 2170  sudo env "DEV=ng0n2" "BS=2147486438" "CONCUR_FILL_SIZE=10" "CONCUR_FILL=1" "FILL_SIZE=10" "TRIM_IODEPTH=1" gdb --args ./fio job-trim.fio 
+ 2172  sudo env "DEV=ng0n2" "BS=2147486438" "CONCUR_FILL_SIZE=10" "CONCUR_FILL=1" "FILL_SIZE=10" "TRIM_IODEPTH=1" gdb --args ./fio job-trim.fio 
+ 2195  sudo env "DEV=ng0n2" "BS=2147486438" "CONCUR_FILL_SIZE=10" "CONCUR_FILL=1" "FILL_SIZE=10" "TRIM_IODEPTH=1" gdb --args ./fio --output-format=json --output=test.json example-job-finish.fio
+ 2197  sudo env "DEV=ng0n2" "BS=2147486438" "CONCUR_FILL_SIZE=10" "CONCUR_FILL=1" "FILL_SIZE=10" "TRIM_IODEPTH=1" gdb --args ./fio --output-format=json --output=test.json example-job-finish.fio
+ 2199  sudo env "DEV=ng0n2" "BS=2147486438" "CONCUR_FILL_SIZE=10" "CONCUR_FILL=1" "FILL_SIZE=10" "TRIM_IODEPTH=1" gdb --args ./fio --output-format=json --output=test.json example-job-finish.fio
+ 2210  sudo env "DEV=ng0n2" "BS=2147486438" "CONCUR_FILL_SIZE=10" "CONCUR_FILL=1" "FILL_SIZE=10" "TRIM_IODEPTH=1" gdb --args ./fio --output-format=json --output=test.json example-job-finish.fio
+ 2212  sudo env "DEV=ng0n2" "BS=2147486438" "CONCUR_FILL_SIZE=10" "CONCUR_FILL=1" "FILL_SIZE=10" "TRIM_IODEPTH=1" gdb --args ./fio --output-format=json --output=test.json example-job-finish.fio
+ 2215  echo "sudo env "DEV=ng0n2" "BS=2147486438" "CONCUR_FILL_SIZE=10" "CONCUR_FILL=1" "FILL_SIZE=10" "TRIM_IODEPTH=1" gdb --args ./fio --output-format=json --output=test.json example-job-finish.fio" >> README.rst 
+ 2233  history | grep "gdb"
+ 2234  history | grep "gdb" > test

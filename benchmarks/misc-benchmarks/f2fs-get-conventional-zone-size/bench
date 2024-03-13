@@ -1,0 +1,74 @@
+#! /bin/bash
+
+set -e
+
+# Check input
+if [ $# != 1 ]; then
+    echo "Usage: $0 <ZNS device (e.g., nvme0n2)>"
+    exit 1
+fi
+ZNS=$1
+export ZNS
+
+# Binaries
+NULLBLKCRT="../../../util/nullblk_create"
+NULLBLKDEL="../../../util/nullblk_delete"
+
+setup_f2fs() {
+    ZNS=$1
+    MOUNT="/mnt/f2fs"
+
+    # Scale the conventional device with the minimum possible size for respective zone sizes:
+    # zone size     | Conventional Device Size
+    # 64MiB         | 448MiB
+    # 256MiB        | 950MiB
+    # 512MiB        | 1472MiB
+    # 2GiB          | 4544MiB
+    DEV=$(sudo ${NULLBLKCRT} 512 1472) 
+    export DEV
+    export ZNS
+
+    sudo nvme zns reset-zone /dev/${ZNS} -a
+    echo mq-deadline | sudo tee /sys/block/${ZNS}/queue/scheduler > /dev/null
+    sudo env "PATH=${PATH}" mkfs.f2fs -f -m -c /dev/${ZNS} /dev/${DEV}
+    sudo mkdir -p /mnt/f2fs
+    sudo mount -t f2fs -o hot_data_streams=10 /dev/${DEV} ${MOUNT}
+    sudo chown -R ${USER} /mnt/f2fs
+}
+
+cleanup() {
+    sudo sync # avoid errors on busy unmount
+    sudo umount /dev/${DEV}
+    DEV_ID=$(echo "${DEV: -1}")
+    sudo ${NULLBLKDEL} $DEV_ID
+}
+
+DIR=data
+mkdir -p ${DIR}
+
+echo "Setup F2FS"
+setup_f2fs ${ZNS}
+
+echo "Inserting F2FS Probes"
+(sudo /home/user/src/bpftrace/build/src/bpftrace ./f2fs-probes.bt -o ${DIR}/f2fs_data.json -f json) &
+child=$! 
+
+sudo env "DIR=${DIR}" ${FIO_HOME}/fio --output-format=json --output=${DIR}/gc.json jobs/job-fill.fio
+# Deleting four files so we have space to write four new files
+sudo rm ${MOUNT}/gc.1.0 ${MOUNT}/gc.3.0 ${MOUNT}/gc.5.0 ${MOUNT}/gc.7.0
+sudo sync
+sudo env "DIR=${DIR}" ${FIO_HOME}/fio --output-format=json --output=${DIR}/write.json jobs/job-write.fio
+
+# Delete 2 of the remaining first written files that should have moved to cold
+sudo rm ${MOUNT}/gc.0.0 ${MOUNT}/gc.2.0
+sudo sync
+sudo env "DIR=${DIR}" ${FIO_HOME}/fio --output-format=json --output=${DIR}/overwrite.json jobs/job-overwrite.fio
+
+sudo kill -SIGTERM ${child}
+
+echo "Terminating F2FS Trace"
+sleep 5 # small sleep to let child terminate
+
+sudo cat /sys/kernel/debug/f2fs/status &> ${DIR}/f2fs-data.dat
+
+cleanup
