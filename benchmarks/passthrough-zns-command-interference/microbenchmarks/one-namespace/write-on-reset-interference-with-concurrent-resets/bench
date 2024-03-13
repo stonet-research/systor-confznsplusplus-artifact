@@ -6,12 +6,20 @@ if [ $# != 1 ]; then
     echo "Usage: $0 <ZNS device (e.g., nvme0n2)>"
     exit 1
 fi
+DEV=$1
 
-DEV=$(echo $1 | sed 's/vme/g/g')
-DEV_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
-DEV_ZONE_SIZE_BLOCKS=$(cat /sys/block/$1/queue/chunk_sectors)
+# Output
+mkdir -p data
+
+# Binaries
+FIO="../../../../../tools/fio/fio"
+
+# Device info
+DEV_CHAR=$(echo ${DEV} | sed 's/vme/g/g')
+DEV_SECT_SIZE=$(cat /sys/block/${DEV}/queue/hw_sector_size)
+DEV_ZONE_SIZE_BLOCKS=$(cat /sys/block/${DEV}/queue/chunk_sectors)
 DEV_ZONE_SIZE=$(echo "${DEV_ZONE_SIZE_BLOCKS} * 512" | bc)
-DEV_ZONES=$(cat /sys/block/$1/queue/nr_zones)
+DEV_ZONES=$(cat /sys/block/${DEV}/queue/nr_zones)
 
 echo "#########################################################"
 echo "####################### ZNS  SETUP ######################"
@@ -28,7 +36,6 @@ printf 'DEV_ZONES: %46s\n' "${DEV_ZONES}"
 echo "---------------------------------------------------------"
 echo ""
 
-mkdir -p data
 
 ##################################
 ## fio options for specific ZNS ##
@@ -41,7 +48,6 @@ FILL_SIZE=$(echo "scale=0; ${DEV_ZONES} * 0.9" | bc | sed 's/\.[0-9]*//g')
 WRITE_ZONES=$(echo "${DEV_ZONES} - ${FILL_SIZE}" | bc) # All but the fill zones
 WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${CONCUR_FILL}" | bc)
 CONCUR_FILL_SIZE=$(echo "scale=0; ${FILL_SIZE} / ${CONCUR_FILL}" | bc)
-
 TRIM_IODEPTH=(1 2 3 4 5 6 7 8 9)
 TRIM_FLOW=(100 99 95 90 75 50)
 
@@ -69,13 +75,12 @@ echo "---------------------------------------------------------"
 echo ""
 
 echo "Benchmarking ZNS Device Write BW Rate Limit"
-sudo nvme zns reset-zone /dev/$1 -a
-sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" \
-    "FILL_SIZE=${FILL_SIZE}" ../../../../tools/fio/fio \
+sudo nvme zns reset-zone /dev/${DEV} -a
+sudo env "DEV=${DEV_CHAR}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" "CONCUR_FILL=${CONCUR_FILL}" \
+    "FILL_SIZE=${FILL_SIZE}" ${FIO} \
         --output-format=json \
         --output=data/bw.json \
-            jobs/job-bw.fio
-
+        jobs/job-bw.fio
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
 echo "Found Sustainable Max BW for Write Rate Limiting: ${BW} B/sec"
 
@@ -84,25 +89,25 @@ for trim_iodepth in ${TRIM_IODEPTH[@]}; do
         write_flow=$((100 - ${trim_flow}))
         echo ""
         echo "Benchmarking TRIM_IODEPTH ${trim_iodepth}: <TRIM_FLOW ${trim_flow} - WRITE_LIMIT ${write_flow}>"
-        sudo nvme zns reset-zone /dev/$1 -a
+        sudo nvme zns reset-zone /dev/${DEV} -a
 
         if [[ ${write_flow} -eq 0 ]]; then
             # With 0 write flow we want to disable the concurrent write workload
-            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" \
+            sudo env "DEV=${DEV_CHAR}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" \
                 "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" \
-                "WRITE_SIZE=0" ../../../../tools/fio/fio \
+                "WRITE_SIZE=0" ${FIO} \
                     --output-format=json \
                     --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json \
-                        jobs/job-trim.fio
+                    jobs/job-trim.fio
         else
             write_rate_limit=$(echo "scale=2; ${write_flow} / 100  * ${BW} / ${CONCUR_WRITE}" | bc)
-            sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" \
+            sudo env "DEV=${DEV_CHAR}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" \
                 "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" \
                 "WRITE_SIZE=${WRITE_SIZE}" "CONCUR_WRITE=${CONCUR_WRITE}" "WRITE_LIMIT=${write_rate_limit}" \
-                ../../../../tools/fio/fio \
+                ${FIO} \
                     --output-format=json \
                     --output=data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json \
-                        jobs/job.fio
+                    jobs/job.fio
         fi
     done
 done
