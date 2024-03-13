@@ -17,7 +17,7 @@ from scipy.optimize import curve_fit
 from matplotlib import pyplot
 
 import os, sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/../../../') 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/../../../../')
 
 from interference_model.quantification import get_interference_rms,get_emd
 

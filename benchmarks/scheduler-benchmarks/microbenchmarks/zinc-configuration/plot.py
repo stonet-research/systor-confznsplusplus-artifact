@@ -1,24 +1,22 @@
 #! /usr/bin/python3
-
-from interference_model.quantification import get_interference_gpt
-import os
-import re
-import glob
-import json
-import math
-import matplotlib
-import matplotlib.pyplot as plt
-from pathlib import Path
-import numpy as np
-import colorama
-from colorama import Fore, Style
-import seaborn as sns
 import matplotlib.patches as mpatches
-
+import seaborn as sns
+from colorama import Fore, Style
+import colorama
+import numpy as np
+from pathlib import Path
+import matplotlib.pyplot as plt
+import matplotlib
+import math
+import json
+import glob
+import re
 import os
 import sys
 sys.path.append(os.path.dirname(
-    os.path.dirname(os.path.abspath(__file__))) + '/../../')
+    os.path.dirname(os.path.abspath(__file__))) + '/../../../')
+
+from interference_model.quantification import get_interference_gpt
 
 
 # TODO: retrieve these values from ZenFS tracing for final calculation
@@ -275,18 +273,18 @@ if __name__ == "__main__":
     file_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])
 
     data = dict()
-    for dir in glob.glob(f'*'):
+    for dir in glob.glob(f'data/*'):
         dir = dir.split('/')[-1]
-        if dir == "data":
+        if dir == "baseline-data":
             data["baseline"] = dict()
-            parse_fio_data(f"{file_path}/{dir}", data["baseline"])
-        elif "data" in dir:
+            parse_fio_data(f"{file_path}/data/{dir}", data["baseline"])
+        elif "data-reset" in dir:
             config = re.findall(r'\d+', dir)
             config_string = f"reset_lat_{config[0]}-write_ratio_{config[1]}"
             data[config_string] = dict()
             data[config_string]["reset_limit_val"] = config[0]
             data[config_string]["write_ratio_val"] = config[1]
-            parse_fio_data(f"{file_path}/{dir}", data[config_string])
+            parse_fio_data(f"{file_path}/data/{dir}", data[config_string])
 
     os.makedirs(f"{file_path}/figures", exist_ok=True)
 
