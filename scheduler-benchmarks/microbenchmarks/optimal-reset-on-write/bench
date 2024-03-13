@@ -3,8 +3,11 @@
 set -e
 
 # Check input
-if [ $# != 1 ]; then
-    echo "Usage: $0 <ZNS device (e.g., nvme0n2)>"
+if [ $# != 4 ]; then
+    echo "Usage: $0 <ZNS device (e.g., nvme0n2)> \
+        $1 <reset_time_conf (64)> \
+        $2 <write_ratio_conf (2000)> \
+        $3 <pending_requests_threshold (3)>"
     exit 1
 fi
 
@@ -16,16 +19,6 @@ fi
 
 # Set binaries
 FIO="../../../tools/fio/fio"
-
-##################################
-## Configurations to check ##
-##################################
-WRITE_THRESHOLD=3 # the knee point of write performance at which the device becomes saturated
-# jiffies is based on 250HZ by default so 1s/250HZ=4ms lowest precision, therefore we need timers to be multiples of four
-# Otherwise any value not a multiple of 4 will be automatically changed to the nearest one in the scheduler
-RESET_TIME_CONFS=(16 32 64 128) 
-RESET_WRITE_RATIO_CONFS=(200 2000 20000 200000)
-TOTAL_WORKLOADS=$((${#RESET_TIME_CONFS[@]} * ${#RESET_WRITE_RATIO_CONFS[@]} * ${#WRITE_IODEPTH[@]}))
 
 # Setup device
 DEV=$(echo $1 | sed 's/vme/g/g')
@@ -112,7 +105,7 @@ echo none | sudo tee /sys/block/$1/queue/scheduler >> /dev/null
 sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "RESET_LIMIT=${trim_rate_limit}" \
     ${FIO} \
         --output-format=json \
-        --output=data/baseline-data/data-reset_baseline-rflow-50.json \
+        --output=data/data-reset_baseline-rflow-50.json \
         jobs/job-reset-baseline.fio
 
 #######################################################
@@ -131,7 +124,7 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
     sudo env "DEV=$1" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
         ${FIO} \
             --output-format=json \
-            --output=data/baseline-data/data-write_iod_${write_iodepth}-wflow_100-mq_deadline.json \
+            --output=data/data-write_iod_${write_iodepth}-wflow_100-mq_deadline.json \
             jobs/job-bw.fio
 done
 
@@ -148,7 +141,7 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
     sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
         "WRITE_SIZE=${WRITE_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ${FIO} \
             --output-format=json \
-            --output=data/baseline-data/data-write_iod_${write_iodepth}-wflow_50-mq_deadline.json \
+            --output=data/data-write_iod_${write_iodepth}-wflow_50-mq_deadline.json \
             jobs/job.fio
 done
 
@@ -168,7 +161,7 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
     sudo env "DEV=$1" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
         ${FIO} \
             --output-format=json \
-            --output=data/baseline-data/data-write_iod_${write_iodepth}-wflow_100-zinc.json \
+            --output=data/data-write_iod_${write_iodepth}-wflow_100-zinc.json \
             jobs/job-bw.fio
 done
 
@@ -180,65 +173,15 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
     sudo nvme zns reset-zone /dev/$1 -a
 
     echo zinc | sudo tee /sys/block/$1/queue/scheduler >> /dev/null
-
+    echo $2 | sudo tee /sys/block/$1/queue/iosched/reset_timer_interval >> /dev/null 
+    echo $3 | sudo tee /sys/block/$1/queue/iosched/write_ratio >> /dev/null 
+    echo $4 | sudo tee /sys/block/$1/queue/iosched/pending_requests_threshold >> /dev/null 
+    
     trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc)
     sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
         "WRITE_SIZE=${WRITE_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ${FIO} \
             --output-format=json \
-            --output=data/baseline-data/data-write_iod_${write_iodepth}-wflow_50-zinc.json \
+            --output=data/data-write_iod_${write_iodepth}-wflow_50-zinc.json \
             jobs/job.fio
 done
 
-##########################################
-## Run the zinc configuration workloads ##
-##########################################
-echo ""
-echo ""
-echo -e ""${GREEN}"Benchmarking ZINC I/O Scheduler Configurations"${CLOSE}""
-
-WL_COUNTER=1
-SECONDS=0
-
-for reset_time_conf in ${RESET_TIME_CONFS[@]}; do
-    for write_ratio_conf in ${RESET_WRITE_RATIO_CONFS[@]}; do
-
-        cur_data="data-reset_time_${reset_time_conf}-write_ratio_${write_ratio_conf}"
-        echo -e ""${BLUE}"Benchmarking RESET_TIMER - WRITE_RATIO: <${reset_time_conf}ms - ${write_ratio_conf}>"${CLOSE}""
-
-        mkdir -p ${cur_data}
-
-        for write_iodepth in ${WRITE_IODEPTH[@]}; do
-            WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
-
-            echo ""
-            echo "Benchmarking WRITE_JOBS ${write_iodepth}"
-            sudo nvme zns reset-zone /dev/$1 -a
-
-            echo zinc | sudo tee /sys/block/$1/queue/scheduler >> /dev/null
-            echo ${reset_time_conf} | sudo tee /sys/block/$1/queue/iosched/reset_timer_interval >> /dev/null #epoch_interval
-            echo ${write_ratio_conf} | sudo tee /sys/block/$1/queue/iosched/write_ratio >> /dev/null #rst_wrt_tokens
-            echo ${WRITE_THRESHOLD} | sudo tee /sys/block/$1/queue/iosched/pending_requests_threshold >> /dev/null #min_concurrency_threshold   max_epoch_hold
-            
-
-            trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc)
-            sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
-                "WRITE_SIZE=${WRITE_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ${FIO} \
-                    --output-format=json \
-                    --output=data/${cur_data}/data-write_iod_${write_iodepth}-wflow_50.json \
-                    jobs/job.fio
-
-            PERCENTAGE_DONE=$(echo "scale=2; ${WL_COUNTER} / ${TOTAL_WORKLOADS} * 100" | bc)
-            DURATION=$SECONDS
-            AVG_WL_DURATION=$(echo "scale=4; ${DURATION} / ${WL_COUNTER}" | bc)
-            ETA=$(echo "scale=2; (${TOTAL_WORKLOADS} - ${WL_COUNTER}) * ${AVG_WL_DURATION}" | bc)
-            SECS=$((${ETA%.*} % 60))
-            MINS_ETA=$((${ETA%.*} / 60))
-            HRS=$((${MINS_ETA%.*} / 60))
-            MINS=$((${MINS_ETA%.*} % 60))
-
-            echo -e ""${GREEN}"FINISHED ${PERCENTAGE_DONE}% (Workloads ${WL_COUNTER}/${TOTAL_WORKLOADS}) \
-                [ETA: ${HRS}h:${MINS}m:${SECS}s]"${CLOSE}""
-            WL_COUNTER=$((${WL_COUNTER} + 1))
-        done
-    done
-done
