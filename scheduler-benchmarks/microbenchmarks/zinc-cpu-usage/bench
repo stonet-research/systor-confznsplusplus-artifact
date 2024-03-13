@@ -1,0 +1,208 @@
+#! /bin/bash
+
+set -e
+
+# Check input
+if [ $# != 2 ]; then
+    echo "Usage: $0 <ZNS device (e.g., nvme0n2)> num"
+    exit 1
+fi
+
+if [ $(lsmod | grep -w 'zinc' | wc -l) != 1 ]; then
+    echo "Missing ZINC I/O Scheduler Kernel module"
+    echo "Follow the Readme Instructions to build and install the ZINC I/O Scheduler".
+    exit 1
+fi
+
+# Set binaries
+FIO="../../../tools/fio/fio"
+
+# Setup device
+DEV=$(echo $1 | sed 's/vme/g/g')
+DEV_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
+DEV_ZONE_SIZE_BLOCKS=$(cat /sys/block/$1/queue/chunk_sectors)
+DEV_ZONE_SIZE=$(echo "${DEV_ZONE_SIZE_BLOCKS} * 512" | bc)
+DEV_ZONES=$(cat /sys/block/$1/queue/nr_zones)
+
+BLUE='\033[1;34m'
+CLOSE='\033[0m'
+RED='\033[1;31m'
+GREEN=$'\033[1;32m'
+
+echo "#########################################################"
+echo "####################### ZNS  SETUP ######################"
+echo "#########################################################"
+echo "---------------------------------------------------------"
+printf 'DEV: %52s\n' "/dev/$1"
+echo "---------------------------------------------------------"
+printf 'SECTOR_SIZE: %44s\n' "${DEV_SECT_SIZE}"
+echo "---------------------------------------------------------"
+printf 'ZONE_SIZE_BLOCKS: %39s\n' "${DEV_ZONE_SIZE_BLOCKS}"
+echo "---------------------------------------------------------"
+printf 'ZONE_SIZE_BYTES: %40s\n' "${DEV_ZONE_SIZE}"
+echo "---------------------------------------------------------"
+printf 'DEV_ZONES: %46s\n' "${DEV_ZONES}"
+echo "---------------------------------------------------------"
+echo ""
+
+##################################
+## fio options for specific ZNS ##
+##################################
+BS=$(echo "${DEV_SECT_SIZE} * ${DEV_ZONE_SIZE}" | bc)
+TRIM_IODEPTH=1 # concurrent trim jobs to find trim bw limit
+# Use 90% of the zones for resets and 10% for writes
+FILL_SIZE=$(echo "scale=0; ${DEV_ZONES} * 0.9" | bc | sed 's/\.[0-9]*//g')
+WRITE_ZONES=$(echo "${DEV_ZONES} - ${FILL_SIZE}" | bc) # All but the fill zones
+
+WRITE_IODEPTH=(1 7)
+
+echo "#########################################################"
+echo "###################### BENCH  SETUP #####################"
+echo "#########################################################"
+echo "---------------------------------------------------------"
+printf 'TRIM_SIZE: %46s\n' "${BS}"
+echo "---------------------------------------------------------"
+printf 'FILL_ZONES (Zones filled for resets): %19s\n' "${FILL_SIZE}"
+echo "---------------------------------------------------------"
+printf 'WRITE_ZONES (Empty zones for writes): %19s\n' "${WRITE_ZONES}"
+echo "---------------------------------------------------------"
+printf 'WRITE_NUMJOBS: %42s\n' "${WRITE_IODEPTH[*]}"
+echo "---------------------------------------------------------"
+echo ""
+
+mkdir -p data
+
+#####################################
+## Identify Reset Max. Performance ##
+#####################################
+
+echo -e ""${GREEN}"Benchmarking ZNS Device Reset Rate Limit"${CLOSE}""
+sudo nvme zns reset-zone /dev/$1 -a
+echo mq-deadline | sudo tee /sys/block/$1/queue/scheduler >> /dev/null
+sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" \
+    ${FIO} \
+        --output-format=json \
+        --output=data/bw.json \
+        job-trim.fio
+BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
+echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
+
+###########################################################################################
+## Identify Reset Performance Baseline at 50% reset rate limit without concurrent writes ##
+###########################################################################################
+
+echo ""
+echo -e ""${GREEN}"Baseline Benchmarking 50% Reset Rate Limit Performance"${CLOSE}""
+trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc) 
+sudo nvme zns reset-zone /dev/$1 -a
+# Not using ZINC for the baseline as it would hold resets and we want the best case reset performance, hence none scheduler is used
+echo none | sudo tee /sys/block/$1/queue/scheduler >> /dev/null
+
+
+# mkdir -p perfout
+# echo "#!/bin/bash" > perfout/tmpjob.sh
+# sudo chmod +x perfout/tmpjob.sh
+# sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ${FIO} --showcmd  job-reset-baseline.fio >> perfout/tmpjob.sh
+# sed -i 's/fio/sudo /fio\/fio/g' perfout/tmpjob.sh
+
+# sudo perf record -a -e cycles,instructions -F 99 -g -o perfout/nonebase perfout/tmpjob.sh
+# sudo perf report --vmlinux /home/user/vmlinux -n -m --stdio --full-source-path --source -s symbol -g -i perfout/nonebase --fields=cycle >> perfout/nonebaseparsed
+# python3 process_report_graph.py perfout/nonebaseparsed
+
+sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" \
+    "FILL_SIZE=${FILL_SIZE}" \
+    "RESET_LIMIT=${trim_rate_limit}" ../fio/fio \
+        --output-format=json \
+        --output=FINDAT-write_iod_${write_iodepth}-wflow_100-mq_deadline-$2.json \
+            job-reset-baseline.fio 
+
+
+############################################################
+## Identify mq-deadline Write Performance - (100% writes) ##
+############################################################
+for write_iodepth in ${WRITE_IODEPTH[@]}; do
+    WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
+
+    echo ""
+    echo -e ""${BLUE}"Baseline Benchmarking Write Performance with 0% Reset Interference: \
+        WRITE_JOBS ${write_iodepth} - mq-deadline"${CLOSE}""
+    sudo nvme zns reset-zone /dev/$1 -a
+    echo mq-deadline | sudo tee /sys/block/$1/queue/scheduler >> /dev/null
+
+    sudo env "DEV=$1" "FILL_SIZE=${FILL_SIZE}" \
+        "WRITE_IODEPTH=${write_iodepth}" ${FIO} \
+            --output-format=json \
+            --output=FINDAT-write_iod_${write_iodepth}-wflow_100-mq_deadline-$2.json \
+                job-bw.fio
+done
+
+###########################################################
+## Identify mq-deadline Write Performance - (50% writes) ##
+###########################################################
+for write_iodepth in ${WRITE_IODEPTH[@]}; do
+    WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
+
+    echo ""
+    echo -e ""${BLUE}"Benchmarking 50% Reset Limit WRITE_JOBS ${write_iodepth} - mq-deadline"${CLOSE}""
+    sudo nvme zns reset-zone /dev/$1 -a
+
+    echo mq-deadline | sudo tee /sys/block/$1/queue/scheduler >> /dev/null
+
+    trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc)
+    sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" \
+        "WRITE_IODEPTH=${write_iodepth}" \
+        "WRITE_SIZE=${WRITE_SIZE}" \
+        "RESET_LIMIT=${trim_rate_limit}" ${FIO} \
+            --output-format=json \
+            --output=FINDAT-write_iod_${write_iodepth}-wflow_50-mq_deadline-$2.json \
+                job.fio
+done
+
+#####################################################
+## Identify zinc Write Performance - (100% writes) ##
+#####################################################
+for write_iodepth in ${WRITE_IODEPTH[@]}; do
+    WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
+
+    echo ""
+    echo -e ""${BLUE}"Baseline Benchmarking Write Performance with 0% Reset Interference: \
+        WRITE_JOBS ${write_iodepth} - zinc"${CLOSE}""
+    sudo nvme zns reset-zone /dev/$1 -a
+    echo zinc | sudo tee /sys/block/$1/queue/scheduler >> /dev/null
+    echo 3 | sudo tee /sys/block/$1/queue/iosched/max_priority
+    echo 4 | sudo tee /sys/block/$1/queue/iosched/pending_requests_threshold
+    echo 64 | sudo tee /sys/block/$1/queue/iosched/reset_timer_interval
+    echo 20000 | sudo tee /sys/block/$1/queue/iosched/write_ratio
+
+    sudo env "DEV=$1" "FILL_SIZE=${FILL_SIZE}" \
+        "WRITE_IODEPTH=${write_iodepth}" ${FIO} \
+            --output-format=json \
+            --output=FINDAT-write_iod_${write_iodepth}-wflow_100-zinc-$2.json \
+                job-bw.fio
+done
+
+####################################################
+## Identify zinc Write Performance - (50% writes) ##
+####################################################
+for write_iodepth in ${WRITE_IODEPTH[@]}; do
+    WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
+
+    echo ""
+    echo -e ""${BLUE}"Benchmarking 50% Reset Limit WRITE_JOBS ${write_iodepth} - zinc"${CLOSE}""
+    sudo nvme zns reset-zone /dev/$1 -a
+
+    echo zinc | sudo tee /sys/block/$1/queue/scheduler >> /dev/null
+    echo 3 | sudo tee /sys/block/$1/queue/iosched/max_priority
+    echo 4 | sudo tee /sys/block/$1/queue/iosched/pending_requests_threshold
+    echo 64 | sudo tee /sys/block/$1/queue/iosched/reset_timer_interval
+    echo 20000 | sudo tee /sys/block/$1/queue/iosched/write_ratio
+
+    trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc)
+    sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" \
+        "WRITE_IODEPTH=${write_iodepth}" \
+        "WRITE_SIZE=${WRITE_SIZE}" \
+        "RESET_LIMIT=${trim_rate_limit}" ${FIO} \
+            --output-format=json \
+            --output=FINDAT-write_iod_${write_iodepth}-wflow_50-zinc-$2.json \
+                job.fio
+done
