@@ -6,7 +6,7 @@ set -e
 if [ $# != 4 ]; then
     echo "Usage: $0 <ZNS device (e.g., nvme0n2)> \
         $1 <reset_time_conf (64)> \
-        $2 <write_ratio_conf (2000)> \
+        $2 <write_ratio_conf (20000)> \
         $3 <pending_requests_threshold (3)>"
     exit 1
 fi
