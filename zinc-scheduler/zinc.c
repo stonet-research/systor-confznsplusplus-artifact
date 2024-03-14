@@ -28,17 +28,17 @@
 
  /*
  * WARNING
- * 1. Only a single queue for all non-reset requests
- * 2. This scheduler currently do not support FINISH and APPEND requests. Requests except READ and WRITE will all be treated as RESET.
+ * 1. Only a single queue for all reset requests and a single queue for all finish requests
+ * 2. This scheduler currently does not support APPEND requests. 
  */
 
 /*
  * Default parameters
  */
-static const int WRITE_RATIO = 2000;
-static const int RESET_DISPATCH_PRIORITY = 3;
-static const int RESET_TIMER_INTERVAL = 32; 	// In ms
-static const int PENDING_REQUEST_THRESHOLD = 2;
+static const int RESET_EPOCH_INTERVAL = 64;	// In ms
+static const int RESET_COMMAND_TOKENS = 2000; // 
+static const int RESET_MINIMUM_CONCURRENCY_THRESHOLD = 3; // In number of resets 
+static const int RESET_MAXIMUM_EPOCH_HOLDS = 3;
 
 /*
  *  I/O Unit conversions
@@ -135,10 +135,10 @@ struct deadline_data {
 	atomic_t dispatched_write;      // number of dispatched write requests in 8KiB units
 
 	// Parameters
-	int WRITE_RATIO;
-	int reset_dispatch_priority;
-	int reset_timer_interval;     	// in jiffies
-	int pending_requests_threshold; // threshold of the maximum number of pending requests in 8KiB units
+	int reset_command_tokens;
+	int reset_maximum_epoch_holds;
+	int reset_epoch_interval;     	// in jiffies
+	int reset_minimum_concurrency_treshold; // threshold of the maximum number of pending requests in 8KiB units
 
 	// timer
 	atomic_t reset_timer_fired;
@@ -186,7 +186,7 @@ static void zinc_fin_reset_timer_fn(struct timer_list *t)
 {
 	struct deadline_data *zd = from_timer(zd, t, reset_timer);
 	atomic_set(&zd->reset_timer_fired, 1);
-	timer_reduce(&zd->reset_timer, jiffies + zd->reset_timer_interval);
+	timer_reduce(&zd->reset_timer, jiffies + zd->reset_epoch_interval);
 }
 
 
@@ -517,7 +517,7 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
 
 		// case 0: The number of pending requests is less to the threshold, dispatch
 		if ((!list_empty(&dd->reset_queue)) && 
-		    pending_requests < dd->pending_requests_threshold) {
+		    pending_requests < dd->reset_minimum_concurrency_treshold) {
 			// printk("ISSUE case threshold, pending requests %d\n", pending_requests);
 			rq = list_first_entry(&dd->reset_queue, struct request,
 				      queuelist);
@@ -527,7 +527,7 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
 		}
 		// case 1: We have dispatched enough write, then dispatch a reset
 		else if ((!list_empty(&dd->reset_queue)) && 
-		   atomic_read(&dd->dispatched_write) > dd->WRITE_RATIO) {
+		   atomic_read(&dd->dispatched_write) > dd->reset_command_tokens) {
 			//printk("ISSUE case writes issued %d\n", atomic_read(&dd->dispatched_write));
 			rq = list_first_entry(&dd->reset_queue, struct request,
 				      queuelist);
@@ -537,8 +537,8 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
 		}
 		// case 2: We haven't dispatched enough write, but we have a high priority reset
 		else if ((!list_empty(&dd->reset_queue)) && 
-		list_first_entry(&dd->reset_queue, struct request, queuelist)->deadline >= dd->reset_dispatch_priority) {
-			//printk("Reached priority reset %d\n", dd->reset_dispatch_priority);
+		list_first_entry(&dd->reset_queue, struct request, queuelist)->deadline >= dd->reset_maximum_epoch_holds) {
+			//printk("Reached priority reset %d\n", dd->reset_maximum_epoch_holds);
 			rq = list_first_entry(&dd->reset_queue, struct request,
 				      queuelist);
 			list_del_init(&rq->queuelist);
@@ -845,15 +845,15 @@ static int dd_init_sched(struct request_queue *q, struct elevator_type *e)
 	atomic_set(&dd->reset_timer_fired, 0);
 
 
-	dd->WRITE_RATIO = WRITE_RATIO;
-	dd->reset_dispatch_priority = RESET_DISPATCH_PRIORITY;
-	dd->reset_timer_interval = msecs_to_jiffies(RESET_TIMER_INTERVAL);
-	if (dd->reset_timer_interval < 1) {
-		dd->reset_timer_interval = 1;
+	dd->reset_command_tokens = RESET_COMMAND_TOKENS;
+	dd->reset_maximum_epoch_holds = RESET_MAXIMUM_EPOCH_HOLDS;
+	dd->reset_epoch_interval = msecs_to_jiffies(RESET_EPOCH_INTERVAL);
+	if (dd->reset_epoch_interval < 1) {
+		dd->reset_epoch_interval = 1;
 	}
-	dd->pending_requests_threshold = PENDING_REQUEST_THRESHOLD;
+	dd->reset_minimum_concurrency_treshold = RESET_MINIMUM_CONCURRENCY_THRESHOLD;
 	timer_setup(&dd->reset_timer, zinc_fin_reset_timer_fn, 0);
-	timer_reduce(&dd->reset_timer, jiffies + dd->reset_timer_interval);
+	timer_reduce(&dd->reset_timer, jiffies + dd->reset_epoch_interval);
 
 
 
@@ -962,7 +962,7 @@ static void dd_insert_request(struct blk_mq_hw_ctx *hctx, struct request *rq,
         list_add(&rq->queuelist, &dd->reset_queue);
         // Force timer
 		pending_requests = atomic_read(&dd->pending_requests);
-		if (pending_requests < dd->pending_requests_threshold) {
+		if (pending_requests < dd->reset_minimum_concurrency_treshold) {
 			// printk("Reset fired instantly\n");
 			atomic_set(&(dd->reset_timer_fired), 1);
 		}
@@ -1090,7 +1090,7 @@ static void dd_finish_request(struct request *rq)
 		// printk("DECREASE HERE %d %d TYPE %d\n", atomic_read(&zd->pending_requests), io_units, zinc_data_dir(rq));
 	} else if (zinc_data_dir(rq) > ZINC_WRITE) {
 		pending_requests = atomic_read(&dd->pending_requests);
-		if (pending_requests < dd->pending_requests_threshold) {
+		if (pending_requests < dd->reset_minimum_concurrency_treshold) {
 			// printk("Reset fired instantly\n");
 			atomic_set(&(dd->reset_timer_fired), 1);
 		}
@@ -1150,10 +1150,10 @@ SHOW_INT(deadline_writes_starved_show, dd->writes_starved);
 SHOW_INT(deadline_front_merges_show, dd->front_merges);
 SHOW_INT(deadline_async_depth_show, dd->async_depth);
 SHOW_INT(deadline_fifo_batch_show, dd->fifo_batch);
-SHOW_INT(deadline_max_priority_show, dd->reset_dispatch_priority);
-SHOW_INT(deadline_write_ratio_show, dd->WRITE_RATIO);
-SHOW_JIFFIES(deadline_reset_timer_interval_show, dd->reset_timer_interval);
-SHOW_INT(deadline_pending_requests_threshold_show, dd->pending_requests_threshold);
+SHOW_INT(deadline_maximum_epoch_holds_show, dd->reset_maximum_epoch_holds);
+SHOW_INT(deadline_write_ratio_show, dd->reset_command_tokens);
+SHOW_JIFFIES(deadline_reset_epoch_interval_show, dd->reset_epoch_interval);
+SHOW_INT(deadline_reset_minimum_concurrency_treshold_show, dd->reset_minimum_concurrency_treshold);
 #undef SHOW_INT
 #undef SHOW_JIFFIES
 
@@ -1184,10 +1184,10 @@ STORE_INT(deadline_writes_starved_store, &dd->writes_starved, INT_MIN, INT_MAX);
 STORE_INT(deadline_front_merges_store, &dd->front_merges, 0, 1);
 STORE_INT(deadline_async_depth_store, &dd->async_depth, 1, INT_MAX);
 STORE_INT(deadline_fifo_batch_store, &dd->fifo_batch, 0, INT_MAX);
-STORE_INT(deadline_max_priority_store, &dd->reset_dispatch_priority, 0, INT_MAX);
-STORE_INT(deadline_write_ratio_store, &dd->WRITE_RATIO, 0, INT_MAX);
-STORE_JIFFIES(deadline_reset_timer_interval_store, &dd->reset_timer_interval, 0, INT_MAX);
-STORE_INT(deadline_pending_requests_threshold_store, &dd->pending_requests_threshold, 0, INT_MAX);
+STORE_INT(deadline_reset_maximum_epoch_holds_store, &dd->reset_maximum_epoch_holds, 0, INT_MAX);
+STORE_INT(deadline_reset_command_tokens_store, &dd->reset_command_tokens, 0, INT_MAX);
+STORE_JIFFIES(deadline_reset_epoch_interval_store, &dd->reset_epoch_interval, 0, INT_MAX);
+STORE_INT(deadline_reset_minimum_concurrency_treshold_store, &dd->reset_minimum_concurrency_treshold, 0, INT_MAX);
 #undef STORE_FUNCTION
 #undef STORE_INT
 #undef STORE_JIFFIES
@@ -1203,10 +1203,10 @@ static struct elv_fs_entry deadline_attrs[] = {
 	DD_ATTR(async_depth),
 	DD_ATTR(fifo_batch),
 	DD_ATTR(prio_aging_expire),
-	DD_ATTR(max_priority),
-	DD_ATTR(write_ratio),
-	DD_ATTR(reset_timer_interval),
-	DD_ATTR(pending_requests_threshold),
+	DD_ATTR(reset_maximum_epoch_holds),
+	DD_ATTR(reset_command_tokens),
+	DD_ATTR(reset_epoch_interval),
+	DD_ATTR(reset_minimum_concurrency_treshold),
 	__ATTR_NULL
 };
 
