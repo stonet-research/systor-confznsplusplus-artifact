@@ -2,6 +2,10 @@
 
 set -e
 
+SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+cd ${SCRIPT_DIR}
+source ../common.sh
+
 # Input
 if [ $# != 2 ]; then
     echo "Usage: $0 <ZNS device (e.g., nvme0n2)> $1 <zones to finish (e.g., 300)>"
@@ -10,35 +14,8 @@ fi
 DEV=$1
 FINISH_SIZE=$2
 
-# Output
-mkdir -p data
-
-# Binaries
-FIO="../../../../../tools/fio/fio"
-
 # Device info
-DEV_CHAR=$(echo ${DEV} | sed 's/vme/g/g')
-DEV_SECT_SIZE=$(cat /sys/block/${DEV}/queue/hw_sector_size)
-DEV_ZONE_SIZE_BLOCKS=$(cat /sys/block/${DEV}/queue/chunk_sectors)
-DEV_ZONE_SIZE=$(echo "${DEV_ZONE_SIZE_BLOCKS} * 512" | bc)
-DEV_ZONES=$(cat /sys/block/${DEV}/queue/nr_zones)
-
-echo "#########################################################"
-echo "####################### ZNS  SETUP ######################"
-echo "#########################################################"
-echo "---------------------------------------------------------"
-printf 'DEV: %52s\n' "/dev/${DEV}"
-echo "---------------------------------------------------------"
-printf 'SECTOR_SIZE: %44s\n' "${DEV_SECT_SIZE}"
-echo "---------------------------------------------------------"
-printf 'ZONE_SIZE_BLOCKS: %39s\n' "${DEV_ZONE_SIZE_BLOCKS}"
-echo "---------------------------------------------------------"
-printf 'ZONE_SIZE_BYTES: %40s\n' "${DEV_ZONE_SIZE}"
-echo "---------------------------------------------------------"
-printf 'DEV_ZONES: %46s\n' "${DEV_ZONES}"
-echo "---------------------------------------------------------"
-echo ""
-
+get_device_info ${DEV}
 
 ##################################
 ## fio options for specific ZNS ##
@@ -63,23 +40,13 @@ printf 'APPEND_IODEPTH: %41s\n' "${APPEND_IODEPTH[*]}"
 echo "---------------------------------------------------------"
 echo ""
 
-echo "Benchmarking ZNS Device Finish Limit"
-sudo nvme zns reset-zone /dev/${DEV} -a
-sudo env "DEV=${DEV_CHAR}" "FINISH_SIZE=${FINISH_SIZE}" ${FIO} \
-    --output-format=json \
-    --output=data/bw.json \
-    jobs/job-finish.fio
-BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
-echo "Found Sustainable BW for Finish: ${BW} B/sec"
-
 for append_iodepth in ${APPEND_IODEPTH[@]}; do
-    echo ""
     echo "Benchmarking with CONCURRENT APPEND_IODEPTH: ${append_iodepth}"
     sudo nvme zns reset-zone /dev/${DEV} -a
     sudo env "DEV=${DEV_CHAR}" "APPEND_IODEPTH=${append_iodepth}" "APPEND_SIZE=${WRITE_ZONES}" \
         "FINISH_SIZE=${FINISH_SIZE}" ${FIO} \
             --output-format=json \
-            --output=data/data-append_iod_${append_iodepth}.json \
-            jobs/job.fio
+            --output=${SCRIPT_DIR}/data/data-append_iod_${append_iodepth}.json \
+            ${SCRIPT_DIR}/jobs/job.fio
 done
 
