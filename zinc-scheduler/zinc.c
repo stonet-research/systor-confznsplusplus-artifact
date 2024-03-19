@@ -5,7 +5,6 @@
  *
  *  Copyright (C) 2016 Jens Axboe <axboe@kernel.dk>
  */
-// HELLO WORLD
 #include <linux/kernel.h>
 #include <linux/fs.h>
 #include <linux/blkdev.h>
@@ -36,7 +35,7 @@
 /*
  * Default parameters
  */
-static const int RESET_DISPATCH_RATIO = 2000;
+static const int WRITE_RATIO = 2000;
 static const int RESET_DISPATCH_PRIORITY = 3;
 static const int RESET_TIMER_INTERVAL = 32; 	// In ms
 static const int PENDING_REQUEST_THRESHOLD = 2;
@@ -136,7 +135,7 @@ struct deadline_data {
 	atomic_t dispatched_write;      // number of dispatched write requests in 8KiB units
 
 	// Parameters
-	int reset_dispatch_ratio;
+	int WRITE_RATIO;
 	int reset_dispatch_priority;
 	int reset_timer_interval;     	// in jiffies
 	int pending_requests_threshold; // threshold of the maximum number of pending requests in 8KiB units
@@ -528,7 +527,7 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
 		}
 		// case 1: We have dispatched enough write, then dispatch a reset
 		else if ((!list_empty(&dd->reset_queue)) && 
-		   atomic_read(&dd->dispatched_write) > dd->reset_dispatch_ratio) {
+		   atomic_read(&dd->dispatched_write) > dd->WRITE_RATIO) {
 			//printk("ISSUE case writes issued %d\n", atomic_read(&dd->dispatched_write));
 			rq = list_first_entry(&dd->reset_queue, struct request,
 				      queuelist);
@@ -846,7 +845,7 @@ static int dd_init_sched(struct request_queue *q, struct elevator_type *e)
 	atomic_set(&dd->reset_timer_fired, 0);
 
 
-	dd->reset_dispatch_ratio = RESET_DISPATCH_RATIO;
+	dd->WRITE_RATIO = WRITE_RATIO;
 	dd->reset_dispatch_priority = RESET_DISPATCH_PRIORITY;
 	dd->reset_timer_interval = msecs_to_jiffies(RESET_TIMER_INTERVAL);
 	if (dd->reset_timer_interval < 1) {
@@ -1152,7 +1151,7 @@ SHOW_INT(deadline_front_merges_show, dd->front_merges);
 SHOW_INT(deadline_async_depth_show, dd->async_depth);
 SHOW_INT(deadline_fifo_batch_show, dd->fifo_batch);
 SHOW_INT(deadline_max_priority_show, dd->reset_dispatch_priority);
-SHOW_INT(deadline_write_ratio_show, dd->reset_dispatch_ratio);
+SHOW_INT(deadline_write_ratio_show, dd->WRITE_RATIO);
 SHOW_JIFFIES(deadline_reset_timer_interval_show, dd->reset_timer_interval);
 SHOW_INT(deadline_pending_requests_threshold_show, dd->pending_requests_threshold);
 #undef SHOW_INT
@@ -1186,7 +1185,7 @@ STORE_INT(deadline_front_merges_store, &dd->front_merges, 0, 1);
 STORE_INT(deadline_async_depth_store, &dd->async_depth, 1, INT_MAX);
 STORE_INT(deadline_fifo_batch_store, &dd->fifo_batch, 0, INT_MAX);
 STORE_INT(deadline_max_priority_store, &dd->reset_dispatch_priority, 0, INT_MAX);
-STORE_INT(deadline_write_ratio_store, &dd->reset_dispatch_ratio, 0, INT_MAX);
+STORE_INT(deadline_write_ratio_store, &dd->WRITE_RATIO, 0, INT_MAX);
 STORE_JIFFIES(deadline_reset_timer_interval_store, &dd->reset_timer_interval, 0, INT_MAX);
 STORE_INT(deadline_pending_requests_threshold_store, &dd->pending_requests_threshold, 0, INT_MAX);
 #undef STORE_FUNCTION
@@ -1419,7 +1418,7 @@ static const struct blk_mq_debugfs_attr deadline_queue_debugfs_attrs[] = {
 #undef DEADLINE_QUEUE_DDIR_ATTRS
 #endif
 
-static struct elevator_type mq_deadline = {
+static struct elevator_type zinc = {
 	.ops = {
 		.depth_updated		= dd_depth_updated,
 		.limit_depth		= dd_limit_depth,
@@ -1452,12 +1451,12 @@ MODULE_ALIAS("mq-deadline-iosched");
 
 static int __init deadline_init(void)
 {
-	return elv_register(&mq_deadline);
+	return elv_register(&zinc);
 }
 
 static void __exit deadline_exit(void)
 {
-	elv_unregister(&mq_deadline);
+	elv_unregister(&zinc);
 }
 
 module_init(deadline_init);

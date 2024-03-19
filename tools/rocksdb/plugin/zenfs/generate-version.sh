@@ -5,7 +5,7 @@ REPO_ROOT=$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )
 cd $REPO_ROOT
 
 # 'git describe --abbrev=7 --dirty' will output a version in that looks like "v0.1.0-12-g3456789-dirty".
-VERSION=$(git describe --abbrev=7 --dirty)
+VERSION=3.32 #$(git describe --abbrev=7 --dirty)
 
 updateVersionFile () {
   if [ "${#VERSION}" -gt 63 ]; then

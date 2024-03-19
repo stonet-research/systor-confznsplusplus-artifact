@@ -1,0 +1,120 @@
+#! /bin/bash
+
+set -e
+
+# Check input
+if [ $# != 2 ]; then
+    echo "Usage: $0 <ZNS device Namespace 1 (e.g., nvme0n2) for finish workload> <Namespace 2 for write workload>"
+    exit 1
+fi
+
+# Set binaries
+FIO="../../../../../tools/fio/fio"
+
+# Setup device
+DEV1=$(echo $1 | sed 's/vme/g/g')
+DEV1_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
+DEV1_ZONE_SIZE_BLOCKS=$(cat /sys/block/$1/queue/chunk_sectors)
+DEV1_ZONE_SIZE=$(echo "${DEV1_ZONE_SIZE_BLOCKS} * 512" | bc)
+DEV1_ZONES=$(cat /sys/block/$1/queue/nr_zones)
+echo mq-deadline | sudo tee /sys/block/$1/queue/scheduler > /dev/null
+
+DEV2=$(echo $2 | sed 's/vme/g/g')
+DEV2_SECT_SIZE=$(cat /sys/block/$2/queue/hw_sector_size)
+DEV2_ZONE_SIZE_BLOCKS=$(cat /sys/block/$2/queue/chunk_sectors)
+DEV2_ZONE_SIZE=$(echo "${DEV2_ZONE_SIZE_BLOCKS} * 512" | bc)
+DEV2_ZONES=$(cat /sys/block/$2/queue/nr_zones)
+echo mq-deadline | sudo tee /sys/block/$2/queue/scheduler > /dev/null
+
+echo "#########################################################"
+echo "####################### ZNS  SETUP ######################"
+echo "#########################################################"
+echo "---------------------------------------------------------"
+printf 'DEV_1: %50s\n' "/dev/${DEV1}"
+echo "---------------------------------------------------------"
+printf 'DEV_1_SECTOR_SIZE: %38s\n' "${DEV1_SECT_SIZE}"
+echo "---------------------------------------------------------"
+printf 'DEV_1_ZONE_SIZE_BLOCKS: %33s\n' "${DEV1_ZONE_SIZE_BLOCKS}"
+echo "---------------------------------------------------------"
+printf 'DEV_1_ZONE_SIZE_BYTES: %34s\n' "${DEV1_ZONE_SIZE}"
+echo "---------------------------------------------------------"
+printf 'DEV_1_ZONES: %44s\n' "${DEV1_ZONES}"
+echo "---------------------------------------------------------"
+echo "---------------------------------------------------------"
+printf 'DEV_2: %50s\n' "/dev/${DEV1}"
+echo "---------------------------------------------------------"
+printf 'DEV_2_SECTOR_SIZE: %38s\n' "${DEV2_SECT_SIZE}"
+echo "---------------------------------------------------------"
+printf 'DEV_2_ZONE_SIZE_BLOCKS: %33s\n' "${DEV2_ZONE_SIZE_BLOCKS}"
+echo "---------------------------------------------------------"
+printf 'DEV_2_ZONE_SIZE_BYTES: %34s\n' "${DEV2_ZONE_SIZE}"
+echo "---------------------------------------------------------"
+printf 'DEV_2_ZONES: %44s\n' "${DEV2_ZONES}"
+echo "---------------------------------------------------------"
+echo ""
+
+mkdir -p data
+
+##################################
+## fio options for specific ZNS ##
+##################################
+BS1=$(echo "${DEV1_SECT_SIZE} * ${DEV1_ZONE_SIZE}" | bc)
+CONCUR_FILL=1
+
+WRITE_IODEPTH=(1 2 3 4 5 6 7) 
+WRITE_FLOW=(100 99 95 90 75 50)
+
+echo "#########################################################"
+echo "###################### BENCH  SETUP #####################"
+echo "#########################################################"
+echo "---------------------------------------------------------"
+printf 'CONCUR_FILL_JOBS: %39s\n' "${CONCUR_FILL}"
+echo "---------------------------------------------------------"
+printf 'FINISH_ZONES (Zones for finish - /dev/%s): %9s\n' "$1" "${DEV1_ZONES}"
+echo "---------------------------------------------------------"
+printf 'WRITE_ZONES (Empty zones for writes - /dev/%s): %4s\n' "$2" "${DEV2_ZONES}"
+echo "---------------------------------------------------------"
+printf 'WRITE_NUMJOBS: %42s\n' "${WRITE_IODEPTH[*]}"
+echo "---------------------------------------------------------"
+printf 'WRITE_RATE_FLOWS: %39s\n' "${WRITE_FLOW[*]}"
+echo "---------------------------------------------------------"
+echo ""
+
+echo "Benchmarking ZNS Device Finish Rate Limit"
+sudo nvme zns reset-zone /dev/$1 -a
+sudo env "DEV=${DEV1}" "FINISH_SIZE=${DEV1_ZONES}"  ${FIO} \
+    --output-format=json \
+    --output=data/bw.json \
+        jobs/job-finish.fio
+
+BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
+echo "Found Sustainable BW for Finish Rate Limiting: ${BW} B/sec"
+
+for write_iodepth in ${WRITE_IODEPTH[@]}; do
+    for write_flow in ${WRITE_FLOW[@]}; do
+        finish_flow=$((100 - ${write_flow}))
+        WRITE_SIZE=$(echo "scale=0; ${DEV2_ZONES} / ${write_iodepth}" | bc)
+
+        echo ""
+        echo "Benchmarking WRITE_IODEPTH ${write_iodepth}: <WRITE_FLOW ${write_flow} - FINISH_LIMIT ${finish_flow}>"
+        sudo nvme zns reset-zone /dev/$1 -a
+        sudo nvme zns reset-zone /dev/$2 -a
+
+        if [[ ${finish_flow} -eq 0 ]]; then
+            # With 0 finish flow we want to disable the concurrent finish workload
+            CONCUR_FILL_SIZE=$(echo "scale=0; ${DEV2_ZONES} / ${write_iodepth}" | bc)
+            sudo env "DEV=${DEV2}" "WRITE_SIZE=${CONCUR_FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" ${FIO} \
+                --output-format=json \
+                --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
+                    jobs/job-bw.fio
+        else
+            CONCUR_FILL_SIZE=$(echo "scale=0; ${DEV2_ZONES} / ${CONCUR_FILL}" | bc)
+            finish_rate_limit=$(echo "scale=2; ${finish_flow} / 100  * ${BW}" | bc)
+            sudo env "DEV1=${DEV1}" "DEV2=${DEV2}" "FINISH_SIZE=${DEV1_ZONES}" "WRITE_IODEPTH=${write_iodepth}" \
+                "WRITE_SIZE=${WRITE_SIZE}" "FINISH_LIMIT=${finish_rate_limit}" ${FIO} \
+                    --output-format=json \
+                    --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
+                        jobs/job.fio
+        fi
+    done
+done
