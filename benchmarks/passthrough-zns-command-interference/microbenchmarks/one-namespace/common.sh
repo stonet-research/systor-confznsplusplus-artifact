@@ -1,12 +1,5 @@
-COMMON_SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
-
-# Binaries
-# To debug fio
-if [[ -z "${DEBUG_FIO}" ]]; then
-    FIO="${COMMON_SCRIPT_DIR}/../../../../tools/fio/fio"
-else
-    FIO="${COMMON_SCRIPT_DIR}/../../../../tools/fio/fio --showcmd"
-fi
+COMMON_PASSTHROUGH_SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+source ${COMMON_PASSTHROUGH_SCRIPT_DIR}/../../../common.sh
 
 # Common functions
 get_device_info() {
@@ -44,7 +37,7 @@ baseline_finish() {
     sudo env "DEV=${DEV_CHAR}" "FINISH_SIZE=${FILL_SIZE}" ${FIO} \
         --output-format=json \
         --output=data/bw.json \
-        ${COMMON_SCRIPT_DIR}/common-jobs/job-finish-baseline.fio
+        ${COMMON_PASSTHROUGH_SCRIPT_DIR}/common-jobs/job-finish-baseline.fio
     if [[ -z "${DEBUG_FIO}" ]]; then
         export FINISH_BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
     else
@@ -66,7 +59,7 @@ baseline_reset() {
         "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=1" ${FIO} \
             --output-format=json \
             --output=data/bw.json \
-        ${COMMON_SCRIPT_DIR}/common-jobs/job-reset-baseline.fio
+        ${COMMON_PASSTHROUGH_SCRIPT_DIR}/common-jobs/job-reset-baseline.fio
     if [[ -z "${DEBUG_FIO}" ]]; then
         export RESET_BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
     else
@@ -83,7 +76,7 @@ baseline_append() {
     sudo env "DEV=${DEV_CHAR}" "APPEND_SIZE=${APPEND_SIZE}" ${FIO} \
         --output-format=json \
         --output=data/bw.json \
-        ${COMMON_SCRIPT_DIR}/common-jobs/job-append-baseline.fio
+        ${COMMON_PASSTHROUGH_SCRIPT_DIR}/common-jobs/job-append-baseline.fio
     if [[ -z "${DEBUG_FIO}" ]]; then
         export APPEND_BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
     else
@@ -100,7 +93,7 @@ baseline_read() {
     sudo env "DEV=${DEV_CHAR}" "WRITE_ZONES=${READ_SIZE}" ${FIO} \
         --output-format=json \
         --output=data/bw.json \
-        ${COMMON_SCRIPT_DIR}/common-jobs/job-read-baseline.fio
+        ${COMMON_PASSTHROUGH_SCRIPT_DIR}/common-jobs/job-read-baseline.fio
     if [[ -z "${DEBUG_FIO}" ]]; then
         export READ_BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
     else
@@ -117,7 +110,7 @@ baseline_write() {
     sudo env "DEV=${DEV_CHAR}" "WRITE_ZONES=${WRITE_SIZE}" ${FIO} \
         --output-format=json \
         --output=data/bw.json \
-        ${COMMON_SCRIPT_DIR}/common-jobs/job-write-baseline.fio
+        ${COMMON_PASSTHROUGH_SCRIPT_DIR}/common-jobs/job-write-baseline.fio
     if [[ -z "${DEBUG_FIO}" ]]; then    
         export WRITE_BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
     else

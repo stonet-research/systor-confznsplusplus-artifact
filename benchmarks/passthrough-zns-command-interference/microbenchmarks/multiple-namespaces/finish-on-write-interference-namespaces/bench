@@ -2,14 +2,15 @@
 
 set -e
 
+SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+cd ${SCRIPT_DIR}
+source ../common.sh
+
 # Check input
 if [ $# != 2 ]; then
     echo "Usage: $0 <ZNS device Namespace 1 (e.g., nvme0n2) for finish workload> <Namespace 2 for write workload>"
     exit 1
 fi
-
-# Set binaries
-FIO="../../../../../tools/fio/fio"
 
 # Setup device
 DEV1=$(echo $1 | sed 's/vme/g/g')
@@ -53,8 +54,6 @@ printf 'DEV_2_ZONES: %44s\n' "${DEV2_ZONES}"
 echo "---------------------------------------------------------"
 echo ""
 
-mkdir -p data
-
 ##################################
 ## fio options for specific ZNS ##
 ##################################
@@ -84,8 +83,8 @@ echo "Benchmarking ZNS Device Finish Rate Limit"
 sudo nvme zns reset-zone /dev/$1 -a
 sudo env "DEV=${DEV1}" "FINISH_SIZE=${DEV1_ZONES}"  ${FIO} \
     --output-format=json \
-    --output=data/bw.json \
-        jobs/job-finish.fio
+    --output=${SCRIPT_DIR}/data/bw.json \
+        ${SCRIPT_DIR}/jobs/job-finish.fio
 
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
 echo "Found Sustainable BW for Finish Rate Limiting: ${BW} B/sec"
@@ -105,16 +104,16 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
             CONCUR_FILL_SIZE=$(echo "scale=0; ${DEV2_ZONES} / ${write_iodepth}" | bc)
             sudo env "DEV=${DEV2}" "WRITE_SIZE=${CONCUR_FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" ${FIO} \
                 --output-format=json \
-                --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
-                    jobs/job-bw.fio
+                --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
+                    ${SCRIPT_DIR}/jobs/job-bw.fio
         else
             CONCUR_FILL_SIZE=$(echo "scale=0; ${DEV2_ZONES} / ${CONCUR_FILL}" | bc)
             finish_rate_limit=$(echo "scale=2; ${finish_flow} / 100  * ${BW}" | bc)
             sudo env "DEV1=${DEV1}" "DEV2=${DEV2}" "FINISH_SIZE=${DEV1_ZONES}" "WRITE_IODEPTH=${write_iodepth}" \
                 "WRITE_SIZE=${WRITE_SIZE}" "FINISH_LIMIT=${finish_rate_limit}" ${FIO} \
                     --output-format=json \
-                    --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
-                        jobs/job.fio
+                    --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
+                        ${SCRIPT_DIR}/jobs/job.fio
         fi
     done
 done
