@@ -2,11 +2,16 @@
 
 set -e
 
+# Check input
 if [ $# != 2 ]; then
     echo "Usage: $0 <ZNS device Namespace 1 (e.g., nvme0n2) for finish workload> <Namespace 2 for write workload>"
     exit 1
 fi
 
+# Set binaries
+FIO="../../../../../tools/fio/fio"
+
+# Setup device
 DEV1=$(echo $1 | sed 's/vme/g/g')
 DEV1_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
 DEV1_ZONE_SIZE_BLOCKS=$(cat /sys/block/$1/queue/chunk_sectors)
@@ -77,7 +82,7 @@ echo ""
 
 echo "Benchmarking ZNS Device Finish Rate Limit"
 sudo nvme zns reset-zone /dev/$1 -a
-sudo env "DEV=${DEV1}" "FINISH_SIZE=${DEV1_ZONES}"  ../../../../tools/fio/fio \
+sudo env "DEV=${DEV1}" "FINISH_SIZE=${DEV1_ZONES}"  ${FIO} \
     --output-format=json \
     --output=data/bw.json \
         jobs/job-finish.fio
@@ -98,7 +103,7 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
         if [[ ${finish_flow} -eq 0 ]]; then
             # With 0 finish flow we want to disable the concurrent finish workload
             CONCUR_FILL_SIZE=$(echo "scale=0; ${DEV2_ZONES} / ${write_iodepth}" | bc)
-            sudo env "DEV=${DEV2}" "WRITE_SIZE=${CONCUR_FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" ../../../../tools/fio/fio\
+            sudo env "DEV=${DEV2}" "WRITE_SIZE=${CONCUR_FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" ${FIO} \
                 --output-format=json \
                 --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
                     jobs/job-bw.fio
@@ -106,7 +111,7 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
             CONCUR_FILL_SIZE=$(echo "scale=0; ${DEV2_ZONES} / ${CONCUR_FILL}" | bc)
             finish_rate_limit=$(echo "scale=2; ${finish_flow} / 100  * ${BW}" | bc)
             sudo env "DEV1=${DEV1}" "DEV2=${DEV2}" "FINISH_SIZE=${DEV1_ZONES}" "WRITE_IODEPTH=${write_iodepth}" \
-                "WRITE_SIZE=${WRITE_SIZE}" "FINISH_LIMIT=${finish_rate_limit}" ../../../../tools/fio/fio \
+                "WRITE_SIZE=${WRITE_SIZE}" "FINISH_LIMIT=${finish_rate_limit}" ${FIO} \
                     --output-format=json \
                     --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
                         jobs/job.fio

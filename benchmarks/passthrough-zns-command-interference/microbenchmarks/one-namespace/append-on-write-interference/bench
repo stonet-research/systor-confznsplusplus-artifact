@@ -65,7 +65,7 @@ sudo nvme zns reset-zone /dev/${DEV} -a
 sudo env "DEV=${DEV_CHAR}" "APPEND_SIZE=${APPEND_SIZE}" ${FIO} \
     --output-format=json \
     --output=data/bw.json \
-    job-append.fio
+    jobs/job-append.fio
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
 echo "Found Sustainable BW for Append Rate Limiting: ${BW} B/sec"
 
@@ -84,7 +84,7 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
                 ${FIO} \
                     --output-format=json \
                     --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
-                    job-write.fio
+                    jobs/job-write.fio
         else
             CONCUR_WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
             append_rate_limit=$(echo "scale=2; ${append_flow} / 100  * ${BW}" | bc)
@@ -93,7 +93,7 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
                 ${FIO} \
                     --output-format=json \
                     --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
-                    job.fio
+                    jobs/job.fio
         fi
     done
 done

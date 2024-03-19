@@ -8,6 +8,7 @@ if [ $# != 2 ]; then
     exit 1
 fi
 DEV=$1
+APPEND_SIZE=$2
 
 # Output
 mkdir -p data

@@ -12,10 +12,10 @@ fi
 DATA_FILE_OUT=${1}-out-f2fs-$(date +"%Y_%m_%d_%I_%M_%p").dat
 
 # Binaries
-DBBENCH="../../../../tools/rocksdb/db_bench"
-ZENFS="../../../../tools/rocksdb/plugin/zenfs/util/zenfs"
-FIO="../../../../tools/fio/fio"
-NULLBLK="../../../../util/nullblk_create"
+DBBENCH="../../../../../tools/rocksdb/db_bench"
+ZENFS="../../../../../tools/rocksdb/plugin/zenfs/util/zenfs"
+FIO="../../../../../tools/fio/fio"
+NULLBLK="../../../../../util/nullblk_create"
 
 # Device info
 DEV_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)

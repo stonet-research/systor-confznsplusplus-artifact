@@ -1,7 +1,6 @@
 #! /bin/bash
 
 set -e
-set -x
 
 # Validate input
 if [ $# != 1 ]; then
@@ -69,7 +68,7 @@ echo "Running device prefill portion"
 sudo env "DEV=${DEV}" ${FIO} \
     --output-format=json \
     --output=data/fio-fill.json \
-        job-prefill.fio
+        jobs/job-prefill.fio
 
 (sudo ${DBBENCH} \
     --fs_uri=zenfs://dev:$1 \
@@ -96,7 +95,7 @@ sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "TRIM_SIZE=${TRIM_SIZE}" "FILL_SIZE=
     ${FIO} \
         --output-format=json \
         --output=data/fio.json \
-            job.fio
+            jobs/job.fio
 
 # After completing interference let rocksdb get back to usual performance
 sleep 30

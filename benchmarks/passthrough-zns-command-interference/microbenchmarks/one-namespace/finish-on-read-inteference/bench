@@ -2,7 +2,7 @@
 
 set -e
 
-if [ $# != 1 ]; then
+if [ $# != 2 ]; then
     echo "Usage: $0 <ZNS device (e.g., nvme0n2)> $1 <zones to finish (e.g., 300)>"
     exit 1
 fi
