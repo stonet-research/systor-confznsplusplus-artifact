@@ -2,97 +2,77 @@
 
 set -e
 
+SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+cd ${SCRIPT_DIR}
+source ../../common.sh
+
 # Verify input
 if [ $# != 4 ]; then
     echo "Usage: $0 <ZNS device (e.g., nvme0n2)>  write_offset_zones reset_offset_zones with_reset"
     exit 1
 fi
+DEV=$1
+WRITE_OFFSET_ZONES=$2
+RESET_OFFSET_ZONES=$3
+WITH_RESET=$4
 
 # Output
-DATA_FILE_OUT=${1}-out-f2fs-$(date +"%Y_%m_%d_%I_%M_%p").dat
+DATA_FILE_OUT=${DEV}-out-f2fs-$(date +"%Y_%m_%d_%I_%M_%p").dat
 
-# Binaries
-DBBENCH="../../../../../tools/rocksdb/db_bench"
-ZENFS="../../../../../tools/rocksdb/plugin/zenfs/util/zenfs"
-FIO="../../../../../tools/fio/fio"
-NULLBLK="../../../../../util/nullblk_create"
-
-# Device info
-DEV_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
-DEV_ZONE_SIZE_BLOCKS=$(cat /sys/block/$1/queue/chunk_sectors)
-DEV_ZONE_SIZE=$(echo "${DEV_ZONE_SIZE_BLOCKS} * 512" | bc)
-DEV_ZONES=$(cat /sys/block/$1/queue/nr_zones)
-
-CAP_SECTORS=$(sudo blkzone report -c 5 /dev/$1 | grep -oP '(?<=cap )[0-9xa-f]+' | head -1)
-ZONE_CAP=$((${CAP_SECTORS} * 512))
-WB_SIZE=$((2 * 1024 * 1024 * 1024))
-
-echo "#########################################################"
-echo "####################### ZNS  SETUP ######################"
-echo "#########################################################"
-echo "---------------------------------------------------------"
-printf 'DEV: %52s\n' "/dev/${DEV}"
-echo "---------------------------------------------------------"
-printf 'SECTOR_SIZE: %44s\n' "${DEV_SECT_SIZE}"
-echo "---------------------------------------------------------"
-printf 'ZONE_SIZE_BLOCKS: %39s\n' "${DEV_ZONE_SIZE_BLOCKS}"
-echo "---------------------------------------------------------"
-printf 'ZONE_SIZE_BYTES: %40s\n' "${DEV_ZONE_SIZE}"
-echo "---------------------------------------------------------"
-printf 'DEV_ZONES: %46s\n' "${DEV_ZONES}"
-echo "---------------------------------------------------------"
-echo ""
+# ZNS vars
+get_device_info ${DEV}
+# RocksDB vars
+get_default_rocksdb_vars ${DEV}
 
 # Prepare
-mkdir -p data
-echo mq-deadline | sudo tee /sys/block/$1/queue/scheduler
-sudo nvme zns reset-zone /dev/$1 -a
+echo mq-deadline | sudo tee /sys/block/${DEV}/queue/scheduler
+sudo nvme zns reset-zone /dev/${DEV} -a
 
 # Get bandwidth of trim from NVMe3
 echo "Benchmarking ZNS Device Reset Rate Limit"
-sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ${FIO} \
+sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${DEV_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" ${FIO} \
     --output-format=json \
-    --output=data/bw.json \
-        jobs/job-trim.fio
+    --output=${SCRIPT_DIR}/data/bw.json \
+        ${SCRIPT_DIR}/jobs/job-trim.fio
 echo "GOT BANDWIDTH"
-BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
+BW=$(cat ${SCRIPT_DIR}/data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
 echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
 
 ## Make F2FS 
-DEV=$(sudo ${NULLBLK} 4096 7168)  # TODO: remove hardcode
-sudo nvme zns reset-zone /dev/$1 -a
-export DEV
-sudo env "PATH=${PATH}" mkfs.f2fs -f -m -c /dev/${1} /dev/${DEV}
+DEVNULL=$(sudo ${NULLBLK} 4096 7168)  # TODO: remove hardcode
+sudo nvme zns reset-zone /dev/${DEV} -a
+export DEVNULL
+sudo env "PATH=${PATH}" mkfs.f2fs -f -m -c /dev/${DEV} /dev/${DEVNULL}
 sudo mkdir -p /mnt/bench-f2fs
-sudo mount -t f2fs /dev/${DEV} /mnt/bench-f2fs
+sudo mount -t f2fs /dev/${DEVNULL} /mnt/bench-f2fs
 
 # Fill namespace 3
-if [ "$4" -eq "1" ]; then
-    sudo env "DEV=$1" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=700" "OFFSET_ZONES=$3" ${FIO} \
+if [ "${WITH_RESET}" -eq "1" ]; then
+    sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=700" "OFFSET_ZONES=${RESET_OFFSET_ZONES}" ${FIO} \
         --output-format=json \
-        --output=data/fill.json \
-            jobs/fill.fio
+        --output=${SCRIPT_DIR}/data/fill.json \
+            ${SCRIPT_DIR}/jobs/fill.fio
     echo "FILL done"
 fi
 
 
 # Spawn concurrent reset/write workload
 trim_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc)
-if [ "$4" -eq "1" ]; then
-    sudo env "DEV=$1" \
-        "OFFSET_ZONES_B=$2" \
-        "OFFSET_ZONES_C=$3" \
+if [ "${WITH_RESET}" -eq "1" ]; then
+    sudo env "DEV=${DEV}" \
+        "OFFSET_ZONES_B=${WRITE_OFFSET_ZONES}" \
+        "OFFSET_ZONES_C=${RESET_OFFSET_ZONES}" \
         "BS=${DEV_ZONE_SIZE}" \
         "RESET_LIMIT=${trim_rate_limit}"  ${FIO} \
             --output-format=json \
-            --output=data/conc-f2fs.json \
-            jobs/concurrent-reset-write-intererference.fio &
+            --output=${SCRIPT_DIR}/data/conc-f2fs.json \
+            ${SCRIPT_DIR}/jobs/concurrent-reset-write-intererference.fio &
 else
     sudo env "DEV=$1" "OFFSET_ZONES_B=$2" "OFFSET_ZONES_C=$3" "BS=${DEV_ZONE_SIZE}" "RESET_LIMIT=${trim_rate_limit}" \
         ${FIO} \
             --output-format=json \
-            --output=data/conc2-f2fs.json \
-                jobs/concurrent-write-intererference.fio &
+            --output=${SCRIPT_DIR}/data/conc2-f2fs.json \
+                ${SCRIPT_DIR}/jobs/concurrent-write-intererference.fio &
 fi
 echo "Spawned dettached fio"
 
@@ -111,9 +91,8 @@ sudo ${DBBENCH} \
     --use_direct_reads \
     --write_buffer_size=${WB_SIZE} \
     --seed=42 \
-    --histogram=1 > data/${DATA_FILE_OUT} \
+    --histogram=1 \
     --duration=30 \
     --use_fsync=1 \
-    --sync=1
-
+    --sync=1 > ${SCRIPT_DIR}/data/${DATA_FILE_OUT}
 echo "DONE with benchmark"
