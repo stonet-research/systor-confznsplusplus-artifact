@@ -43,7 +43,6 @@ baseline_finish ${DEV_CHAR} ${FINISH_SIZE}
 for read_iodepth in ${READ_IODEPTH[@]}; do
     for read_flow in ${READ_FLOW[@]}; do
         finish_flow=$((100 - ${read_flow}))
-        echo ""
         echo "Benchmarking READ_IODEPTH ${read_iodepth}: <READ_FLOW ${read_flow} - FINISH_LIMIT ${finish_flow}>"
         sudo nvme zns reset-zone /dev/${DEV_CHAR} -a
 

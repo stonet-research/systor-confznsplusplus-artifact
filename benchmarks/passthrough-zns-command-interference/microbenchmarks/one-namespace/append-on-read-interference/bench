@@ -62,7 +62,7 @@ for read_iodepth in ${READ_IODEPTH[@]}; do
                 "APPEND_SIZE=${APPEND_SIZE}" "APPEND_LIMIT=${append_rate_limit}" \
                 "READ_SIZE=${READ_ZONES}" ${FIO} \
                     --output-format=json \
-                    --output=${SCRIPT_DIR}data/data-read_iod_${read_iodepth}-rflow_${read_flow}.json \
+                    --output=${SCRIPT_DIR}/data/data-read_iod_${read_iodepth}-rflow_${read_flow}.json \
                     ${SCRIPT_DIR}/jobs/job.fio
         fi
     done

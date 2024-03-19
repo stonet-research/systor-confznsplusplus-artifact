@@ -49,11 +49,10 @@ printf 'WRITE_NUMJOBS: %42s\n' "${WRITE_IODEPTH[*]}"
 echo "---------------------------------------------------------"
 echo ""
 
-baseline_reset ${DEV_CHAR} 
+baseline_reset ${DEV_CHAR} ${FILL_SIZE}
 
 for write_iodepth in ${WRITE_IODEPTH[@]}; do
     WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
-    echo ""
     echo "Benchmarking WRITE_IODEPTH ${write_iodepth}"
     sudo nvme zns reset-zone /dev/${DEV_CHAR} -a
 

@@ -42,7 +42,6 @@ baseline_write ${DEV_CHAR} ${WRITE_ZONES}
 for append_iodepth in ${APPEND_IODEPTH[@]}; do
     for append_flow in ${APPEND_FLOW[@]}; do
         write_flow=$((100 - ${append_flow}))
-        echo ""
         echo "Benchmarking APPEND_IODEPTH ${append_iodepth}: <APPEND_FLOW ${append_flow} - WRITE_FLOW ${write_flow}>"
         sudo nvme zns reset-zone /dev/${DEV_CHAR} -a
 
