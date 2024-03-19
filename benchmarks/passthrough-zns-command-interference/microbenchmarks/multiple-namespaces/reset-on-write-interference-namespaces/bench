@@ -2,11 +2,17 @@
 
 set -e
 
+SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+cd ${SCRIPT_DIR}
+source ../common.sh
+
+# Check input
 if [ $# != 2 ]; then
     echo "Usage: $0 <ZNS device Namespace 1 (e.g., nvme0n2) for reset workload> <Namespace 2 for write workload>"
     exit 1
 fi
 
+# Setup device
 DEV1=$(echo $1 | sed 's/vme/g/g')
 DEV1_SECT_SIZE=$(cat /sys/block/$1/queue/hw_sector_size)
 DEV1_ZONE_SIZE_BLOCKS=$(cat /sys/block/$1/queue/chunk_sectors)
@@ -48,8 +54,6 @@ printf 'DEV_2_ZONES: %44s\n' "${DEV2_ZONES}"
 echo "---------------------------------------------------------"
 echo ""
 
-mkdir -p data
-
 ##################################
 ## fio options for specific ZNS ##
 ##################################
@@ -89,10 +93,10 @@ echo ""
 echo "Benchmarking ZNS Device Reset Rate Limit"
 sudo nvme zns reset-zone /dev/$1 -a
 sudo env "DEV=${DEV1}" "BS=${DEV1_ZONE_SIZE}" "FILL_SIZE=${DEV1_ZONES}" "TRIM_IODEPTH=${TRIM_IODEPTH}" \
-    ../../../../tools/fio/fio \
+    ${FIO} \
         --output-format=json \
-        --output=data/bw.json \
-            jobs/job-trim.fio
+        --output=${SCRIPT_DIR}/data/bw.json \
+            ${SCRIPT_DIR}/jobs/job-trim.fio
 
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 6 {print $3}' | sed 's/,//g')
 echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
@@ -112,19 +116,19 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
             CONCUR_FILL_SIZE=$(echo "scale=0; ${DEV2_ZONES} / ${write_iodepth}" | bc)
             sudo env "DEV=${DEV2}" "BS=${DEV2_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" \
                 "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${DEV2_ZONES}" "WRITE_IODEPTH=${write_iodepth}" \
-                ../../../../tools/fio/fio \
+                ${FIO} \
                     --output-format=json \
-                    --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
-                        jobs/job-bw.fio
+                    --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
+                        ${SCRIPT_DIR}/jobs/job-bw.fio
         else
             CONCUR_FILL_SIZE=$(echo "scale=0; ${DEV2_ZONES} / ${CONCUR_FILL}" | bc)
             trim_rate_limit=$(echo "scale=2; ${trim_flow} / 100  * ${BW}" | bc)
             sudo env "DEV1=${DEV1}" "DEV2=${DEV2}" "BS=${DEV1_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" \
                 "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${DEV1_ZONES}" "WRITE_IODEPTH=${write_iodepth}" \
-                "WRITE_SIZE=${WRITE_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ../../../../tools/fio/fio \
+                "WRITE_SIZE=${WRITE_SIZE}" "RESET_LIMIT=${trim_rate_limit}" ${FIO} \
                     --output-format=json \
-                    --output=data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
-                        jobs/job.fio
+                    --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
+                        ${SCRIPT_DIR}/jobs/job.fio
         fi
     done
 done

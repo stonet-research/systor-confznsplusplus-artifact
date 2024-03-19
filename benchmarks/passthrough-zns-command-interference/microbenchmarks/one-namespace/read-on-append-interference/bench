@@ -2,50 +2,27 @@
 
 set -e
 
+SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+cd ${SCRIPT_DIR}
+source ../common.sh
+
+# Input
 if [ $# != 1 ]; then
     echo "Usage: $0 <ZNS device (e.g., nvme0n2)>"
     exit 1
 fi
 DEV=$1
 
-# Output
-mkdir -p data
-
-# Binaries
-FIO="../../../../../tools/fio/fio"
-
 # Device info
-DEV_CHAR=$(echo ${DEV} | sed 's/vme/g/g')
-DEV_SECT_SIZE=$(cat /sys/block/${DEV}/queue/hw_sector_size)
-DEV_ZONE_SIZE_BLOCKS=$(cat /sys/block/${DEV}/queue/chunk_sectors)
-DEV_ZONE_SIZE=$(echo "${DEV_ZONE_SIZE_BLOCKS} * 512" | bc)
-DEV_ZONES=$(cat /sys/block/${DEV}/queue/nr_zones)
-
-echo "#########################################################"
-echo "####################### ZNS  SETUP ######################"
-echo "#########################################################"
-echo "---------------------------------------------------------"
-printf 'DEV: %52s\n' "/dev/${DEV}"
-echo "---------------------------------------------------------"
-printf 'SECTOR_SIZE: %44s\n' "${DEV_SECT_SIZE}"
-echo "---------------------------------------------------------"
-printf 'ZONE_SIZE_BLOCKS: %39s\n' "${DEV_ZONE_SIZE_BLOCKS}"
-echo "---------------------------------------------------------"
-printf 'ZONE_SIZE_BYTES: %40s\n' "${DEV_ZONE_SIZE}"
-echo "---------------------------------------------------------"
-printf 'DEV_ZONES: %46s\n' "${DEV_ZONES}"
-echo "---------------------------------------------------------"
-echo ""
-
+get_device_info ${DEV}
 
 ##################################
 ## fio options for specific ZNS ##
 ##################################
-BS=$(echo "${DEV_SECT_SIZE} * ${DEV_ZONE_SIZE}" | bc)
 APPEND_SIZE=$(echo "scale=0; ${DEV_ZONES} * 0.3" | bc | sed 's/\.[0-9]*//g')
 WRITE_ZONES=$(echo "${DEV_ZONES} - ${APPEND_SIZE}" | bc) # All but the fill zones
 APPEND_IODEPTH=(1 2 3 4 5 6 7) 
-APPEND_FLOW=(100 99 95 90 75 50) # 25)
+APPEND_FLOW=(100 99 95 90 75 50)
 
 echo "#########################################################"
 echo "###################### BENCH  SETUP #####################"
@@ -61,37 +38,29 @@ printf 'APPEND_FLOW: %44s\n' "${APPEND_FLOW[*]}"
 echo "---------------------------------------------------------"
 echo ""
 
-echo "Benchmarking ZNS Device Read Rate Limit"
-sudo nvme zns reset-zone /dev/${DEV} -a
-sudo env "DEV=${DEV_CHAR}" "WRITE_ZONES=${WRITE_ZONES}" ${FIO} \
-    --output-format=json \
-    --output=data/bw.json \
-    job-read.fio
-BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
-echo "Found Sustainable BW for Read Rate Limiting: ${BW} B/sec"
+baseline_read ${DEV_CHAR} ${WRITE_ZONES}
 
 for append_iodepth in ${APPEND_IODEPTH[@]}; do
     for append_flow in ${APPEND_FLOW[@]}; do
         read_flow=$((100 - ${append_flow}))
-        echo ""
         echo "Benchmarking APPEND_IODEPTH ${append_iodepth}: <APPEND_FLOW ${append_flow} - READ_FLOW ${read_flow}>"
-        sudo nvme zns reset-zone /dev/${DEV} -a
+        sudo nvme zns reset-zone /dev/${DEV_CHAR} -a
 
         if [[ ${read_flow} -eq 0 ]]; then
             # With 0 read flow we want to disable the concurrent read workload
             sudo env "DEV=${DEV_CHAR}" "APPEND_SIZE=${APPEND_SIZE}" "APPEND_IODEPTH=${append_iodepth}" \
                 ${FIO} \
                     --output-format=json \
-                    --output=data/data-append_iod_${append_iodepth}-aflow_${append_flow}.json \
-                    jobs/job-append.fio
+                    --output=${SCRIPT_DIR}/data/data-append_iod_${append_iodepth}-aflow_${append_flow}.json \
+                    ${SCRIPT_DIR}/jobs/job-append.fio
         else
-            read_rate_limit=$(echo "scale=2; ${read_flow} / 100  * ${BW}" | bc)
+            read_rate_limit=$(echo "scale=2; ${read_flow} / 100  * ${READ_BW}" | bc)
 
             sudo env "DEV=${DEV_CHAR}" "WRITE_SIZE=${WRITE_ZONES}" "APPEND_SIZE=${APPEND_SIZE}" \
                 "APPEND_IODEPTH=${append_iodepth}" "READ_LIMIT=${read_rate_limit}" ${FIO} \
                     --output-format=json \
-                    --output=data/data-append_iod_${append_iodepth}-aflow_${append_flow}.json \
-                    jobs/job.fio
+                    --output=${SCRIPT_DIR}/data/data-append_iod_${append_iodepth}-aflow_${append_flow}.json \
+                    ${SCRIPT_DIR}/jobs/job.fio
         fi
     done
 done
