@@ -76,7 +76,7 @@ for trim_iodepth in ${TRIM_IODEPTH[@]}; do
                     --output=${SCRIPT_DIR}/data/data-trim_iod_${trim_iodepth}-tflow_${trim_flow}.json \
                     ${SCRIPT_DIR}/jobs/job-trim.fio
         else
-            write_rate_limit=$(echo "scale=2; ${write_flow} / 100  * 100 / ${CONCUR_WRITE}" | bc)
+            write_rate_limit=$(echo "scale=2; ${write_flow} / 100  * ${BW} / ${CONCUR_WRITE}" | bc)
             sudo env "DEV=${DEV_CHAR}" "BS=${DEV_ZONE_SIZE}" "CONCUR_FILL_SIZE=${CONCUR_FILL_SIZE}" \
                 "CONCUR_FILL=${CONCUR_FILL}" "FILL_SIZE=${FILL_SIZE}" "TRIM_IODEPTH=${trim_iodepth}" \
                 "WRITE_SIZE=${WRITE_SIZE}" "CONCUR_WRITE=${CONCUR_WRITE}" "WRITE_LIMIT=${write_rate_limit}" \
