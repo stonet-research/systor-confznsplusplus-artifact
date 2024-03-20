@@ -1446,6 +1446,11 @@ static int fio_ioring_cmd_finish_zone(struct thread_data *td, struct fio_file *f
 	return fio_nvme_finish_zone(td, f, offset, length);
 }
 
+static int fio_ioring_finish_zone(struct thread_data *td, struct fio_file *f,
+				   uint64_t offset, uint64_t length) {
+	return blkzoned_finish_zone(td, f, offset, length);
+}
+
 static int fio_ioring_cmd_get_max_open_zones(struct thread_data *td,
 					     struct fio_file *f,
 					     unsigned int *max_open_zones)
@@ -1488,7 +1493,7 @@ static struct ioengine_ops ioengine_uring = {
 	.queue			= fio_ioring_queue,
 	.commit			= fio_ioring_commit,
 	.getevents		= fio_ioring_getevents,
-	.finish_zone    = fio_ioring_cmd_finish_zone,
+	.finish_zone    = fio_ioring_finish_zone,
 	.event			= fio_ioring_event,
 	.cleanup		= fio_ioring_cleanup,
 	.open_file		= fio_ioring_open_file,
