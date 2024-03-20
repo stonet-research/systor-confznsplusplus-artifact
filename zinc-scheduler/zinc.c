@@ -86,10 +86,13 @@ static inline enum dd_data_dir zinc_data_dir(struct request *rq)
 		case REQ_OP_WRITE:
 			return ZINC_WRITE;
 		case REQ_OP_ZONE_RESET:
+			// pr_alert("Reset\n");
 			return ZINC_RESET;
 		case REQ_OP_ZONE_FINISH:
+			// pr_alert("Finish\n");
 			return ZINC_FINISH;
 		default:
+			// pr_alert("Other\n");
 			return ZINC_OTHER;
 	}
 }
@@ -538,6 +541,7 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
 		// case 0: The number of pending requests is less to the threshold, dispatch
 		if ((!list_empty(&dd->reset_queue)) && 
 		    pending_requests < dd->reset_minimum_concurrency_treshold) {
+			// pr_alert("Pending < Reset \n");
 			rq = list_first_entry(&dd->reset_queue, struct request,
 				      queuelist);
 			list_del_init(&rq->queuelist);
@@ -547,6 +551,7 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
 		// case 1: We have dispatched enough write, then dispatch a reset
 		else if ((!list_empty(&dd->reset_queue)) && 
 		   atomic_read(&dd->reset_dispatched_write) > dd->reset_command_tokens) {
+				// pr_alert("Tokens < Reset \n");
 			rq = list_first_entry(&dd->reset_queue, struct request,
 				      queuelist);
 			list_del_init(&rq->queuelist);
@@ -556,6 +561,7 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
 		// case 2: We haven't dispatched enough write, but we have a high priority reset
 		else if ((!list_empty(&dd->reset_queue)) && 
 		list_first_entry(&dd->reset_queue, struct request, queuelist)->deadline >= dd->reset_maximum_epoch_holds) {
+				// pr_alert("Reset dispatched \n");
 			rq = list_first_entry(&dd->reset_queue, struct request,
 				      queuelist);
 			list_del_init(&rq->queuelist);
@@ -565,6 +571,7 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
 		// case 3: We can not dispatch a reset, then we increment the priority for each pending reset.
 		//         Then continue to dispatch a normal request.
 		list_for_each_entry(rq, &dd->reset_queue, queuelist) {
+					// pr_alert("Reset prio\n");
 			rq->deadline++;
 		}
 
@@ -582,6 +589,7 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
 		// case 0: The number of pending requests is less to the threshold, dispatch
 		if ((!list_empty(&dd->finish_queue)) && 
 		    pending_requests < dd->finish_minimum_concurrency_treshold) {
+			// pr_alert("Pending < finish min\n");
 			rq = list_first_entry(&dd->finish_queue, struct request,
 				      queuelist);
 			list_del_init(&rq->queuelist);
@@ -591,6 +599,7 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
 		// case 1: We have dispatched enough write, then dispatch a finish
 		else if ((!list_empty(&dd->finish_queue)) && 
 		   atomic_read(&dd->finish_dispatched_write) > dd->finish_command_tokens) {
+			// pr_alert("Write < finish tokens\n");
 			rq = list_first_entry(&dd->finish_queue, struct request,
 				      queuelist);
 			list_del_init(&rq->queuelist);
@@ -600,6 +609,7 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
 		// case 2: We haven't dispatched enough write, but we have a high priority reset
 		else if ((!list_empty(&dd->finish_queue)) && 
 		list_first_entry(&dd->finish_queue, struct request, queuelist)->deadline >= dd->finish_maximum_epoch_holds) {
+			// pr_alert("Max epoch holds\n");
 			rq = list_first_entry(&dd->finish_queue, struct request,
 				      queuelist);
 			list_del_init(&rq->queuelist);
@@ -609,6 +619,7 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
 		// case 3: We can not dispatch a reset, then we increment the priority for each pending reset.
 		//         Then continue to dispatch a normal request.
 		list_for_each_entry(rq, &dd->finish_queue, queuelist) {
+			// pr_alert("Postponing %d\n", rq->deadline);
 			rq->deadline++;
 		}
 
@@ -1034,6 +1045,7 @@ static void dd_insert_request(struct blk_mq_hw_ctx *hctx, struct request *rq,
 
 	if (data_dir == ZINC_FINISH) {
 		rq->deadline = 0;
+		// pr_alert("Add finish\n");
 		list_add(&rq->queuelist, &dd->finish_queue);
 		// Force timer
 		pending_requests = atomic_read(&dd->finish_pending_requests);
@@ -1044,6 +1056,7 @@ static void dd_insert_request(struct blk_mq_hw_ctx *hctx, struct request *rq,
     }	
     else if (data_dir > ZINC_WRITE) {
         rq->deadline = 0;
+		// pr_alert("Add Reset\n");
         list_add(&rq->queuelist, &dd->reset_queue);
         // Force timer
 		pending_requests = atomic_read(&dd->reset_pending_requests);

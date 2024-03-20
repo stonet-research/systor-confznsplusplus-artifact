@@ -54,22 +54,22 @@ printf 'WRITE_NUMJOBS: %42s\n' "${WRITE_IODEPTH[*]}"
 echo "---------------------------------------------------------"
 echo ""
 
-#####################################
-## Identify Reset Max. Performance ##
-#####################################
+#################################################
+## Identify Finish Max. Performance mq-deadline ##
+#################################################
 echo -e ""${GREEN}"Benchmarking ZNS Device Reset Rate Limit"${CLOSE}""
 sudo nvme zns reset-zone /dev/${DEV} -a
 echo mq-deadline | sudo tee /sys/block/${DEV}/queue/scheduler >> /dev/null
-# sudo env "DEV=${DEV}" "FINISH_SIZE=${FINISH_SIZE}" \
-#     ${FIO} \
-#         --output-format=json \
-#         --output=${SCRIPT_DIR}/data/bw.json \
-#         ${SCRIPT_DIR}/jobs/job-finish.fio
+sudo env "DEV=${DEV}" "FINISH_SIZE=${FINISH_SIZE}" \
+    ${FIO} \
+        --output-format=json \
+        --output=${SCRIPT_DIR}/data/bw.json \
+        ${SCRIPT_DIR}/jobs/job-finish-baseline-100.fio
 BW=$(cat data/bw.json | grep -i "bw_bytes" | awk 'FNR == 2 {print $3}' | sed 's/,//g')
 echo "Found Sustainable BW for Reset Rate Limiting: ${BW} B/sec"
 
 ###########################################################################################
-## Identify Reset Performance Baseline at 50% reset rate limit without concurrent writes ##
+## Identify Finish Performance Baseline at 50% reset rate limit without concurrent writes ##
 ###########################################################################################
 echo -e ""${GREEN}"Baseline Benchmarking 50% Reset Rate Limit Performance"${CLOSE}""
 finish_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc) 
@@ -81,34 +81,38 @@ sudo env "DEV=${DEV}" "FINISH_SIZE=${FINISH_SIZE}" "FINISH_LIMIT=${finish_rate_l
     ${FIO} \
         --output-format=json \
         --output=${SCRIPT_DIR}/data/data-finish_baseline-rflow-50.json \
-        ${SCRIPT_DIR}/jobs/job-finish-baseline.fio
+        ${SCRIPT_DIR}/jobs/job-finish-baseline-50.fio
 
 #######################################################
 ## Identify Baseline Write Performance - mq-deadline ##
 #######################################################
 for write_iodepth in ${WRITE_IODEPTH[@]}; do
-    WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
+    CONCUR_WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
     echo -e ""${BLUE}"Baseline Benchmarking Write Performance with 0% Reset Interference: \
         WRITE_JOBS ${write_iodepth} - mq-deadline"${CLOSE}""
     sudo nvme zns reset-zone /dev/${DEV} -a
     echo mq-deadline | sudo tee /sys/block/${DEV}/queue/scheduler >> /dev/null
-    sudo env "DEV=${DEV}" "FILL_SIZE=${FINISH_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
+    sudo env "DEV=${DEV}" "CONCUR_WRITE_SIZE=${CONCUR_WRITE_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
         ${FIO} \
             --output-format=json \
-            --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_100-mq_deadline.json \
-            ${SCRIPT_DIR}/jobs/job-bw.fio
+            --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
+            ${SCRIPT_DIR}/jobs/job-write-baseline.fio
 done
 
+##############################################################
+## Identify Fimish on Write Performance (50%) - mq-deadline ##
+##############################################################
 for write_iodepth in ${WRITE_IODEPTH[@]}; do
     WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
     echo -e ""${BLUE}"Benchmarking 50% Reset Limit WRITE_JOBS ${write_iodepth} - mq-deadline"${CLOSE}""
     sudo nvme zns reset-zone /dev/${DEV} -a
     echo mq-deadline | sudo tee /sys/block/${DEV}/queue/scheduler >> /dev/null
     finish_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc)
-    sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FINISH_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
-        "WRITE_SIZE=${WRITE_SIZE}" "FINISH_LIMIT=${finish_rate_limit}" ${FIO} \
+    sudo env "DEV=${DEV}" "CONCUR_WRITE_SIZE=${CONCUR_WRITE_SIZE}" \
+         "WRITE_IODEPTH=${write_iodepth}" "FINISH_SIZE=${FINISH_SIZE}" \
+         "FINISH_LIMIT=${finish_rate_limit}" ${FIO} \
             --output-format=json \
-            --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_50-mq_deadline.json \
+            --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_50-zinc-${FINISH_EPOCH_INTERVAL}.json \
             ${SCRIPT_DIR}/jobs/job.fio
 done
 
@@ -116,19 +120,22 @@ done
 ## Identify Baseline Write Performance - zinc ##
 ################################################
 for write_iodepth in ${WRITE_IODEPTH[@]}; do
-    WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
+    CONCUR_WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
     echo -e ""${BLUE}"Baseline Benchmarking Write Performance with 0% Reset Interference: \
         WRITE_JOBS ${write_iodepth} - zinc"${CLOSE}""
     sudo nvme zns reset-zone /dev/${DEV} -a
     # use default zinc options for baseline (no finish in the baseline)
     echo zinc | sudo tee /sys/block/${DEV}/queue/scheduler >> /dev/null 
-    sudo env "DEV=${DEV}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
+    sudo env "DEV=${DEV}" "CONCUR_WRITE_SIZE=${CONCUR_WRITE_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
         ${FIO} \
             --output-format=json \
-            --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_100-zinc.json \
-            ${SCRIPT_DIR}/jobs/job-bw.fio
+            --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
+            ${SCRIPT_DIR}/jobs/job-write-baseline.fio
 done
 
+#######################################################
+## Identify Fimish on Write Performance (50%) - zinc ##
+#######################################################
 for write_iodepth in ${WRITE_IODEPTH[@]}; do
     WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
     echo -e ""${BLUE}"Benchmarking 50% Reset Limit WRITE_JOBS ${write_iodepth} - zinc"${CLOSE}""
@@ -139,11 +146,15 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
     echo ${FINISH_COMMAND_TOKENS} | sudo tee /sys/block/${DEV}/queue/iosched/finish_command_tokens >> /dev/null 
     echo ${FINISH_MINIMUM_CONCURRENCY_TRESHOLD} | sudo tee /sys/block/${DEV}/queue/iosched/finish_minimum_concurrency_treshold >> /dev/null 
     
+    echo "OK? ${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_50-zinc-${FINISH_EPOCH_INTERVAL}.json"
+
     finish_rate_limit=$(echo "scale=2; 50 / 100  * ${BW}" | bc)
-    sudo env "DEV=${DEV}" "BS=${DEV_ZONE_SIZE}" "FILL_SIZE=${FILL_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
-        "WRITE_SIZE=${WRITE_SIZE}" "FINISH_LIMIT=${finish_rate_limit}" ${FIO} \
+    CONCUR_WRITE_SIZE=$(echo "scale=0; ${WRITE_ZONES} / ${write_iodepth}" | bc)
+    sudo env "DEV=${DEV}" "CONCUR_WRITE_SIZE=${CONCUR_WRITE_SIZE}" \
+         "WRITE_IODEPTH=${write_iodepth}" "FINISH_SIZE=${FINISH_SIZE}" \
+         "FINISH_LIMIT=${finish_rate_limit}" ${FIO} \
             --output-format=json \
-            --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_50-zinc.json \
+            --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_50-zinc-${FINISH_EPOCH_INTERVAL}.json \
             ${SCRIPT_DIR}/jobs/job.fio
 done
 
