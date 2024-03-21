@@ -95,7 +95,7 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
     sudo env "DEV=${DEV}" "CONCUR_WRITE_SIZE=${CONCUR_WRITE_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
         ${FIO} \
             --output-format=json \
-            --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
+            --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_100-mq_deadline.json \
             ${SCRIPT_DIR}/jobs/job-write-baseline.fio
 done
 
@@ -112,7 +112,7 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
          "WRITE_IODEPTH=${write_iodepth}" "FINISH_SIZE=${FINISH_SIZE}" \
          "FINISH_LIMIT=${finish_rate_limit}" ${FIO} \
             --output-format=json \
-            --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_50-zinc-${FINISH_EPOCH_INTERVAL}.json \
+            --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_50-mq_deadline.json \
             ${SCRIPT_DIR}/jobs/job.fio
 done
 
@@ -129,7 +129,7 @@ for write_iodepth in ${WRITE_IODEPTH[@]}; do
     sudo env "DEV=${DEV}" "CONCUR_WRITE_SIZE=${CONCUR_WRITE_SIZE}" "WRITE_IODEPTH=${write_iodepth}" \
         ${FIO} \
             --output-format=json \
-            --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_${write_flow}.json \
+            --output=${SCRIPT_DIR}/data/data-write_iod_${write_iodepth}-wflow_100-zinc.json \
             ${SCRIPT_DIR}/jobs/job-write-baseline.fio
 done
 

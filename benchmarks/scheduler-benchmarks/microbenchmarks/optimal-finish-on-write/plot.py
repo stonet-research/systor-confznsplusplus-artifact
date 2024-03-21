@@ -19,13 +19,14 @@ from interference_model.quantification import get_interference_gpt
 
 # TODO: retrieve these values from ZenFS tracing for final calculation
 WRITE_INTERFERENCE_GAMMA = 0.5
-RESET_INTERFERENCE_DELTA = 0.5
+finish_INTERFERENCE_DELTA = 0.5
 
-# From our benchmark reset-on-write-interference, the retrieved RMS value
-RESET_ON_WRITE_RMS = 0.241
-# From our benchmark write-on-reset-interference, the retrieved RMS value
-WRITE_ON_RESET_RMS = 0.072
+# From our benchmark finish-on-write-interference, the retrieved RMS value
+finish_ON_WRITE_RMS = 0.241
+# From our benchmark write-on-finish-interference, the retrieved RMS value
+WRITE_ON_finish_RMS = 0.072
 
+MARK="64-5000000"
 
 plt.rc('font', size=12)          # controls default text sizes
 plt.rc('axes', titlesize=12)     # fontsize of the axes title
@@ -75,9 +76,14 @@ def parse_fio_data(fi, data):
 
     if "bw" in fi:
         return
+    if not f"50-zinc-{MARK}.json" in fi and not "50-mq_deadline" in fi and not "100-mq_deadline" in fi and not "100-zinc" in fi \
+        and not 'finish_base' in fi:
+        return
     with open(fi, 'r') as f:
         for index, line in enumerate(f, 1):
             # Removing all fio logs in json file by finding first {
+            if not len(line.split()):
+                continue
             if line.split()[0] == "{":
                 rows = f.readlines()
                 with open(os.path.join(os.getcwd(), "temp.json"), 'w+') as temp:
@@ -104,13 +110,13 @@ def init_baseline(baseline):
 
 
 def parse_write_baseline(write_baseline_iops, write_baseline_lat, mqddl_iops, mqddl_lat, mqddl50_iops, mqddl50_lat,
-                         mqddl_reset_iops, mqddl_reset_lat, zinc_baseline_iops, zinc_baseline_lat, 
-                         zinc50_iops, zinc50_lat, zinc50_reset_iops, zinc50_reset_lat):
+                         mqddl_finish_iops, mqddl_finish_lat, zinc_baseline_iops, zinc_baseline_lat, 
+                         zinc50_iops, zinc50_lat, zinc50_finish_iops, zinc50_finish_lat):
     for conf_key, conf_value in data.items():
         # print('c', conf_key)
         for key, value in conf_value.items():
             if conf_key == "baseline":
-                if "reset_baseline" in key:
+                if "finish_baseline" in key:
                     continue
                 elif "bw" in key:
                     continue
@@ -118,13 +124,15 @@ def parse_write_baseline(write_baseline_iops, write_baseline_lat, mqddl_iops, mq
                     head, tail = os.path.split(key)
                     numjobs = int(re.search(r'\d+', tail).group())
                     mqddl50_iops[numjobs -
-                                 1] = value["jobs"][2]["finish"]["iops_mean"]/1000
+                                 1] = value["jobs"][1]["finish"]["iops_mean"]/1000
                     mqddl50_lat[numjobs -
-                                1] = value["jobs"][2]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
-                    mqddl_reset_iops[numjobs -
-                                     1] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
-                    mqddl_reset_lat[numjobs -
-                                    1] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000
+                                1] = value["jobs"][1]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
+                    mqddl_finish_iops[numjobs -
+                                     1] = value["jobs"][0]["finish"]["iops_mean"]
+                    mqddl_finish_lat[numjobs -
+                                    1] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
+                    # print(numjobs, mqddl50_iops, mqddl50_lat)
+                    # print(numjobs, mqddl_finish_iops, mqddl_finish_lat)
                 elif "100-mq_deadline" in key:
                     head, tail = os.path.split(key)
                     numjobs = int(re.search(r'\d+', tail).group())
@@ -132,17 +140,20 @@ def parse_write_baseline(write_baseline_iops, write_baseline_lat, mqddl_iops, mq
                                1] = value["jobs"][0]["finish"]["iops_mean"]/1000
                     mqddl_lat[numjobs -
                               1] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
+                    # print(numjobs, mqddl_iops, mqddl_lat)
                 elif "50-zinc" in key:
                     head, tail = os.path.split(key)
                     numjobs = int(re.search(r'\d+', tail).group())
                     zinc50_iops[numjobs -
-                                 1] = value["jobs"][2]["finish"]["iops_mean"]/1000
+                                 1] = value["jobs"][1]["finish"]["iops_mean"]/1000
                     zinc50_lat[numjobs -
-                                1] = value["jobs"][2]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000 
-                    zinc50_reset_iops[numjobs -
-                                     1] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
-                    zinc50_reset_lat[numjobs -
-                                    1] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000
+                                1] = value["jobs"][1]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000 
+                    zinc50_finish_iops[numjobs -
+                                     1] = value["jobs"][0]["finish"]["iops_mean"]
+                    zinc50_finish_lat[numjobs -
+                                    1] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
+                    print(numjobs, zinc50_iops, zinc50_lat)
+                    print(numjobs, zinc50_finish_iops, zinc50_finish_lat)
                 elif "100-zinc" in key:
                     head, tail = os.path.split(key)
                     numjobs = int(re.search(r'\d+', tail).group())
@@ -150,28 +161,28 @@ def parse_write_baseline(write_baseline_iops, write_baseline_lat, mqddl_iops, mq
                                        1] = value["jobs"][0]["finish"]["iops_mean"]/1000
                     zinc_baseline_lat[numjobs -
                                       1] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
+                    # print(numjobs, zinc_baseline_iops, zinc_baseline_lat)
                 else:
                     head, tail = os.path.split(key)
-                    numjobs = int(re.search(r'\d+', tail).group())
-                    write_baseline_iops[numjobs -
-                                        1] = value["jobs"][0]["finish"]["iops_mean"]/1000
-                    write_baseline_lat[numjobs -
-                                       1] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
+                    # numjobs = int(re.search(r'\d+', tail).group())
+                    # write_baseline_iops[numjobs -
+                    #                     1] = value["jobs"][0]["finish"]["iops_mean"]/1000
+                    # write_baseline_lat[numjobs -
+                    #                    1] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
             else:
                 continue
 
 
-def parse_reset_baseline(reset_baseline_iops, reset_baseline_lat):
+def parse_finish_baseline(finish_baseline_iops, finish_baseline_lat):
     for conf_key, conf_value in data.items():
-
         for key, value in conf_value.items():
             if conf_key == "baseline":
-                if "reset_baseline" in key:
-                    reset_baseline_iops[0] = value["jobs"][1]["ZNS Reset"]["iops_mean"]
-                    reset_baseline_lat[0] = value["jobs"][1]["ZNS Reset"]["lat_ns"]["percentile"]["95.000000"]/1000
-                    init_baseline(reset_baseline_iops)
-                    init_baseline(reset_baseline_lat)
-                    print(reset_baseline_iops, reset_baseline_lat)
+                if "finish_baseline" in key:
+                    finish_baseline_iops[0] = value["jobs"][0]["finish"]["iops_mean"]
+                    finish_baseline_lat[0] = value["jobs"][0]["finish"]["lat_ns"]["percentile"]["95.000000"]/1000
+                    init_baseline(finish_baseline_iops)
+                    init_baseline(finish_baseline_lat)
+                    print(finish_baseline_iops, finish_baseline_lat)
                     return
                 else:
                     continue
@@ -180,7 +191,7 @@ def parse_reset_baseline(reset_baseline_iops, reset_baseline_lat):
 
 
 def get_matrix_col(val):
-    """Get the config index for the col which represents the reset latency"""
+    """Get the config index for the col which represents the finish latency"""
     match(val):
         case 16:
             return 3
@@ -207,6 +218,11 @@ def get_matrix_row(val):
 if __name__ == "__main__":
     file_path = '/'.join(os.path.abspath(__file__).split('/')[:-1])
 
+    if len(sys.argv) <= 1:
+        print(f"Please provide a marker in the form of 'finish_reset_epoch_interval-finish_command_tokens'")
+        sys.exit()
+    MARK=sys.argv[1]
+
     data = dict()
     data["baseline"] = dict()
     for fi in glob.glob(f'data/*'):
@@ -218,17 +234,17 @@ if __name__ == "__main__":
     queue_depths = np.arange(1, 8)
     lowest_interference = (None, None)
 
-    reset_baseline_iops = [None] * len(queue_depths)
-    reset_baseline_lat = [None] * len(queue_depths)
+    finish_baseline_iops = [None] * len(queue_depths)
+    finish_baseline_lat = [None] * len(queue_depths)
     # NOTE: This is the old setup, now instead use mqddl_iops
     write_baseline_iops = [None] * len(queue_depths)
     # NOTE: This is the old setup, now instead use mqddl_lat
     write_baseline_lat = [None] * len(queue_depths)
-    config_reset_limit = []
+    config_finish_limit = []
     config_write_ratio = []
     config_interference = np.zeros(shape=(4, 4))
     config_interference_write = np.zeros(shape=(4, 4))
-    config_interference_reset = np.zeros(shape=(4, 4))
+    config_interference_finish = np.zeros(shape=(4, 4))
     mqddl_iops = [None] * len(queue_depths)
     mqddl50_iops = [None] * len(queue_depths)
     mqddl_lat = [None] * len(queue_depths)
@@ -237,38 +253,39 @@ if __name__ == "__main__":
     zinc_baseline_lat = [None] * len(queue_depths)
     zinc50_iops = [None] * len(queue_depths)
     zinc50_lat = [None] * len(queue_depths)   
-    zinc50_reset_iops = [None] * len(queue_depths)
-    zinc50_reset_lat = [None] * len(queue_depths)   
-    mqddl_reset_iops = [None] * len(queue_depths)
-    mqddl_reset_lat = [None] * len(queue_depths)
+    zinc50_finish_iops = [None] * len(queue_depths)
+    zinc50_finish_lat = [None] * len(queue_depths)   
+    mqddl_finish_iops = [None] * len(queue_depths)
+    mqddl_finish_lat = [None] * len(queue_depths)
 
     parse_write_baseline(write_baseline_iops, write_baseline_lat, mqddl_iops, mqddl_lat, mqddl50_iops, mqddl50_lat,
-                         mqddl_reset_iops, mqddl_reset_lat, zinc_baseline_iops, zinc_baseline_lat,
-                         zinc50_iops,zinc50_lat,zinc50_reset_iops,zinc50_reset_lat)
-    parse_reset_baseline(reset_baseline_iops, reset_baseline_lat)
+                         mqddl_finish_iops, mqddl_finish_lat, zinc_baseline_iops, zinc_baseline_lat,
+                         zinc50_iops,zinc50_lat,zinc50_finish_iops,zinc50_finish_lat)
+    parse_finish_baseline(finish_baseline_iops, finish_baseline_lat)
 
     mqddl_write_interference = get_interference_gpt(
         mqddl_iops, mqddl50_iops, mqddl_lat, mqddl50_lat)
-    mqddl_reset_interference = get_interference_gpt(
-        reset_baseline_iops, mqddl_reset_iops, reset_baseline_lat, mqddl_reset_lat)
+    print("CR", finish_baseline_iops, mqddl_finish_iops, finish_baseline_lat, mqddl_finish_lat)
+    mqddl_finish_interference = get_interference_gpt(
+        finish_baseline_iops, mqddl_finish_iops, finish_baseline_lat, mqddl_finish_lat)
     zinc_write_interference = get_interference_gpt(
         zinc_baseline_iops, zinc50_iops, zinc_baseline_lat, zinc50_lat)
     write_interference = get_interference_gpt(
         mqddl_iops, zinc50_iops, mqddl_lat, zinc50_lat)
-    reset_interference = get_interference_gpt(
-        reset_baseline_iops, zinc50_reset_iops, reset_baseline_lat, zinc50_reset_lat)
+    finish_interference = get_interference_gpt(
+        finish_baseline_iops, zinc50_finish_iops, finish_baseline_lat, zinc50_finish_lat)
 
     print("-------------------------------------------------------------------------------------")
     print(
         f"mq-deadline WRITE Interference RMS {mqddl_write_interference: >20.15f}")
     print(
-        f"mq-deadline RESET Interference RMS {mqddl_reset_interference: >20.15f}")
+        f"mq-deadline finish Interference RMS {mqddl_finish_interference: >20.15f}")
     print(
         f"ZINC WRITE Interference RMS {zinc_write_interference: >20.15f}")
     print(
         f"ZINC versus mq-deadline WRITE Interference RMS {write_interference: >20.15f}")
     print(
-        f"ZINC RESET Interference RMS {reset_interference: >20.15f}")
+        f"ZINC finish Interference RMS {finish_interference: >20.15f}")
     print("-------------------------------------------------------------------------------------")
 
 
@@ -276,13 +293,13 @@ if __name__ == "__main__":
     fig, ax = plt.subplots()
 
     ax.plot(mqddl_iops, mqddl_lat, markersize=4,
-            marker='>', label="   0% reset - mqddl")
+            marker='>', label="   0% finish - mqddl")
     ax.plot(mqddl50_iops, mqddl50_lat, markersize=4,
-            marker='>', label="  50% reset - mqddl")
+            marker='>', label="  50% finish - mqddl")
     ax.plot(zinc_baseline_iops, zinc_baseline_lat,
-            markersize=4, marker='>', label="   0% reset - zinc")
+            markersize=4, marker='>', label="   0% finish - zinc")
     ax.plot(zinc50_iops, zinc50_lat, markersize=4,
-            marker='*', label=" 50% reset - zinc")
+            marker='*', label=" 50% finish - zinc")
 
     fig.tight_layout()
     ax.grid(which='major', linestyle='dashed', linewidth='1')
@@ -294,7 +311,7 @@ if __name__ == "__main__":
     ax.set_ylabel("p95 write Latency (usec)")
     ax.set_xlabel("Total IOPS (x1000)")
     plt.savefig(
-        f"{file_path}/figures/loaded_write_latency-optimal.pdf", bbox_inches="tight")
+        f"{file_path}/figures/loaded_write_latency-optimal-{MARK}.pdf", bbox_inches="tight")
     plt.savefig(
         f"{file_path}/figures/loaded_write_latency-optimal.png", bbox_inches="tight")
     plt.clf()
