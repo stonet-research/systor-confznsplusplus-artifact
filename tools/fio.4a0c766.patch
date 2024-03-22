@@ -1,5 +1,5 @@
 diff --git a/engines/io_uring.c b/engines/io_uring.c
-index 6cdf1b4f..0c9379e8 100644
+index 6cdf1b4f..ca70afd7 100644
 --- a/engines/io_uring.c
 +++ b/engines/io_uring.c
 @@ -90,6 +90,8 @@ struct ioring_options {
@@ -98,7 +98,7 @@ index 6cdf1b4f..0c9379e8 100644
  		struct nvme_data *data = NULL;
  		__u64 nlba = 0;
  		int ret;
-@@ -1388,6 +1440,12 @@ static int fio_ioring_cmd_reset_wp(struct thread_data *td, struct fio_file *f,
+@@ -1388,6 +1440,17 @@ static int fio_ioring_cmd_reset_wp(struct thread_data *td, struct fio_file *f,
  	return fio_nvme_reset_wp(td, f, offset, length);
  }
  
@@ -108,14 +108,19 @@ index 6cdf1b4f..0c9379e8 100644
 +	return fio_nvme_finish_zone(td, f, offset, length);
 +}
 +
++static int fio_ioring_finish_zone(struct thread_data *td, struct fio_file *f,
++				   uint64_t offset, uint64_t length) {
++	return blkzoned_finish_zone(td, f, offset, length);
++}
++
  static int fio_ioring_cmd_get_max_open_zones(struct thread_data *td,
  					     struct fio_file *f,
  					     unsigned int *max_open_zones)
-@@ -1430,11 +1488,12 @@ static struct ioengine_ops ioengine_uring = {
+@@ -1430,11 +1493,12 @@ static struct ioengine_ops ioengine_uring = {
  	.queue			= fio_ioring_queue,
  	.commit			= fio_ioring_commit,
  	.getevents		= fio_ioring_getevents,
-+	.finish_zone    = fio_ioring_cmd_finish_zone,
++	.finish_zone    = fio_ioring_finish_zone,
  	.event			= fio_ioring_event,
  	.cleanup		= fio_ioring_cleanup,
  	.open_file		= fio_ioring_open_file,
@@ -125,7 +130,7 @@ index 6cdf1b4f..0c9379e8 100644
  	.options		= options,
  	.option_struct_size	= sizeof(struct ioring_options),
  };
-@@ -1460,6 +1519,7 @@ static struct ioengine_ops ioengine_uring_cmd = {
+@@ -1460,6 +1524,7 @@ static struct ioengine_ops ioengine_uring_cmd = {
  	.get_zoned_model	= fio_ioring_cmd_get_zoned_model,
  	.report_zones		= fio_ioring_cmd_report_zones,
  	.reset_wp		= fio_ioring_cmd_reset_wp,
