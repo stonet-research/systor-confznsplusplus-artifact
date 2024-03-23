@@ -1,5 +1,5 @@
 diff --git a/engines/io_uring.c b/engines/io_uring.c
-index 6cdf1b4f..ca70afd7 100644
+index 6cdf1b4f..f8a4ff06 100644
 --- a/engines/io_uring.c
 +++ b/engines/io_uring.c
 @@ -90,6 +90,8 @@ struct ioring_options {
@@ -11,15 +11,16 @@ index 6cdf1b4f..ca70afd7 100644
  	unsigned int sqpoll_set;
  	unsigned int sqpoll_cpu;
  	unsigned int nonvectored;
-@@ -161,6 +163,15 @@ static struct fio_option options[] = {
+@@ -161,6 +163,16 @@ static struct fio_option options[] = {
  		.category = FIO_OPT_C_ENGINE,
  		.group	= FIO_OPT_G_IOURING,
  	},
 +	{
 +		.name	= "finish",
 +		.lname	= "FINISH ZNS",
-+		.type	= FIO_OPT_STR_SET,
++		.type	= FIO_OPT_INT,
 +		.off1	= offsetof(struct ioring_options, finish),
++		.def	= "0",
 +		.help	= "Issue FINISH Commands to ZNS device",
 +		.category = FIO_OPT_C_ENGINE,
 +		.group	= FIO_OPT_G_IOURING,
@@ -27,7 +28,7 @@ index 6cdf1b4f..ca70afd7 100644
  	{
  		.name	= "sqthread_poll_cpu",
  		.lname	= "SQ Thread Poll CPU",
-@@ -274,6 +285,15 @@ static struct fio_option options[] = {
+@@ -274,6 +286,15 @@ static struct fio_option options[] = {
  		.category = FIO_OPT_C_ENGINE,
  		.group	= FIO_OPT_G_IOURING,
  	},
@@ -43,7 +44,7 @@ index 6cdf1b4f..ca70afd7 100644
  	{
  		.name	= NULL,
  	},
-@@ -421,6 +441,10 @@ static int fio_ioring_cmd_prep(struct thread_data *td, struct io_u *io_u)
+@@ -421,6 +442,10 @@ static int fio_ioring_cmd_prep(struct thread_data *td, struct io_u *io_u)
  		sqe->buf_index = io_u->index;
  	}
  
@@ -54,7 +55,7 @@ index 6cdf1b4f..ca70afd7 100644
  	cmd = (struct nvme_uring_cmd *)sqe->cmd;
  	return fio_nvme_uring_cmd_prep(cmd, io_u,
  			o->nonvectored ? NULL : &ld->iovecs[io_u->index],
-@@ -1338,6 +1362,34 @@ static int fio_ioring_cmd_close_file(struct thread_data *td,
+@@ -1338,6 +1363,34 @@ static int fio_ioring_cmd_close_file(struct thread_data *td,
  	return 0;
  }
  
@@ -89,7 +90,7 @@ index 6cdf1b4f..ca70afd7 100644
  static int fio_ioring_cmd_get_file_size(struct thread_data *td,
  					struct fio_file *f)
  {
-@@ -1346,7 +1398,7 @@ static int fio_ioring_cmd_get_file_size(struct thread_data *td,
+@@ -1346,7 +1399,7 @@ static int fio_ioring_cmd_get_file_size(struct thread_data *td,
  	if (fio_file_size_known(f))
  		return 0;
  
@@ -98,7 +99,7 @@ index 6cdf1b4f..ca70afd7 100644
  		struct nvme_data *data = NULL;
  		__u64 nlba = 0;
  		int ret;
-@@ -1388,6 +1440,17 @@ static int fio_ioring_cmd_reset_wp(struct thread_data *td, struct fio_file *f,
+@@ -1388,6 +1441,17 @@ static int fio_ioring_cmd_reset_wp(struct thread_data *td, struct fio_file *f,
  	return fio_nvme_reset_wp(td, f, offset, length);
  }
  
@@ -116,7 +117,7 @@ index 6cdf1b4f..ca70afd7 100644
  static int fio_ioring_cmd_get_max_open_zones(struct thread_data *td,
  					     struct fio_file *f,
  					     unsigned int *max_open_zones)
-@@ -1430,11 +1493,12 @@ static struct ioengine_ops ioengine_uring = {
+@@ -1430,11 +1494,12 @@ static struct ioengine_ops ioengine_uring = {
  	.queue			= fio_ioring_queue,
  	.commit			= fio_ioring_commit,
  	.getevents		= fio_ioring_getevents,
@@ -130,7 +131,7 @@ index 6cdf1b4f..ca70afd7 100644
  	.options		= options,
  	.option_struct_size	= sizeof(struct ioring_options),
  };
-@@ -1460,6 +1524,7 @@ static struct ioengine_ops ioengine_uring_cmd = {
+@@ -1460,6 +1525,7 @@ static struct ioengine_ops ioengine_uring_cmd = {
  	.get_zoned_model	= fio_ioring_cmd_get_zoned_model,
  	.report_zones		= fio_ioring_cmd_report_zones,
  	.reset_wp		= fio_ioring_cmd_reset_wp,
@@ -313,7 +314,7 @@ index 786251d5..f4c983c9 100644
  	/*
  	 * Callback for io completion
 diff --git a/stat.c b/stat.c
-index 7b791628..93c242fa 100644
+index 7b791628..27ce2d3e 100644
 --- a/stat.c
 +++ b/stat.c
 @@ -1448,15 +1448,30 @@ static struct json_object *add_ddir_lat_json(struct thread_stat *ts,
@@ -327,7 +328,7 @@ index 7b791628..93c242fa 100644
 +
 +	flist_for_each(entry, opt_list) {
 +		p = flist_entry(entry, struct print_option, list);
-+		if (strcmp(p->name, "finish") && p->value && strcmp(p->value, "1"))
++		if (strcmp(p->name, "finish") && p->value && !strcmp(p->value, "0"))
 +			return true;
 +	}
 +
@@ -402,7 +403,7 @@ index 7b791628..93c242fa 100644
  	json_object_add_value_float(root, "usr_cpu", usr_cpu);
  	json_object_add_value_float(root, "sys_cpu", sys_cpu);
 diff --git a/zbd.c b/zbd.c
-index caac68bb..2b9b57c1 100644
+index caac68bb..c3d57755 100644
 --- a/zbd.c
 +++ b/zbd.c
 @@ -23,6 +23,43 @@
@@ -485,7 +486,7 @@ index caac68bb..2b9b57c1 100644
  		verify_data_left = td->runstate == TD_VERIFYING ||
  			td->io_hist_len || td->verify_batch;
  		if (td->io_hist_len && td->o.verify_backlog)
-@@ -1743,10 +1782,11 @@ unlock:
+@@ -1743,10 +1782,12 @@ unlock:
   * zbd_put_io - Unlock an I/O unit target zone lock
   * @io_u: I/O unit
   */
@@ -496,17 +497,21 @@ index caac68bb..2b9b57c1 100644
 +	struct fio_file *f = io_u->file;
  	struct fio_zone_info *z;
 +	struct ioring_options *o = td->eo;
++	uint64_t zone_filled;
  
  	assert(f->zbd_info);
  
-@@ -1757,6 +1797,34 @@ static void zbd_put_io(struct thread_data *td, const struct io_u *io_u)
+@@ -1757,6 +1798,38 @@ static void zbd_put_io(struct thread_data *td, const struct io_u *io_u)
  	       "%s: terminate I/O (%lld, %llu) for zone %u\n",
  	       f->file_name, io_u->offset, io_u->buflen, zbd_zone_idx(f, z));
  
++	zone_filled = z->capacity - (zbd_zone_capacity_end(z) - (io_u->offset + io_u->buflen)); 
++	// printf("filled %lu >= %u \n", zone_filled, o->finish);
++
 +	/*
 +	 * After completing full write finish the zone
 +	 */
-+	if (io_u->ddir == DDIR_WRITE && o->finish) {
++	if (io_u->ddir == DDIR_WRITE && o->finish && zone_filled >= o->finish) {
 +		pthread_mutex_lock(&f->zbd_info->mutex);
 +		zbd_write_zone_put(td, f, z);
 +		pthread_mutex_unlock(&f->zbd_info->mutex);
@@ -523,18 +528,19 @@ index caac68bb..2b9b57c1 100644
 +		 * Hardcoded to only account for finish bytes written and remove the 4K write before.
 +		 * We only use bw_bytes so we do not need so track all info.
 +		 */
-+		td->io_bytes[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
-+		td->io_issue_bytes[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
-+		td->bytes_done[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
-+		td->rate_io_issue_bytes[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
-+		td->stat_io_bytes[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
-+		td->this_io_bytes[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
++		// printf("TEST %llu %lu %lu %lu\n", td->o.bs[DDIR_WRITE], z->capacity - zone_filled, z->capacity, zone_filled);
++		td->io_bytes[DDIR_WRITE] += z->capacity - zone_filled;
++		td->io_issue_bytes[DDIR_WRITE] += z->capacity - zone_filled;
++		td->bytes_done[DDIR_WRITE] += z->capacity - zone_filled;
++		td->rate_io_issue_bytes[DDIR_WRITE] += z->capacity - zone_filled;
++		td->stat_io_bytes[DDIR_WRITE] += z->capacity - zone_filled;
++		td->this_io_bytes[DDIR_WRITE] += z->capacity - zone_filled;
 +	}
 +
  	zbd_end_zone_io(td, io_u, z);
  
  	zone_unlock(z);
-@@ -1895,6 +1963,7 @@ enum io_u_action zbd_adjust_block(struct thread_data *td, struct io_u *io_u)
+@@ -1895,6 +1968,7 @@ enum io_u_action zbd_adjust_block(struct thread_data *td, struct io_u *io_u)
  {
  	struct fio_file *f = io_u->file;
  	struct zoned_block_device_info *zbdi = f->zbd_info;
@@ -542,7 +548,7 @@ index caac68bb..2b9b57c1 100644
  	struct fio_zone_info *zb, *zl, *orig_zb;
  	uint32_t orig_len = io_u->buflen;
  	uint64_t min_bs = td->o.min_bs[io_u->ddir];
-@@ -2078,6 +2147,19 @@ retry:
+@@ -2078,6 +2152,19 @@ retry:
  				zb->reset_zone = 1;
  		}
  
@@ -562,7 +568,7 @@ index caac68bb..2b9b57c1 100644
  		/* Reset the zone pointer if necessary */
  		if (zb->reset_zone || zbd_zone_full(f, zb, min_bs)) {
  			if (td->o.verify != VERIFY_NONE) {
-@@ -2093,13 +2175,6 @@ retry:
+@@ -2093,13 +2180,6 @@ retry:
  				io_u->file = f;
  			}
  
@@ -576,7 +582,7 @@ index caac68bb..2b9b57c1 100644
  			io_u_quiesce(td);
  			zb->reset_zone = 0;
  			if (__zbd_reset_zone(td, f, zb) < 0)
-@@ -2166,6 +2241,7 @@ retry:
+@@ -2166,6 +2246,7 @@ retry:
  
  	case DDIR_SYNC:
  		/* fall-through */

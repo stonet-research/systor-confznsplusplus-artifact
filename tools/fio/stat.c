@@ -1455,7 +1455,7 @@ static bool is_finish_set(struct flist_head *opt_list)
 
 	flist_for_each(entry, opt_list) {
 		p = flist_entry(entry, struct print_option, list);
-		if (strcmp(p->name, "finish") && p->value && strcmp(p->value, "1"))
+		if (strcmp(p->name, "finish") && p->value && !strcmp(p->value, "0"))
 			return true;
 	}
 
