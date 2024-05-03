@@ -166,8 +166,9 @@ static struct fio_option options[] = {
 	{
 		.name	= "finish",
 		.lname	= "FINISH ZNS",
-		.type	= FIO_OPT_STR_SET,
+		.type	= FIO_OPT_INT,
 		.off1	= offsetof(struct ioring_options, finish),
+		.def	= "0",
 		.help	= "Issue FINISH Commands to ZNS device",
 		.category = FIO_OPT_C_ENGINE,
 		.group	= FIO_OPT_G_IOURING,

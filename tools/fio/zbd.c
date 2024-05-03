@@ -362,8 +362,16 @@ static void zbd_write_zone_put(struct thread_data *td, const struct fio_file *f,
 	if (!o->finish && zi == f->zbd_info->num_write_zones)
 		return;
 
-	dprint(FD_ZBD, "%s: removing zone %u from write zone array\n",
-	       f->file_name, zbd_zone_idx(f, z));
+	/*
+	 * max_write_zones == 0 means that there is no limit on the
+	 * maximum number of write target zones. In this case, do no track write
+	 * target zones in zbdi->write_zones array.
+	 */
+	if (!f->zbd_info->max_write_zones)
+		return;
+
+	dprint(FD_ZBD, "%s: removing zone %u from write zone array %u %u\n",
+	       f->file_name, zbd_zone_idx(f, z), zi, f->zbd_info->num_write_zones);
 
 	memmove(f->zbd_info->write_zones + zi,
 		f->zbd_info->write_zones + zi + 1,
@@ -1787,6 +1795,7 @@ static void zbd_put_io(struct thread_data *td, struct io_u *io_u)
 	struct fio_file *f = io_u->file;
 	struct fio_zone_info *z;
 	struct ioring_options *o = td->eo;
+	uint64_t zone_filled;
 
 	assert(f->zbd_info);
 
@@ -1797,10 +1806,12 @@ static void zbd_put_io(struct thread_data *td, struct io_u *io_u)
 	       "%s: terminate I/O (%lld, %llu) for zone %u\n",
 	       f->file_name, io_u->offset, io_u->buflen, zbd_zone_idx(f, z));
 
+	zone_filled = z->capacity - (zbd_zone_capacity_end(z) - (io_u->offset + io_u->buflen)); 
+
 	/*
 	 * After completing full write finish the zone
 	 */
-	if (io_u->ddir == DDIR_WRITE && o->finish) {
+	if (io_u->ddir == DDIR_WRITE && o->finish && zone_filled >= o->finish) {
 		pthread_mutex_lock(&f->zbd_info->mutex);
 		zbd_write_zone_put(td, f, z);
 		pthread_mutex_unlock(&f->zbd_info->mutex);
@@ -1809,7 +1820,7 @@ static void zbd_put_io(struct thread_data *td, struct io_u *io_u)
 				f->file_name, zbd_zone_idx(f, z));
 		io_u_quiesce(td);
 		zbd_finish_zone(td, f, z);
-		
+
 		z->reset_zone = false;
 		z->write = false;
 
@@ -1817,12 +1828,13 @@ static void zbd_put_io(struct thread_data *td, struct io_u *io_u)
 		 * Hardcoded to only account for finish bytes written and remove the 4K write before.
 		 * We only use bw_bytes so we do not need so track all info.
 		 */
-		td->io_bytes[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
-		td->io_issue_bytes[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
-		td->bytes_done[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
-		td->rate_io_issue_bytes[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
-		td->stat_io_bytes[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
-		td->this_io_bytes[DDIR_WRITE] += z->capacity - td->o.bs[DDIR_WRITE];
+		// printf("TEST %llu %lu %lu %lu\n", td->o.bs[DDIR_WRITE], z->capacity - zone_filled, z->capacity, zone_filled);
+		td->io_bytes[DDIR_WRITE] += z->capacity - zone_filled;
+		td->io_issue_bytes[DDIR_WRITE] += z->capacity - zone_filled;
+		td->bytes_done[DDIR_WRITE] += z->capacity - zone_filled;
+		td->rate_io_issue_bytes[DDIR_WRITE] += z->capacity - zone_filled;
+		td->stat_io_bytes[DDIR_WRITE] += z->capacity - zone_filled;
+		td->this_io_bytes[DDIR_WRITE] += z->capacity - zone_filled;
 	}
 
 	zbd_end_zone_io(td, io_u, z);
