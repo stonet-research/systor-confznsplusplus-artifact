@@ -362,8 +362,16 @@ static void zbd_write_zone_put(struct thread_data *td, const struct fio_file *f,
 	if (!o->finish && zi == f->zbd_info->num_write_zones)
 		return;
 
-	dprint(FD_ZBD, "%s: removing zone %u from write zone array\n",
-	       f->file_name, zbd_zone_idx(f, z));
+	/*
+	 * max_write_zones == 0 means that there is no limit on the
+	 * maximum number of write target zones. In this case, do no track write
+	 * target zones in zbdi->write_zones array.
+	 */
+	if (!f->zbd_info->max_write_zones)
+		return;
+
+	dprint(FD_ZBD, "%s: removing zone %u from write zone array %u %u\n",
+	       f->file_name, zbd_zone_idx(f, z), zi, f->zbd_info->num_write_zones);
 
 	memmove(f->zbd_info->write_zones + zi,
 		f->zbd_info->write_zones + zi + 1,
@@ -1799,7 +1807,6 @@ static void zbd_put_io(struct thread_data *td, struct io_u *io_u)
 	       f->file_name, io_u->offset, io_u->buflen, zbd_zone_idx(f, z));
 
 	zone_filled = z->capacity - (zbd_zone_capacity_end(z) - (io_u->offset + io_u->buflen)); 
-	// printf("filled %lu >= %u \n", zone_filled, o->finish);
 
 	/*
 	 * After completing full write finish the zone
@@ -1813,7 +1820,7 @@ static void zbd_put_io(struct thread_data *td, struct io_u *io_u)
 				f->file_name, zbd_zone_idx(f, z));
 		io_u_quiesce(td);
 		zbd_finish_zone(td, f, z);
-		
+
 		z->reset_zone = false;
 		z->write = false;
 

@@ -403,7 +403,7 @@ index 7b791628..27ce2d3e 100644
  	json_object_add_value_float(root, "usr_cpu", usr_cpu);
  	json_object_add_value_float(root, "sys_cpu", sys_cpu);
 diff --git a/zbd.c b/zbd.c
-index caac68bb..c3d57755 100644
+index caac68bb..f480b714 100644
 --- a/zbd.c
 +++ b/zbd.c
 @@ -23,6 +23,43 @@
@@ -450,7 +450,7 @@ index caac68bb..c3d57755 100644
  static bool is_valid_offset(const struct fio_file *f, uint64_t offset)
  {
  	return (uint64_t)(offset - f->file_offset) < f->io_size;
-@@ -313,15 +350,16 @@ static void zbd_write_zone_put(struct thread_data *td, const struct fio_file *f,
+@@ -313,19 +350,28 @@ static void zbd_write_zone_put(struct thread_data *td, const struct fio_file *f,
  			       struct fio_zone_info *z)
  {
  	uint32_t zi;
@@ -468,8 +468,22 @@ index caac68bb..c3d57755 100644
 +	if (!o->finish && zi == f->zbd_info->num_write_zones)
  		return;
  
- 	dprint(FD_ZBD, "%s: removing zone %u from write zone array\n",
-@@ -1337,6 +1375,7 @@ void zbd_file_reset(struct thread_data *td, struct fio_file *f)
+-	dprint(FD_ZBD, "%s: removing zone %u from write zone array\n",
+-	       f->file_name, zbd_zone_idx(f, z));
++	/*
++	 * max_write_zones == 0 means that there is no limit on the
++	 * maximum number of write target zones. In this case, do no track write
++	 * target zones in zbdi->write_zones array.
++	 */
++	if (!f->zbd_info->max_write_zones)
++		return;
++
++	dprint(FD_ZBD, "%s: removing zone %u from write zone array %u %u\n",
++	       f->file_name, zbd_zone_idx(f, z), zi, f->zbd_info->num_write_zones);
+ 
+ 	memmove(f->zbd_info->write_zones + zi,
+ 		f->zbd_info->write_zones + zi + 1,
+@@ -1337,6 +1383,7 @@ void zbd_file_reset(struct thread_data *td, struct fio_file *f)
  {
  	struct fio_zone_info *zb, *ze;
  	bool verify_data_left = false;
@@ -477,7 +491,7 @@ index caac68bb..c3d57755 100644
  
  	if (!f->zbd_info || !td_write(td))
  		return;
-@@ -1349,7 +1388,7 @@ void zbd_file_reset(struct thread_data *td, struct fio_file *f)
+@@ -1349,7 +1396,7 @@ void zbd_file_reset(struct thread_data *td, struct fio_file *f)
  	 * writing any data to avoid that a zone reset has to be issued while
  	 * writing data, which causes data loss.
  	 */
@@ -486,7 +500,7 @@ index caac68bb..c3d57755 100644
  		verify_data_left = td->runstate == TD_VERIFYING ||
  			td->io_hist_len || td->verify_batch;
  		if (td->io_hist_len && td->o.verify_backlog)
-@@ -1743,10 +1782,12 @@ unlock:
+@@ -1743,10 +1790,12 @@ unlock:
   * zbd_put_io - Unlock an I/O unit target zone lock
   * @io_u: I/O unit
   */
@@ -501,12 +515,11 @@ index caac68bb..c3d57755 100644
  
  	assert(f->zbd_info);
  
-@@ -1757,6 +1798,38 @@ static void zbd_put_io(struct thread_data *td, const struct io_u *io_u)
+@@ -1757,6 +1806,37 @@ static void zbd_put_io(struct thread_data *td, const struct io_u *io_u)
  	       "%s: terminate I/O (%lld, %llu) for zone %u\n",
  	       f->file_name, io_u->offset, io_u->buflen, zbd_zone_idx(f, z));
  
 +	zone_filled = z->capacity - (zbd_zone_capacity_end(z) - (io_u->offset + io_u->buflen)); 
-+	// printf("filled %lu >= %u \n", zone_filled, o->finish);
 +
 +	/*
 +	 * After completing full write finish the zone
@@ -520,7 +533,7 @@ index caac68bb..c3d57755 100644
 +				f->file_name, zbd_zone_idx(f, z));
 +		io_u_quiesce(td);
 +		zbd_finish_zone(td, f, z);
-+		
++
 +		z->reset_zone = false;
 +		z->write = false;
 +
@@ -540,7 +553,7 @@ index caac68bb..c3d57755 100644
  	zbd_end_zone_io(td, io_u, z);
  
  	zone_unlock(z);
-@@ -1895,6 +1968,7 @@ enum io_u_action zbd_adjust_block(struct thread_data *td, struct io_u *io_u)
+@@ -1895,6 +1975,7 @@ enum io_u_action zbd_adjust_block(struct thread_data *td, struct io_u *io_u)
  {
  	struct fio_file *f = io_u->file;
  	struct zoned_block_device_info *zbdi = f->zbd_info;
@@ -548,7 +561,7 @@ index caac68bb..c3d57755 100644
  	struct fio_zone_info *zb, *zl, *orig_zb;
  	uint32_t orig_len = io_u->buflen;
  	uint64_t min_bs = td->o.min_bs[io_u->ddir];
-@@ -2078,6 +2152,19 @@ retry:
+@@ -2078,6 +2159,19 @@ retry:
  				zb->reset_zone = 1;
  		}
  
@@ -568,7 +581,7 @@ index caac68bb..c3d57755 100644
  		/* Reset the zone pointer if necessary */
  		if (zb->reset_zone || zbd_zone_full(f, zb, min_bs)) {
  			if (td->o.verify != VERIFY_NONE) {
-@@ -2093,13 +2180,6 @@ retry:
+@@ -2093,13 +2187,6 @@ retry:
  				io_u->file = f;
  			}
  
@@ -582,7 +595,7 @@ index caac68bb..c3d57755 100644
  			io_u_quiesce(td);
  			zb->reset_zone = 0;
  			if (__zbd_reset_zone(td, f, zb) < 0)
-@@ -2166,6 +2246,7 @@ retry:
+@@ -2166,6 +2253,7 @@ retry:
  
  	case DDIR_SYNC:
  		/* fall-through */
