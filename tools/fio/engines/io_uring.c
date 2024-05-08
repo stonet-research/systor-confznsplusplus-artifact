@@ -91,6 +91,8 @@ struct ioring_options {
 	unsigned int registerfiles;
 	unsigned int sqpoll_thread;
 	unsigned int finish;
+	unsigned int softfinish;
+	unsigned int softfinish_chunk;
 	unsigned int zone_append;
 	unsigned int sqpoll_set;
 	unsigned int sqpoll_cpu;
@@ -170,6 +172,26 @@ static struct fio_option options[] = {
 		.off1	= offsetof(struct ioring_options, finish),
 		.def	= "0",
 		.help	= "Issue FINISH Commands to ZNS device",
+		.category = FIO_OPT_C_ENGINE,
+		.group	= FIO_OPT_G_IOURING,
+	},
+	{
+		.name	= "softfinish",
+		.lname	= "SOFTFINISH ZNS",
+		.type	= FIO_OPT_INT,
+		.off1	= offsetof(struct ioring_options, softfinish),
+		.def	= "0",
+		.help	= "Issue soft FINISH Commands to ZNS device",
+		.category = FIO_OPT_C_ENGINE,
+		.group	= FIO_OPT_G_IOURING,
+	},
+	{
+		.name	= "softfinish_chunk",
+		.lname	= "SOFTFINISH CHUNK ZNS",
+		.type	= FIO_OPT_INT,
+		.off1	= offsetof(struct ioring_options, softfinish_chunk),
+		.def	= "1024",
+		.help	= "Issue soft FINISH Commands to ZNS device at chunk size",
 		.category = FIO_OPT_C_ENGINE,
 		.group	= FIO_OPT_G_IOURING,
 	},
@@ -1371,7 +1393,7 @@ static int fio_ioring_get_file_size(struct thread_data *td,
 	if (fio_file_size_known(f))
 		return 0;
 
-	if (o->finish) {
+	if (o->finish || o->softfinish) {
 		struct nvme_data *data = NULL;
 		__u64 nlba = 0;
 		int ret;
@@ -1399,7 +1421,7 @@ static int fio_ioring_cmd_get_file_size(struct thread_data *td,
 	if (fio_file_size_known(f))
 		return 0;
 
-	if (o->finish || o->cmd_type == FIO_URING_CMD_NVME) {
+	if (o->finish || o->softfinish || o->cmd_type == FIO_URING_CMD_NVME) {
 		struct nvme_data *data = NULL;
 		__u64 nlba = 0;
 		int ret;
@@ -1441,15 +1463,56 @@ static int fio_ioring_cmd_reset_wp(struct thread_data *td, struct fio_file *f,
 	return fio_nvme_reset_wp(td, f, offset, length);
 }
 
+
+static inline struct fio_zone_info *zbd_get_zone(const struct fio_file *f,
+						 unsigned int zone_idx)
+{
+	return &f->zbd_info->zone_info[zone_idx];
+}
+
+static unsigned int zbd_offset_to_zone_idx(const struct fio_file *f,
+                            uint64_t offset)
+{
+	uint32_t zone_idx;
+ 
+        if (f->zbd_info->zone_size_log2 > 0)
+            zone_idx = offset >> f->zbd_info->zone_size_log2;
+        else
+            zone_idx = offset / f->zbd_info->zone_size;
+ 	return min(zone_idx, f->zbd_info->nr_zones);
+}
+
+static inline struct fio_zone_info *
+zbd_offset_to_zone(const struct fio_file *f,  uint64_t offset)
+{
+	return zbd_get_zone(f, zbd_offset_to_zone_idx(f, offset));
+}
+
 static int fio_ioring_cmd_finish_zone(struct thread_data *td, struct fio_file *f,
 				   uint64_t offset, uint64_t length)
 {
-	return fio_nvme_finish_zone(td, f, offset, length);
+	struct ioring_options *o = td->eo;
+	struct fio_zone_info *z;
+
+	if (o->softfinish) {
+		z = zbd_offset_to_zone(f, offset); 
+		return fio_nvme_softfinish_zone(td, f, z->start, z->wp, z->capacity, o->softfinish_chunk);
+	} else {
+		return fio_nvme_finish_zone(td, f, offset, length);
+	}
 }
 
 static int fio_ioring_finish_zone(struct thread_data *td, struct fio_file *f,
 				   uint64_t offset, uint64_t length) {
-	return blkzoned_finish_zone(td, f, offset, length);
+	struct ioring_options *o = td->eo;
+	struct fio_zone_info *z;
+
+	if (o->softfinish) {
+		z = zbd_offset_to_zone(f, offset); 
+		return blkzoned_softfinish_zone(td, f, z->start, z->wp, z->capacity, o->softfinish_chunk);
+	} else {
+		return blkzoned_finish_zone(td, f, offset, length);
+	}
 }
 
 static int fio_ioring_cmd_get_max_open_zones(struct thread_data *td,

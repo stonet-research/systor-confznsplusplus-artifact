@@ -368,3 +368,39 @@ int blkzoned_finish_zone(struct thread_data *td, struct fio_file *f,
 
 	return ret;
 }
+
+
+int blkzoned_softfinish_zone(struct thread_data *td, struct fio_file *f,
+			 uint64_t start, uint64_t offset, uint64_t length, uint64_t chunksize)
+{
+	struct blk_zone_range zr = {
+		.sector         = offset >> 9,
+		.nr_sectors     = length >> 9,
+	};
+	int fd, ret = 0;
+
+	/* If the file is not yet opened, open it for this function. */
+	fd = f->fd;
+	if (fd < 0) {
+		fd = open(f->file_name, O_RDWR | O_LARGEFILE);
+		if (fd < 0)
+			return -errno;
+	}
+	uint64_t finish_chunk = (512*chunksize);
+	char* buf = calloc(1, finish_chunk);
+	uint64_t count = finish_chunk;
+	while (offset < start + length) {
+		count = (start + length) - offset > finish_chunk ? finish_chunk :  (start + length) - offset;
+		// printf("Write %lu %lu %lu\n", start, offset, length); fflush(stdout);
+		if (pwrite(fd, buf, (size_t)count, (off_t)offset) < 0) {
+			return -errno;
+		}
+		offset += count;
+	}
+	free(buf);
+
+	if (f->fd < 0)
+		close(fd);
+
+	return ret;
+}

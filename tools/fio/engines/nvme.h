@@ -443,6 +443,9 @@ int fio_nvme_reset_wp(struct thread_data *td, struct fio_file *f,
 int fio_nvme_finish_zone(struct thread_data *td, struct fio_file *f,
 		      uint64_t offset, uint64_t length);
 
+int fio_nvme_softfinish_zone(struct thread_data *td, struct fio_file *f,
+		      uint64_t start, uint64_t offset, uint64_t length, uint64_t chunksize);
+
 int fio_nvme_get_max_open_zones(struct thread_data *td, struct fio_file *f,
 				unsigned int *max_open_zones);
 
