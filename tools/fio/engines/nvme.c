@@ -883,11 +883,15 @@ int fio_nvme_finish_zone(struct thread_data *td, struct fio_file *f,
 		};
 
 		ret = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+		if (ret < 0) {
+			ret = -errno;
+		}
 	}
 
 	if (f->fd < 0)
 		close(fd);
-	return -ret;
+	
+	return ret;
 }
 
 
@@ -915,7 +919,7 @@ int fio_nvme_softfinish_zone(struct thread_data *td, struct fio_file *f,
 	while (offset < start + length) {
 		count = (start + length) - offset > finish_chunk ? finish_chunk :  (start + length) - offset;
 		zslba = offset >> data->lba_shift;
-		uint64_t nlb = (count / 512)-1;
+		uint64_t nlb = (count / 4096)-1;
 
 		struct nvme_passthru_cmd cmd = {
 			.opcode         = nvme_cmd_write,
@@ -930,6 +934,8 @@ int fio_nvme_softfinish_zone(struct thread_data *td, struct fio_file *f,
 
 		ret = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
 		offset += count;
+		// TODO: make not-constant
+		// usleep(50);
 	}
 	free(buf);
 

@@ -1393,7 +1393,7 @@ static int fio_ioring_get_file_size(struct thread_data *td,
 	if (fio_file_size_known(f))
 		return 0;
 
-	if (o->finish || o->softfinish) {
+	if (o->finish) {
 		struct nvme_data *data = NULL;
 		__u64 nlba = 0;
 		int ret;
@@ -1421,7 +1421,7 @@ static int fio_ioring_cmd_get_file_size(struct thread_data *td,
 	if (fio_file_size_known(f))
 		return 0;
 
-	if (o->finish || o->softfinish || o->cmd_type == FIO_URING_CMD_NVME) {
+	if (o->finish || o->cmd_type == FIO_URING_CMD_NVME) {
 		struct nvme_data *data = NULL;
 		__u64 nlba = 0;
 		int ret;

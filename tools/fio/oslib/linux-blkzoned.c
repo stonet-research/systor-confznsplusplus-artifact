@@ -388,11 +388,14 @@ int blkzoned_softfinish_zone(struct thread_data *td, struct fio_file *f,
 	}
 	uint64_t finish_chunk = (512*chunksize);
 	char* buf = calloc(1, finish_chunk);
-	uint64_t count = finish_chunk;
+	if (!buf) {
+		printf("Error allocating \n"); fflush(stdout);
+	}	uint64_t count = finish_chunk;
 	while (offset < start + length) {
 		count = (start + length) - offset > finish_chunk ? finish_chunk :  (start + length) - offset;
 		// printf("Write %lu %lu %lu\n", start, offset, length); fflush(stdout);
 		if (pwrite(fd, buf, (size_t)count, (off_t)offset) < 0) {
+			free(buf);
 			return -errno;
 		}
 		offset += count;
