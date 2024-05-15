@@ -879,16 +879,82 @@ int fio_nvme_finish_zone(struct thread_data *td, struct fio_file *f,
 			.cdw13          = NVME_ZNS_ZSA_FINISH,
 			.addr           = (__u64)(uintptr_t)NULL,
 			.data_len       = 0,
-			.timeout_ms     = NVME_DEFAULT_IOCTL_TIMEOUT,
+			// If we emulate finish it might take very very long. Do not just kill that is impolite.
+			.timeout_ms     = 2147483648,
 		};
 
 		ret = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+		if (ret < 0) {
+			ret = -errno;
+		}
 	}
 
 	if (f->fd < 0)
 		close(fd);
-	return -ret;
+	
+	return ret;
 }
+
+
+int fio_nvme_softfinish_zone(struct thread_data *td, struct fio_file *f,
+		      uint64_t start, uint64_t offset, uint64_t length, uint64_t chunksize)
+{
+	struct nvme_data *data = FILE_ENG_DATA(f);
+	unsigned int nr_zones;
+	unsigned long long zslba;
+	int i, fd, ret = 0;
+	uint64_t offset_original = offset;
+
+	/* If the file is not yet opened, open it for this function. */
+	fd = f->fd;
+	if (fd < 0) {
+		fd = open(f->file_name, O_RDWR | O_LARGEFILE);
+		if (fd < 0) {
+			printf("Can not open\n");
+			return -errno;
+		}
+	}
+
+	uint64_t finish_chunk = (512*chunksize);
+	char* buf = calloc(1, finish_chunk);
+	uint64_t count = finish_chunk;
+
+	// printf("Errorr %lu %lu %lu %lu\n", offset, start, length, count);
+	while (offset < start + length) {
+		count = (start + length) - offset > finish_chunk ? finish_chunk :  (start + length) - offset;
+		zslba = offset >> data->lba_shift;
+		uint64_t nlb = (count / 4096)-1;
+
+		struct nvme_passthru_cmd cmd = {
+			.opcode         = nvme_cmd_write,
+			.nsid           = data->nsid,
+			.cdw10          = zslba & 0xffffffff,
+			.cdw11          = zslba >> 32,
+			.cdw12			= nlb,
+			.addr           = (__u64)(uintptr_t)buf,
+			.data_len       = finish_chunk,
+			.timeout_ms     = NVME_DEFAULT_IOCTL_TIMEOUT,
+		};
+
+		ret = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
+		if (ret < 0) {
+			printf("Error %lu %lu %lu\n", finish_chunk, count, nlb);
+			ret = -errno;
+		}
+		offset += count;
+		// TODO: make not-constant
+		usleep(50);
+	}
+	free(buf);
+
+	//printf("Finished %d  %lu %lu\n", ret, offset, count);
+	// ret = fio_nvme_finish_zone(td, f, start, length);
+
+	if (f->fd < 0)
+		close(fd);
+	return ret;
+}
+
 
 int fio_nvme_get_max_open_zones(struct thread_data *td, struct fio_file *f,
 				unsigned int *max_open_zones)

@@ -1,0 +1,73 @@
+#! /bin/bash
+
+set -e
+
+SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+cd ${SCRIPT_DIR}
+source ../common.sh
+
+# Input
+if [ $# != 2 ]; then
+    echo "Usage: $0 <ZNS device (e.g., nvme0n2)> $1 <zones to finish (e.g., 300)>"
+    exit 1
+fi
+DEV=$1
+FINISH_SIZE=$2
+
+# Device info
+get_device_info ${DEV}
+
+##################################
+## fio options for specific ZNS ##
+##################################
+READ_ZONES=$(echo "${DEV_ZONES} - ${FINISH_SIZE}" | bc) # All but the fill zones
+READ_IODEPTH=(64 32 16 8 4 2 1) 
+READ_FLOW=(50)
+
+echo "#########################################################"
+echo "###################### BENCH  SETUP #####################"
+echo "#########################################################"
+echo "---------------------------------------------------------"
+printf 'FINISH_ZONES (Empty zones for finish): %18s\n' "${FINISH_SIZE}"
+echo "---------------------------------------------------------"
+printf 'READ_ZONES (zones for read): %28s\n' "${READ_ZONES}"
+echo "---------------------------------------------------------"
+printf 'READ_IODEPTH: %43s\n' "${READ_IODEPTH[*]}"
+echo "---------------------------------------------------------"
+printf 'READ_RATE_FLOWS: %40s\n' "${READ_FLOW[*]}"
+echo "---------------------------------------------------------"
+echo ""
+
+baseline_finish ${DEV_CHAR} ${FINISH_SIZE}
+
+for read_iodepth in ${READ_IODEPTH[@]}; do
+    for read_flow in ${READ_FLOW[@]}; do
+        finish_flow=$((100 - ${read_flow}))
+        echo "Benchmarking READ_IODEPTH ${read_iodepth}: <READ_FLOW ${read_flow} - FINISH_LIMIT ${finish_flow}>"
+        sudo nvme zns reset-zone /dev/${DEV_CHAR} -a
+
+        if [[ ${finish_flow} -eq 0 ]]; then
+            # With 0 finish flow we want to disable the concurrent finish workload
+            CONCUR_READ_SIZE=$(echo "scale=0; ${READ_ZONES} / ${read_iodepth}" | bc)
+            sudo env "DEV=${DEV_CHAR}" "CONCUR_READ_SIZE=${CONCUR_READ_SIZE}" "READ_IODEPTH=${read_iodepth}" \
+                "FINISH_SIZE=${FINISH_SIZE}" "READ_SIZE=${READ_ZONES}" ${FIO} \
+                        --output-format=json \
+                    ${SCRIPT_DIR}/jobs/job-read.fio \
+                    --output=${SCRIPT_DIR}/data/data-read_iod_${read_iodepth}-rflow_${read_flow}.json \
+                    # --showcmd
+        else
+            CONCUR_READ_SIZE=$(echo "scale=0; ${READ_ZONES} / ${read_iodepth}" | bc)
+            finish_rate_limit=$(echo "scale=2; ${finish_flow} / 100  * ${FINISH_BW}" | bc)
+
+            # Read job has a ramp time because fio will directly issue 2 finishs and then realize it needs to rate limit, therefore we don't want to account this period in the read performance
+            sudo env "DEV=${DEV_CHAR}" "CONCUR_READ_SIZE=${CONCUR_READ_SIZE}" "READ_IODEPTH=${read_iodepth}" \
+                "FINISH_SIZE=${FINISH_SIZE}" "FINISH_LIMIT=${finish_rate_limit}" "READ_SIZE=${READ_ZONES}" \
+                    ${FIO} \
+                        --output-format=json \
+                        ${SCRIPT_DIR}/jobs/job.fio \
+                        --output=${SCRIPT_DIR}/data/data-read_iod_${read_iodepth}-rflow_${read_flow}-8.json \
+                        # --showcmd
+        fi
+    done
+done
+
