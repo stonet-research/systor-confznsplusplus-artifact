@@ -1,11 +1,14 @@
-# ZINC - A ZNS Interference-aware NVMe Command Scheduler
+# Exploring I/O Management Performance in ZNS with ConfZNS++
 
-This repository contains ZINC, an I/O scheduler for ZNS, and a ZNS command (I/O and management) interference study.
-Despite ZNS’s promises, with the benchmarks (micro- and macro-level workloads) we identify that the new ZNS commands create complex interference patterns with I/O and each other that lead to significant losses in application performance.
-We introduce a first-of-its-kind interference model ([`interference_model`](./interference_model/quantification.py)) for ZNS to quantify and study the interference overheads of ZNS.
-Based on our interference study, we propose ZINC, a ZNS interface-aware NVMe command scheduler that mitigates the impact of interference by prioritizing user I/O commands over flash management commands (configurable).
+This repository contains the source code of "Exploring I/O Management Performance in ZNS with
+ConfZNS++". This includes:
+* A performance characterization of ZNS I/O management interference:  [`microbenchmarks`](./benchmarks/passthrough-zns-command-interference/microbenchmarks). 
+* An interference model to quantify I/O management interference: [quantification.py](interference_model/quantification.py)
+* ConfZNS++: [confznsplusplus](confznsplusplus)
+* Fio modified to support finish, append and softfinish: [fio](tools/fio/)
+* ZINC: [zinc-scheduler](zinc-scheduler)
 
-## Dependencies and build instructions
+## Dependencies and build instructions for benchmarks
 
 All of our experiments utilize the `io_uring NVMe passthrough` functionality, which requires a modern Linux kernel (>6).
 Additionally, our scheduler is built on `Linux 6.3.8`, so we recommend using `Linux 6.3.8` of the Linux kernel for reproducability.
@@ -31,19 +34,6 @@ Building the custom fio requires no modifications over the conventional fio buil
 pushd tools/fio
 ./configure
 make -j
-popd
-```
-
-### Build ZenFS
-
-Our macro benchmarks use ZenFS. To build ZenFS run:
-
-```bash
-pushd tools/rocksdb
-DEBUG_LEVEL=0 ROCKSDB_PLUGINS=zenfs make -j db_bench
-sudo DEBUG_LEVEL=0 ROCKSDB_PLUGINS=zenfs make install
-cd plugin/zenfs/util
-make
 popd
 ```
 
@@ -84,6 +74,25 @@ make
 sudo insmod zinc.ko
 popd
 ```
+
+## Dependencies and build instructions for ConfZNS++
+
+ConfZNS++ extends on ConfZNS, so the build instructions are similar (see https://github.com/DKU-StarLab/ConfZNS):
+```bash
+cd confznsplusplus
+cp ../femu-scripts/femu-copy-scripts.sh .
+./femu-copy-scripts.sh .
+# only Debian/Ubuntu based distributions supported
+sudo ./pkgdep.sh
+./femu-compile.sh
+```
+
+## How to run ConfZNS++ with paper configurations
+
+We exposed the configurations we used with ConfZNS++ in [confznplusplus-config.sh](confznplusplus-config.sh).
+Please modify this script as needed (e.g., change the VM path).
+All benchmarks and data that used ConfZNS++ are in [`./benchmarks/passthrough-zns-command-interference/microbenchmarks`](./benchmarks/passthrough-zns-command-interference/microbenchmarks) and have the name `conznsplusplus-*-final-configuration`.
+
 
 ## Run micro interference experiments
 
@@ -127,13 +136,14 @@ This repository is broken down into several distinct directories and subdirector
 
 - [`interference_model`](./interference_model/) contains the python lib of the presented quantification model, to be imported into data parsing scripts to calculate the $Z^{Inter}$ value.
 - [`plotting-notebooks`](./plotting-notebooks/) contains all plotting scripts, as jupyter notebooks, for generating figures.
+- [`confznsplusplus`](./confznsplusplus): contains the source code of ConZNSplusplus
 - [`tools`](./tools/) contains the custom `fio` and `ZenFS` repositories for generating all micro- and macro-level benchmarks of this study.
 - [`benchmarks/scheduler-benchmarks`](./benchmarks/scheduler-benchmarks/) contains all the benchmarking scripts and collected data for the benchmarks (micro- and macro-level) using a scheduler. It contains benchmarks with ZINC and mq-deadline.
 - [`zinc-scheduler`](./zinc-scheduler/) contains the source code of ZINC.
 - [`benchmarks/passthrough-zns-command-interference`](./benchmarks/passthrough-zns-command-interference) contains all interference workloads run throughout the study. Each workload has its own subdirectory, with a benchmarking script to run the workload (run `./bench nvme0n2` on the respective device), all our collected data sets, and each workload has a plotting script to generate standalone figures apart from the paper figures (run `python3 plot.py`).
 - [`util`](./util/) contains utility scripts used throughout this study, which are typically called from other benchmarking scripts.
 
-## Cite ZINC
+## Cite
 
 TODO: Reference Format for final paper
 
