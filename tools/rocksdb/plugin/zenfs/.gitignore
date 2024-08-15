@@ -1,5 +1,0 @@
-util/zenfs
-fs/*.o
-fs/*.cc.d
-tests/results
-fs/version.h

@@ -1,17 +1,19 @@
 diff --git a/engines/io_uring.c b/engines/io_uring.c
-index 6cdf1b4f..f8a4ff06 100644
+index 6cdf1b4f..773e9d64 100644
 --- a/engines/io_uring.c
 +++ b/engines/io_uring.c
-@@ -90,6 +90,8 @@ struct ioring_options {
+@@ -90,6 +90,10 @@ struct ioring_options {
  	unsigned int fixedbufs;
  	unsigned int registerfiles;
  	unsigned int sqpoll_thread;
 +	unsigned int finish;
++	unsigned int softfinish;
++	unsigned int softfinish_chunk;
 +	unsigned int zone_append;
  	unsigned int sqpoll_set;
  	unsigned int sqpoll_cpu;
  	unsigned int nonvectored;
-@@ -161,6 +163,16 @@ static struct fio_option options[] = {
+@@ -161,6 +165,36 @@ static struct fio_option options[] = {
  		.category = FIO_OPT_C_ENGINE,
  		.group	= FIO_OPT_G_IOURING,
  	},
@@ -25,10 +27,30 @@ index 6cdf1b4f..f8a4ff06 100644
 +		.category = FIO_OPT_C_ENGINE,
 +		.group	= FIO_OPT_G_IOURING,
 +	},
++	{
++		.name	= "softfinish",
++		.lname	= "SOFTFINISH ZNS",
++		.type	= FIO_OPT_INT,
++		.off1	= offsetof(struct ioring_options, softfinish),
++		.def	= "0",
++		.help	= "Issue soft FINISH Commands to ZNS device",
++		.category = FIO_OPT_C_ENGINE,
++		.group	= FIO_OPT_G_IOURING,
++	},
++	{
++		.name	= "softfinish_chunk",
++		.lname	= "SOFTFINISH CHUNK ZNS",
++		.type	= FIO_OPT_INT,
++		.off1	= offsetof(struct ioring_options, softfinish_chunk),
++		.def	= "1024",
++		.help	= "Issue soft FINISH Commands to ZNS device at chunk size",
++		.category = FIO_OPT_C_ENGINE,
++		.group	= FIO_OPT_G_IOURING,
++	},
  	{
  		.name	= "sqthread_poll_cpu",
  		.lname	= "SQ Thread Poll CPU",
-@@ -274,6 +286,15 @@ static struct fio_option options[] = {
+@@ -274,6 +308,15 @@ static struct fio_option options[] = {
  		.category = FIO_OPT_C_ENGINE,
  		.group	= FIO_OPT_G_IOURING,
  	},
@@ -44,7 +66,7 @@ index 6cdf1b4f..f8a4ff06 100644
  	{
  		.name	= NULL,
  	},
-@@ -421,6 +442,10 @@ static int fio_ioring_cmd_prep(struct thread_data *td, struct io_u *io_u)
+@@ -421,6 +464,10 @@ static int fio_ioring_cmd_prep(struct thread_data *td, struct io_u *io_u)
  		sqe->buf_index = io_u->index;
  	}
  
@@ -55,7 +77,7 @@ index 6cdf1b4f..f8a4ff06 100644
  	cmd = (struct nvme_uring_cmd *)sqe->cmd;
  	return fio_nvme_uring_cmd_prep(cmd, io_u,
  			o->nonvectored ? NULL : &ld->iovecs[io_u->index],
-@@ -1338,6 +1363,34 @@ static int fio_ioring_cmd_close_file(struct thread_data *td,
+@@ -1338,6 +1385,34 @@ static int fio_ioring_cmd_close_file(struct thread_data *td,
  	return 0;
  }
  
@@ -90,7 +112,7 @@ index 6cdf1b4f..f8a4ff06 100644
  static int fio_ioring_cmd_get_file_size(struct thread_data *td,
  					struct fio_file *f)
  {
-@@ -1346,7 +1399,7 @@ static int fio_ioring_cmd_get_file_size(struct thread_data *td,
+@@ -1346,7 +1421,7 @@ static int fio_ioring_cmd_get_file_size(struct thread_data *td,
  	if (fio_file_size_known(f))
  		return 0;
  
@@ -99,25 +121,66 @@ index 6cdf1b4f..f8a4ff06 100644
  		struct nvme_data *data = NULL;
  		__u64 nlba = 0;
  		int ret;
-@@ -1388,6 +1441,17 @@ static int fio_ioring_cmd_reset_wp(struct thread_data *td, struct fio_file *f,
+@@ -1388,6 +1463,58 @@ static int fio_ioring_cmd_reset_wp(struct thread_data *td, struct fio_file *f,
  	return fio_nvme_reset_wp(td, f, offset, length);
  }
  
++
++static inline struct fio_zone_info *zbd_get_zone(const struct fio_file *f,
++						 unsigned int zone_idx)
++{
++	return &f->zbd_info->zone_info[zone_idx];
++}
++
++static unsigned int zbd_offset_to_zone_idx(const struct fio_file *f,
++                            uint64_t offset)
++{
++	uint32_t zone_idx;
++ 
++        if (f->zbd_info->zone_size_log2 > 0)
++            zone_idx = offset >> f->zbd_info->zone_size_log2;
++        else
++            zone_idx = offset / f->zbd_info->zone_size;
++ 	return min(zone_idx, f->zbd_info->nr_zones);
++}
++
++static inline struct fio_zone_info *
++zbd_offset_to_zone(const struct fio_file *f,  uint64_t offset)
++{
++	return zbd_get_zone(f, zbd_offset_to_zone_idx(f, offset));
++}
++
 +static int fio_ioring_cmd_finish_zone(struct thread_data *td, struct fio_file *f,
 +				   uint64_t offset, uint64_t length)
 +{
-+	return fio_nvme_finish_zone(td, f, offset, length);
++	struct ioring_options *o = td->eo;
++	struct fio_zone_info *z;
++
++	if (o->softfinish) {
++		z = zbd_offset_to_zone(f, offset); 
++		return fio_nvme_softfinish_zone(td, f, z->start, z->wp, z->capacity, o->softfinish_chunk);
++	} else {
++		return fio_nvme_finish_zone(td, f, offset, length);
++	}
 +}
 +
 +static int fio_ioring_finish_zone(struct thread_data *td, struct fio_file *f,
 +				   uint64_t offset, uint64_t length) {
-+	return blkzoned_finish_zone(td, f, offset, length);
++	struct ioring_options *o = td->eo;
++	struct fio_zone_info *z;
++
++	if (o->softfinish) {
++		z = zbd_offset_to_zone(f, offset); 
++		return blkzoned_softfinish_zone(td, f, z->start, z->wp, z->capacity, o->softfinish_chunk);
++	} else {
++		return blkzoned_finish_zone(td, f, offset, length);
++	}
 +}
 +
  static int fio_ioring_cmd_get_max_open_zones(struct thread_data *td,
  					     struct fio_file *f,
  					     unsigned int *max_open_zones)
-@@ -1430,11 +1494,12 @@ static struct ioengine_ops ioengine_uring = {
+@@ -1430,11 +1557,12 @@ static struct ioengine_ops ioengine_uring = {
  	.queue			= fio_ioring_queue,
  	.commit			= fio_ioring_commit,
  	.getevents		= fio_ioring_getevents,
@@ -131,7 +194,7 @@ index 6cdf1b4f..f8a4ff06 100644
  	.options		= options,
  	.option_struct_size	= sizeof(struct ioring_options),
  };
-@@ -1460,6 +1525,7 @@ static struct ioengine_ops ioengine_uring_cmd = {
+@@ -1460,6 +1588,7 @@ static struct ioengine_ops ioengine_uring_cmd = {
  	.get_zoned_model	= fio_ioring_cmd_get_zoned_model,
  	.report_zones		= fio_ioring_cmd_report_zones,
  	.reset_wp		= fio_ioring_cmd_reset_wp,
@@ -140,7 +203,7 @@ index 6cdf1b4f..f8a4ff06 100644
  	.options		= options,
  	.option_struct_size	= sizeof(struct ioring_options),
 diff --git a/engines/nvme.c b/engines/nvme.c
-index 08503b33..bff48d79 100644
+index 08503b33..4900b530 100644
 --- a/engines/nvme.c
 +++ b/engines/nvme.c
 @@ -7,6 +7,7 @@
@@ -211,7 +274,7 @@ index 08503b33..bff48d79 100644
  		log_err("ioengine io_uring_cmd only works with nvme ns "
  			"generic char devices (/dev/ngXnY)\n");
  		return 1;
-@@ -819,6 +851,45 @@ int fio_nvme_reset_wp(struct thread_data *td, struct fio_file *f,
+@@ -819,6 +851,111 @@ int fio_nvme_reset_wp(struct thread_data *td, struct fio_file *f,
  	return -ret;
  }
  
@@ -243,22 +306,88 @@ index 08503b33..bff48d79 100644
 +			.cdw13          = NVME_ZNS_ZSA_FINISH,
 +			.addr           = (__u64)(uintptr_t)NULL,
 +			.data_len       = 0,
-+			.timeout_ms     = NVME_DEFAULT_IOCTL_TIMEOUT,
++			// If we emulate finish it might take very very long. Do not just kill that is impolite.
++			.timeout_ms     = 2147483648,
 +		};
 +
 +		ret = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
++		if (ret < 0) {
++			ret = -errno;
++		}
 +	}
 +
 +	if (f->fd < 0)
 +		close(fd);
-+	return -ret;
++	
++	return ret;
 +}
++
++
++int fio_nvme_softfinish_zone(struct thread_data *td, struct fio_file *f,
++		      uint64_t start, uint64_t offset, uint64_t length, uint64_t chunksize)
++{
++	struct nvme_data *data = FILE_ENG_DATA(f);
++	unsigned int nr_zones;
++	unsigned long long zslba;
++	int i, fd, ret = 0;
++	uint64_t offset_original = offset;
++
++	/* If the file is not yet opened, open it for this function. */
++	fd = f->fd;
++	if (fd < 0) {
++		fd = open(f->file_name, O_RDWR | O_LARGEFILE);
++		if (fd < 0) {
++			printf("Can not open\n");
++			return -errno;
++		}
++	}
++
++	uint64_t finish_chunk = (512*chunksize);
++	char* buf = calloc(1, finish_chunk);
++	uint64_t count = finish_chunk;
++
++	// printf("Errorr %lu %lu %lu %lu\n", offset, start, length, count);
++	while (offset < start + length) {
++		count = (start + length) - offset > finish_chunk ? finish_chunk :  (start + length) - offset;
++		zslba = offset >> data->lba_shift;
++		uint64_t nlb = (count / 4096)-1;
++
++		struct nvme_passthru_cmd cmd = {
++			.opcode         = nvme_cmd_write,
++			.nsid           = data->nsid,
++			.cdw10          = zslba & 0xffffffff,
++			.cdw11          = zslba >> 32,
++			.cdw12			= nlb,
++			.addr           = (__u64)(uintptr_t)buf,
++			.data_len       = finish_chunk,
++			.timeout_ms     = NVME_DEFAULT_IOCTL_TIMEOUT,
++		};
++
++		ret = ioctl(fd, NVME_IOCTL_IO_CMD, &cmd);
++		if (ret < 0) {
++			printf("Error %lu %lu %lu\n", finish_chunk, count, nlb);
++			ret = -errno;
++		}
++		offset += count;
++		// TODO: make not-constant
++		usleep(50);
++	}
++	free(buf);
++
++	//printf("Finished %d  %lu %lu\n", ret, offset, count);
++	// ret = fio_nvme_finish_zone(td, f, start, length);
++
++	if (f->fd < 0)
++		close(fd);
++	return ret;
++}
++
 +
  int fio_nvme_get_max_open_zones(struct thread_data *td, struct fio_file *f,
  				unsigned int *max_open_zones)
  {
 diff --git a/engines/nvme.h b/engines/nvme.h
-index 792b35d8..f57f3f30 100644
+index 792b35d8..1d3d6ad8 100644
 --- a/engines/nvme.h
 +++ b/engines/nvme.h
 @@ -50,6 +50,7 @@ struct nvme_uring_cmd {
@@ -277,12 +406,15 @@ index 792b35d8..f57f3f30 100644
  };
  
  enum nvme_zns_zs {
-@@ -438,6 +440,9 @@ int fio_nvme_report_zones(struct thread_data *td, struct fio_file *f,
+@@ -438,6 +440,12 @@ int fio_nvme_report_zones(struct thread_data *td, struct fio_file *f,
  int fio_nvme_reset_wp(struct thread_data *td, struct fio_file *f,
  		      uint64_t offset, uint64_t length);
  
 +int fio_nvme_finish_zone(struct thread_data *td, struct fio_file *f,
 +		      uint64_t offset, uint64_t length);
++
++int fio_nvme_softfinish_zone(struct thread_data *td, struct fio_file *f,
++		      uint64_t start, uint64_t offset, uint64_t length, uint64_t chunksize);
 +
  int fio_nvme_get_max_open_zones(struct thread_data *td, struct fio_file *f,
  				unsigned int *max_open_zones);
@@ -313,6 +445,80 @@ index 786251d5..f4c983c9 100644
  
  	/*
  	 * Callback for io completion
+diff --git a/oslib/blkzoned.h b/oslib/blkzoned.h
+index e598bd4f..74d01b9f 100644
+--- a/oslib/blkzoned.h
++++ b/oslib/blkzoned.h
+@@ -23,6 +23,8 @@ extern int blkzoned_get_max_active_zones(struct thread_data *td,
+ 					 unsigned int *max_active_zones);
+ extern int blkzoned_finish_zone(struct thread_data *td, struct fio_file *f,
+ 				uint64_t offset, uint64_t length);
++extern int blkzoned_softfinish_zone(struct thread_data *td, struct fio_file *f,
++				uint64_t start, uint64_t offset, uint64_t length, uint64_t chunk);
+ #else
+ /*
+  * Define stubs for systems that do not have zoned block device support.
+@@ -68,6 +70,12 @@ static inline int blkzoned_finish_zone(struct thread_data *td,
+ {
+ 	return -EIO;
+ }
++static inline int blkzoned_softfinish_zone(struct thread_data *td,
++				       struct fio_file *f,
++				       uint64_t start, uint64_t offset, uint64_t length, uint64_t chunk)
++{
++	return -EIO;
++}
+ #endif
+ 
+ #endif /* FIO_BLKZONED_H */
+diff --git a/oslib/linux-blkzoned.c b/oslib/linux-blkzoned.c
+index 2c3ecf33..f65de411 100644
+--- a/oslib/linux-blkzoned.c
++++ b/oslib/linux-blkzoned.c
+@@ -368,3 +368,42 @@ int blkzoned_finish_zone(struct thread_data *td, struct fio_file *f,
+ 
+ 	return ret;
+ }
++
++
++int blkzoned_softfinish_zone(struct thread_data *td, struct fio_file *f,
++			 uint64_t start, uint64_t offset, uint64_t length, uint64_t chunksize)
++{
++	struct blk_zone_range zr = {
++		.sector         = offset >> 9,
++		.nr_sectors     = length >> 9,
++	};
++	int fd, ret = 0;
++
++	/* If the file is not yet opened, open it for this function. */
++	fd = f->fd;
++	if (fd < 0) {
++		fd = open(f->file_name, O_RDWR | O_LARGEFILE);
++		if (fd < 0)
++			return -errno;
++	}
++	uint64_t finish_chunk = (512*chunksize);
++	char* buf = calloc(1, finish_chunk);
++	if (!buf) {
++		printf("Error allocating \n"); fflush(stdout);
++	}	uint64_t count = finish_chunk;
++	while (offset < start + length) {
++		count = (start + length) - offset > finish_chunk ? finish_chunk :  (start + length) - offset;
++		// printf("Write %lu %lu %lu\n", start, offset, length); fflush(stdout);
++		if (pwrite(fd, buf, (size_t)count, (off_t)offset) < 0) {
++			free(buf);
++			return -errno;
++		}
++		offset += count;
++	}
++	free(buf);
++
++	if (f->fd < 0)
++		close(fd);
++
++	return ret;
++}
+\ No newline at end of file
 diff --git a/stat.c b/stat.c
 index 7b791628..27ce2d3e 100644
 --- a/stat.c
