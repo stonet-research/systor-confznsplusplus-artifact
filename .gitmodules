@@ -1,3 +1,6 @@
 [submodule "zinc-scheduler"]
 	path = zinc-scheduler
 	url = https://github.com/stonet-research/zinc-scheduler.git
+[submodule "confznsplusplus"]
+	path = confznsplusplus
+	url = https://github.com/stonet-research/confznsplusplus.git
