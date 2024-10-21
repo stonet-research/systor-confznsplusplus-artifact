@@ -121,5 +121,24 @@ This repository is broken down into several distinct directories and subdirector
 * [`util`](./util/) contains utility scripts used throughout this study, which are typically called from other benchmarking scripts.
 
 ## Cite
+Krijn Doekemeijer, Dennis Maisenbacher, Zebin Ren, Nick Tehrany, Matias Bjørling, and Animesh Trivedi. 2024. Exploring I/O Management Performance in ZNS with ConfZNS++. In Proceedings of the 17th ACM International Systems and Storage Conference (SYSTOR '24). Association for Computing Machinery, New York, NY, USA, 162–177. https://doi.org/10.1145/3688351.3689160
 
-TODO: Reference Format for final paper
+```
+@inproceedings{2024-systor-confzsnplusplus,
+author = {Doekemeijer, Krijn and Maisenbacher, Dennis and Ren, Zebin and Tehrany, Nick and Bj\o{}rling, Matias and Trivedi, Animesh},
+title = {Exploring I/O Management Performance in ZNS with ConfZNS++},
+year = {2024},
+isbn = {9798400711817},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3688351.3689160},
+doi = {10.1145/3688351.3689160},
+abstract = {Flash-based storage is known to suffer from performance unpredictability due to interference between host-issued I/O and device-side I/O management. SSDs with data placement capabilities, such as Zoned Namespaces (ZNS) and Flexible Data Placement (FDP), expose selective device-side I/O management operations to the host to provide predictable performance. In this paper, we demonstrate that these host-issued I/O management operations lead to performance interference with host-issued I/O. Indeed, we find that the I/O management operations introduced by ZNS and FDP create I/O interference, leading to significant performance losses. Despite the performance implications, we observe that ZNS research frequently uses emulators (over 20 recently published papers), but no emulator currently has function-realistic models for I/O management. To address this gap, we identify ten ZNS I/O management designs, explain how they interfere with I/O, and introduce ConfZNS++, a function-realistic emulator with native I/O management support, providing future research with the capability to explore these designs. Additionally, we introduce two actionable host-managed solutions to reduce ZNS management interference: ZINC, an I/O scheduler prioritizing I/O over I/O management, and the softfinish operation, a host-managed implementation of the finish operation. In our experiments, ZINC reduces reset interference by 56.9\%, and softfinish reduces finish interference by 50.7\%.},
+booktitle = {Proceedings of the 17th ACM International Systems and Storage Conference},
+pages = {162–177},
+numpages = {16},
+keywords = {Emulation, Interference, NVMe Flash Storage, ZNS},
+location = {Virtual, Israel},
+series = {SYSTOR '24}
+}
+```
