@@ -44,7 +44,7 @@ This code includes:
 5. Setup ZINC
 
     Note, building ZINC is not necessary for the interference study or for the ConfZNSplusplus results!
-    In order to install ZINC follow the install instructions in [zinc-scheduler/README.md](zinc-scheduler/README.md).
+    In order to install ZINC follow the install instructions in [https://github.com/stonet-research/zinc-scheduler/blob/master/README.md](https://github.com/stonet-research/zinc-scheduler/blob/master/README.md).
 
 6. Setup ConfZNS++
 
@@ -90,7 +90,7 @@ All benchmarks and data are in [`./benchmarks/passthrough-zns-command-interferen
 
 ### ZINC
 
-1. First ensure that the `zinc.ko` module is installed (`sudo insmod zinc.ko`, see [zinc-scheduler/README.md](zinc-scheduler/README.md)).
+1. First ensure that the `zinc.ko` module is installed (`sudo insmod zinc.ko`, see [https://github.com/stonet-research/zinc-scheduler/blob/master/README.md](https://github.com/stonet-research/zinc-scheduler/blob/master/README.md)).
 
 2. Run the benchmarks in [`benchmarks/scheduler-benchmarks/microbenchmarks`](./benchmarks/scheduler-benchmarks/microbenchmarks/). It contains the following benchmarks:
     * `zinc-configuration`: The scripts needed to get the optimal configuration for ZINC. Run `./bench` to see what arguments to use to run the benchmarks. The data is in `data/`, where `baseline-data` holds the data without interference, and `data-reset_time_*_write_ratio_*` holds data for various ZINC configurations. Run `plot.py` to get the plots.
